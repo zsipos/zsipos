@@ -23,7 +23,7 @@ repos = OrderedDict(repos)
 
 if len(sys.argv) < 2:
     print("Available commands:")
-    print("- install to user directory)")
+    print("- install (to user directory)")
     print("- update")
     exit()
 
