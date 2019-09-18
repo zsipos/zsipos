@@ -2,7 +2,7 @@
 export PATH="$TOP/scripts:$PATH"
 
 # add toolchain to PATH
-export TOOLCHAINDIR="$TOP/toolchain/riscv64"
-export PATH="$TOOLCHAINDIR/bin:$PATH"
+export RISCV="$TOP/toolchain/riscv64"
+export PATH="$RISCV/bin:$PATH"
 
 
