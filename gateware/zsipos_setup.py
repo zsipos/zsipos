@@ -10,7 +10,7 @@ current_path = os.path.dirname(os.path.realpath(__file__))
 # name,  (url, recursive clone, develop)
 repos = [
     # HDL
-    ("migen",      ("https://github.com/m-labs/",        True,  True)),
+    ("migen",      ("https://github.com/m-labs/", True,  True)),
 
     # LiteX SoC builder
     ("litex",      ("https://github.com/zsipos/", True,  True)),
