@@ -5,4 +5,11 @@ export PATH="$TOP/scripts:$PATH"
 export RISCV="$TOP/toolchain/riscv64"
 export PATH="$RISCV/bin:$PATH"
 
+# cross compile
+export CROSS_COMPILE="riscv64-unknown-linux-gnu-"
+
+# which board to build
+export BOARD="zsipos"
+
+
 

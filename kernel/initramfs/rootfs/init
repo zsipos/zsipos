@@ -1,0 +1,32 @@
+#!/bin/busybox sh
+
+/bin/busybox --install
+
+ifconfig eth0 192.168.0.55 netmask 255.255.255.0 up
+route add default gw 192.168.0.2
+
+mkdir -p /nfs
+mount -t nfs -o nolock 192.168.0.45:/opt/riscv-root /nfs 
+for i in proc sys dev tmp run
+do
+	mkdir -p /nfs/$i
+done
+
+mount -t proc     none   /nfs/proc
+mount -t sysfs    none   /nfs/sys
+mount -t devtmpfs udev   /nfs/dev
+mkdir -p /nfs/dev/pts
+mount -t devpts   devpts /nfs/dev/pts
+mount -t tmpfs    tmpfs  /nfs/tmp
+mount -t tmpfs    tmpfs  /nfs/run
+
+exec switch_root /nfs /sbin/init
+
+#
+# should not get here
+#
+
+echo "oops, something went wrong!"
+stty erase ^H
+/bin/sh
+

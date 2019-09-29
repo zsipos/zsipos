@@ -13,3 +13,12 @@
 [submodule "gateware/litedram"]
 	path = gateware/litedram
 	url = https://github.com/zsipos/litedram
+[submodule "kernel/riscv-pk"]
+	path = kernel/riscv-pk
+	url = https://github.com/zsipos/riscv-pk
+[submodule "kernel/linux"]
+	path = kernel/linux
+	url = https://github.com/zsipos/linux
+[submodule "kernel/initramfs/busybox"]
+	path = kernel/initramfs/busybox
+	url = git://busybox.net/busybox.git
