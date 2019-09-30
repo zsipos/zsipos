@@ -21,17 +21,19 @@ from dts import *
 class MySoC(EthernetSoC):
 
     def __init__(self, **kwargs):
-        EthernetSoC.__init__(self, sys_clk_freq=60e6, cpu_type="rocket2", cpu_variant="linux", **kwargs)
+        EthernetSoC.__init__(self, sys_clk_freq=60e6,
+                             cpu_type="rocket2", cpu_variant="linux",
+                             **kwargs)
 
     def get_dts(self):
         d = DTSHelper(self)
         d.add_litex_uart(0, "uart")
         d.add_litex_eth(0, "ethphy", "ethmac")
         s = Rocket2RV64.build_dts(variant=d.get_cpu_variant(),
-                                  bootargs="",
-                                  sdram_size=d.get_sdram_size(),
-                                  timebase_frequency=d.get_sys_clk_freq()//100,
-                                  devices=d.get_devices())
+                               bootargs="",
+                               sdram_size=d.get_sdram_size(),
+                               timebase_frequency=d.get_sys_clk_freq()//100,
+                               devices=d.get_devices())
         return s
 
     def write_dts(self, dts_file):

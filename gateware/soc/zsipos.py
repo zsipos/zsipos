@@ -105,10 +105,10 @@ class EthernetSoC(BaseSoC):
         d.add_litex_uart(0, "uart")
         d.add_litex_eth(0, "ethphy", "ethmac")
         s = Rocket2RV64.build_dts(variant=d.get_cpu_variant(),
-                                  bootargs="",
-                                  sdram_size=d.get_sdram_size(),
-                                  timebase_frequency=d.get_sys_clk_freq(),
-                                  devices=d.get_devices())
+                               bootargs="",
+                               sdram_size=d.get_sdram_size(),
+                               timebase_frequency=d.get_sys_clk_freq(),
+                               devices=d.get_devices())
         return s
 
     def write_dts(self, dts_file):

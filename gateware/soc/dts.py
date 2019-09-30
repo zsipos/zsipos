@@ -4,9 +4,14 @@ from litex.soc.integration import cpu_interface
 class DTSHelper():
 
     def __init__(self, soc, indent=2):
-        csr_regions = soc.get_csr_regions()
-        memory_regions = soc.get_memory_regions()
-        constants = soc.get_constants()
+        if hasattr(soc, "csr_regions"):
+            csr_regions    = soc.csr_regions
+            memory_regions = soc.memory_regions
+            constants      = soc.constants
+        else:
+            csr_regions    = soc.get_csr_regions()
+            memory_regions = soc.get_memory_regions()
+            constants      = soc.get_constants()
         self.json = json.loads(cpu_interface.get_csr_json(csr_regions, constants, memory_regions))
         self.json.update({"csr_sizes": {}})
         for name, base in self.json["csr_bases"].items():
