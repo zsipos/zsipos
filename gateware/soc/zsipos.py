@@ -17,7 +17,7 @@ from liteeth.mac import LiteEthMAC
 
 from platform import Platform
 from dts import *
-from litex.soc.cores.cpu.rocket2 import Rocket2RV64
+from litex.soc.cores.cpu.rocket2 import Rocket64
 
 # CRG ----------------------------------------------------------------------------------------------
 
@@ -52,7 +52,7 @@ class BaseSoC(SoCSDRAM):
     def __init__(self, sys_clk_freq=int(60e6), **kwargs):
         platform = Platform()
         SoCSDRAM.__init__(self, platform, clk_freq=sys_clk_freq,
-                          cpu_type="rocket2", cpu_variant="linux",
+                          cpu_type="rocket64", cpu_variant="linux",
                           integrated_rom_size=0x8000,
                           integrated_sram_size=0x8000,
                           l2_size=0, **kwargs)
@@ -104,7 +104,7 @@ class EthernetSoC(BaseSoC):
         d = DTSHelper(self)
         d.add_litex_uart(0, "uart")
         d.add_litex_eth(0, "ethphy", "ethmac")
-        s = Rocket2RV64.build_dts(variant=d.get_cpu_variant(),
+        s = Rocket64.build_dts(variant=d.get_cpu_variant(),
                                bootargs="",
                                sdram_size=d.get_sdram_size(),
                                timebase_frequency=d.get_sys_clk_freq(),

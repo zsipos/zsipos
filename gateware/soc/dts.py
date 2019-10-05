@@ -6,7 +6,7 @@ class DTSHelper():
     def __init__(self, soc, indent=2):
         if hasattr(soc, "csr_regions"):
             csr_regions    = soc.csr_regions
-            memory_regions = soc.memory_regions
+            memory_regions = soc.mem_regions
             constants      = soc.constants
         else:
             csr_regions    = soc.get_csr_regions()
@@ -39,6 +39,21 @@ class DTSHelper():
     def get_devices(self):
         return self.dts
 
+    def get_spi_mmc(self, index, mmc):
+        if index:
+            mmc += str(index)
+        s = ""
+        s += self.tabs(1) + mmc + "@" + str(index) + " {\n"
+        s += self.tabs(2) + 'compatible = "mmc-spi-slot";\n'
+        s += self.tabs(2) + "reg = <" + str(index) + ">;\n"
+        s += self.tabs(2) + "voltage-ranges = <3300 3300>;\n"
+        s += self.tabs(2) + "spi-max-frequency = <25000000>;\n"
+        if self.json["constants"].get(mmc+"_interrupt"):
+            s += self.tabs(2) + self._irqparent() + ";\n"
+            s += self.tabs(2) + "interrupts = <" + self._irq(mmc) + ">;\n"
+        s += self.tabs(1) + "};\n"
+        return s
+
     def tabs(self, extra):
         return "\t" * (self.indent+extra)
 
@@ -60,6 +75,10 @@ class DTSHelper():
     def _memreg(self, name):
         m = self.json["memories"][name]
         return hex(m["base"]) + " " + hex(m["size"])
+
+    def _membase(self, name):
+        m = self.json["memories"][name]
+        return hex(m["base"])
 
     def add_litex_uart(self, index, uart):
         if index:
@@ -87,6 +106,20 @@ class DTSHelper():
         s += self.tabs(1) + "reg = \t<" + self._base(mac) + " " + self._size(mac) + "\n"
         s += self.tabs(2) + " " + self._base(phy) + " " + self._size(phy) + "\n"
         s += self.tabs(2) + " " + self._memreg(mac) + ">;\n"
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
+    def add_zsipos_spi(self, index, spi, devices=None):
+        if index:
+            spi += str(index)
+        s = ""
+        s += self.tabs(0) + "spi" + str(index) + ": spi@" + self._membase(spi)[2:] + " {\n"
+        s += self.tabs(1) + 'compatible = "zsipos,spi";\n'
+        s += self.tabs(1) + self._irqparent() + ";\n"
+        s += self.tabs(1) + "interrupts = <" + self._irq(spi) + ">;\n"
+        s += self.tabs(1) + "reg = <" + self._memreg((spi)) + ">;\n"
+        if devices:
+            s += devices
         s += self.tabs(0) + "};\n"
         self.dts += s
 

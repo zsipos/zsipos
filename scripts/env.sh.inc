@@ -9,7 +9,7 @@ export PATH="$RISCV/bin:$PATH"
 export CROSS_COMPILE="riscv64-unknown-linux-gnu-"
 
 # which board to build
-export BOARD="zsipos"
+export BOARD="nexys4ddr"
 
 
 
