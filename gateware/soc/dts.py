@@ -117,11 +117,32 @@ class DTSHelper():
         s += self.tabs(1) + 'compatible = "zsipos,spi";\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(spi) + ">;\n"
-        s += self.tabs(1) + "reg = <" + self._memreg((spi)) + ">;\n"
+        s += self.tabs(1) + "reg = <" + self._memreg(spi) + ">;\n"
         if devices:
             s += devices
         s += self.tabs(0) + "};\n"
         self.dts += s
+
+    def add_zsipos_aes(self, index, aes):
+        if index:
+            aes += str(index)
+        s = ""
+        s += self.tabs(0) + "aes" + str(index) + ": aes@" + self._membase(aes)[2:] + " {\n"
+        s += self.tabs(1) + 'compatible = "zsipos,aes";\n'
+        s += self.tabs(1) + "reg = <" + self._memreg(aes) + ">;\n"
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
+    def add_zsipos_sha1(self, index, sha1):
+        if index:
+            sha1 += str(index)
+        s = ""
+        s += self.tabs(0) + "sha1_" + str(index) + ": sha1@" + self._membase(sha1)[2:] + " {\n"
+        s += self.tabs(1) + 'compatible = "zsipos,sha1";\n'
+        s += self.tabs(1) + "reg = <" + self._memreg(sha1) + ">;\n"
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
 
 def dtshelper_args(parser):
     parser.add_argument("--dts-file", default=None, help="device tree file")

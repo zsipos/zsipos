@@ -1,7 +1,5 @@
 import os
-
 from migen import *
-
 from litex.soc.interconnect import wishbone
 
 class IRQ():

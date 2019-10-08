@@ -22,3 +22,9 @@
 [submodule "kernel/initramfs/busybox"]
 	path = kernel/initramfs/busybox
 	url = git://busybox.net/busybox.git
+[submodule "gateware/soc/cores/aes/verilog"]
+	path = gateware/soc/cores/aes/verilog
+	url = https://github.com/zsipos/aes
+[submodule "gateware/soc/cores/sha1/verilog"]
+	path = gateware/soc/cores/sha1/verilog
+	url = https://github.com/zsipos/sha1
