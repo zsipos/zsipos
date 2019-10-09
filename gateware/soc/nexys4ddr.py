@@ -26,9 +26,9 @@ from cores.extint.extint_mod import EXTINT
 class MySoC(EthernetSoC):
 
     mem_map = {
-        "spi1": 0x21000000,
-        "aes":  0x22000000,
-        "sha1": 0x23000000,
+        "spi1": 0xa1000000,
+        "aes":  0xa2000000,
+        "sha1": 0xa3000000,
     }
     mem_map.update(EthernetSoC.mem_map)
 
@@ -38,7 +38,7 @@ class MySoC(EthernetSoC):
         spi1 = SPI(self.platform, "sdspi", number=1)
         self.submodules.spi1 = spi1
         self.add_wb_slave(self.mem_map["spi1"], spi1.bus, size=spi1.get_size())
-        self.add_memory_region("spi1", self.mem_map["spi1"] | self.shadow_base, spi1.get_size())
+        self.add_memory_region("spi1", self.mem_map["spi1"], spi1.get_size(), io_region=True)
         self.add_interrupt("spi1")
         # nexys4 special
         sdpwdn = self.platform.request("sdpwdn")
@@ -50,12 +50,12 @@ class MySoC(EthernetSoC):
         aes = AES(self.platform)
         self.submodules.aes = aes
         self.add_wb_slave(self.mem_map["aes"], aes.bus, size=aes.get_size())
-        self.add_memory_region("aes", self.mem_map["aes"] | self.shadow_base, aes.get_size())
+        self.add_memory_region("aes", self.mem_map["aes"], aes.get_size(), io_region=True)
         # SHA1
         sha1 = SHA1(self.platform)
         self.submodules.sha1 = sha1
         self.add_wb_slave(self.mem_map["sha1"], sha1.bus, size=sha1.get_size())
-        self.add_memory_region("sha1", self.mem_map["sha1"] | self.shadow_base, sha1.get_size())
+        self.add_memory_region("sha1", self.mem_map["sha1"], sha1.get_size(), io_region=True)
 
     def get_dts(self):
         d = DTSHelper(self)
