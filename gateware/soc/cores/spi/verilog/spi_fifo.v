@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////
 ////                                                             ////
-//// FIFO 4 entries deep                                         ////
+//// FIFO 256 entries deep                                       ////
 ////                                                             ////
 //// Authors: Rudolf Usselmann, Richard Herveille                ////
 ////          rudi@asics.ws     richard@asics.ws                 ////
@@ -68,20 +68,16 @@ module zsipos_spififo(clk, rst, clr,  din, we, dout, re, full, empty);
 //
 
     always @(posedge clk or negedge rst)
-        if(!rst)        wp <= 8'h0;
-        else
-            if(clr)     wp <= 8'h0;
-        else
-            if(we)      wp <= wp_p1;
+        if(!rst)     wp <= 8'h0;
+        else if(clr) wp <= 8'h0;
+        else if(we)  wp <= wp_p1;
 
     assign wp_p1 = wp + 8'h1;
 
     always @(posedge clk or negedge rst)
-        if(!rst)        rp <= 8'h0;
-        else
-            if(clr)     rp <= 8'h0;
-        else
-            if(re)      rp <= rp_p1;
+        if(!rst)     rp <= 8'h0;
+        else if(clr) rp <= 8'h0;
+        else if(re)  rp <= rp_p1;
 
     assign rp_p1 = rp + 8'h1;
 
@@ -90,7 +86,7 @@ module zsipos_spififo(clk, rst, clr,  din, we, dout, re, full, empty);
 
 // Fifo Input
     always @(posedge clk)
-        if(we)    mem[ wp ] <=  din;
+        if(we) mem[ wp ] <=  din;
 
 // Status
     assign empty = (wp == rp) & !gb;
@@ -98,12 +94,9 @@ module zsipos_spififo(clk, rst, clr,  din, we, dout, re, full, empty);
 
 // Guard Bit ...
     always @(posedge clk)
-        if(!rst)                   gb <= 1'b0;
-        else
-            if(clr)                gb <= 1'b0;
-        else
-            if((wp_p1 == rp) & we) gb <= 1'b1;
-        else
-            if(re)                 gb <= 1'b0;
+        if(!rst)                    gb <= 1'b0;
+        else if(clr)                gb <= 1'b0;
+        else if((wp_p1 == rp) & we) gb <= 1'b1;
+        else if(re)                 gb <= 1'b0;
 
 endmodule
