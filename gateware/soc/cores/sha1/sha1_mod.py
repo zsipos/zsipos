@@ -27,7 +27,7 @@ class SHA1(Module):
             "sha1_w_mem.v"
         )
 
-        self.specials +=  Instance("sha1",
+        self.specials += Instance("sha1",
             i_clk        = ClockSignal(),
             i_reset_n    = reset_n,
             i_cs         = cs,

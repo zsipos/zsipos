@@ -32,7 +32,7 @@ class SPI(Module):
             "spi_fifo.v"
         )
 
-        self.specials +=  Instance("zsipos_spi",
+        self.specials += Instance("zsipos_spi",
             p_SS_WIDTH = ss_width,
             i_clk_i    = ClockSignal(),
             i_rst_i    = ResetSignal(),

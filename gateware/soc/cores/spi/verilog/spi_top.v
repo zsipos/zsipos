@@ -232,7 +232,7 @@ module zsipos_spi #(
     wire ena = !clkcnt;
     reg  ibit;
 
-    // transfer statemachine
+// transfer statemachine
     always @(posedge clk_i)
         if (~spe | rst_i)  begin
             state <= 2'b00; // idle

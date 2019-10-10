@@ -31,7 +31,7 @@ class AES(Module):
             "aes_sbox.v"
         )
 
-        self.specials +=  Instance("aes",
+        self.specials += Instance("aes",
             i_clk        = ClockSignal(),
             i_reset_n    = reset_n,
             i_cs         = cs,
