@@ -26,9 +26,9 @@ from cores.extint.extint_mod import EXTINT
 class MySoC(EthernetSoC):
 
     mem_map = {
-        "spi1": 0xa1000000,
-        "aes":  0xa2000000,
-        "sha1": 0xa3000000,
+        "spi1": 0x40000000,
+        "aes":  0x41000000,
+        "sha1": 0x42000000,
     }
     mem_map.update(EthernetSoC.mem_map)
 

@@ -20,7 +20,7 @@ cd "$WRKDIR"
 	--host=riscv64-unknown-linux-gnu \
 	--with-arch=rv64imac \
 	--with-payload=../linux/vmlinux \
-	--with-mem-start=0x40000000 \
+	--with-mem-start=0x80000000 \
 	--enable-logo
 
 make
