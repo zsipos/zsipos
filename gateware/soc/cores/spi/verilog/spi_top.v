@@ -159,19 +159,14 @@ module zsipos_spi #(
 // generate status register
     wire wr_spsr = wb_wr & (adr_i == 3'd1);
 
-    reg spif;
-    always @(posedge clk_i)
-        if (~spe | rst_i)
-            spif <= 1'b0;
-        else
-            spif <= (tirq | spif) & ~(wr_spsr & dat_i[7]);
-
     reg wcol;
     always @(posedge clk_i)
         if (~spe | rst_i)
             wcol <= 1'b0;
         else
             wcol <= (wfov | wcol) & ~(wr_spsr & dat_i[6]);
+
+    reg spif;
 
     assign spsr[7]   = spif;
     assign spsr[6]   = wcol;
@@ -242,12 +237,19 @@ module zsipos_spi #(
         if (~spe | rst_i)  begin
             state <= 2'b00; // idle
             bcnt  <= 3'h0;
-            treg  <= 8'h00;
+            treg  <= 1'b0;
             wfre  <= 1'b0;
             rfwe  <= 1'b0;
             sck_o <= 1'b0;
+            spif  <= 1'b0;
         end
         else begin
+
+            if (wb_wr & adr_i == 3'd5)
+                tcnt <= dat_i;
+
+            if (wr_spsr & dat_i[7])
+                spif <= 0;
 
             wfre <= 1'b0;
             rfwe <= 1'b0;
@@ -266,7 +268,7 @@ module zsipos_spi #(
                         end
                     end
 
-                2'b01: // clock-phase2, next data
+                2'b01: // clock phase2, next data
                     if (ena) begin
                         ibit  <= miso_i;
                         sck_o <= ~sck_o;
@@ -276,8 +278,12 @@ module zsipos_spi #(
                 2'b11: // clock phase1
                     if (ena) begin
                         treg <= {treg[6:0], ibit};
-                        bcnt <= bcnt -3'h1;
+                        bcnt <= bcnt - 3'h1;
                         if (!bcnt) begin
+                            if (tcnt)
+                                tcnt <= tcnt - 8'h1;
+                            else
+                                spif = 1'b1;
                             state <= 2'b00;
                             sck_o <= cpol;
                             rfwe  <= 1'b1;
@@ -290,19 +296,6 @@ module zsipos_spi #(
             endcase
         end
 
-    always @(posedge clk_i)
-        if (~spe)
-            tcnt <= icnt;
-        else if (wb_wr & adr_i == 3'b101) begin
-            tcnt <= dat_i;
-        end
-        else if (rfwe) // rfwe gets asserted when all bits have been transfered
-            if (tcnt)
-                tcnt <= tcnt - 8'h1;
-            else
-                tcnt <= icnt;
-
-    assign tirq = !tcnt & rfwe;
 
 endmodule : zsipos_spi
 
