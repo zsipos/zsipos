@@ -27,6 +27,11 @@ exec switch_root /nfs /sbin/init
 #
 
 echo "oops, something went wrong!"
+for i in proc sys tmp run
+do
+	ln -s /nfs/$i /$i
+done
+mount -t devtmpfs udev /dev
 stty erase ^H
 /bin/sh
 
