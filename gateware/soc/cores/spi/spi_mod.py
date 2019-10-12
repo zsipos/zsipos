@@ -21,7 +21,7 @@ class SPI(Module):
         dato = Signal(8)
 
         self.comb += [
-            adri.eq(bus.adr[1:4]),
+            adri.eq(bus.adr[0:3]),
             dati.eq(bus.dat_w[0:8]),
             bus.dat_r.eq(Cat(dato, Replicate(0, 24)))
         ]

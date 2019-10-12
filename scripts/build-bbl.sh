@@ -18,7 +18,7 @@ cd "$WRKDIR"
 
 "$SRCDIR/configure" \
 	--host=riscv64-unknown-linux-gnu \
-	--with-arch=rv64imac \
+	--with-arch=rv${BITS}imac \
 	--with-payload=../linux/vmlinux \
 	--with-mem-start=0x80000000 \
 	--enable-logo

@@ -1,5 +1,5 @@
 cd $1
-for i in bin sbin usr/bin usr/sbin
+for i in dev bin sbin usr/bin usr/sbin
 do
 	mkdir -p $i
 done

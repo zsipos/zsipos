@@ -25,14 +25,17 @@ linuxmake()
 
 if [ ! -f "$WRKDIR/.config" ]
 then
-	linuxmake "${CONFIG}_defconfig"
+	echo "using default config"
+	DEFCONFIG=${CONFIG}${BITS}_defconfig
+	mkdir -p "$WRKDIR"
+	linuxmake $DEFCONFIG
 fi
 
 if [ "$1" == "config" ]
 then
 	linuxmake menuconfig
 	linuxmake savedefconfig
-	cp "$WRKDIR/defconfig" "$SRCDIR/arch/riscv/configs/${CONFIG}_defconfig"
+	cp "$WRKDIR/defconfig" "$SRCDIR/arch/riscv/configs/${CONFIG}${BITS}_defconfig"
 else
 	linuxmake -j8 vmlinux
 fi

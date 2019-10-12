@@ -18,7 +18,7 @@ class SHA1(Module):
             cs.eq(bus.cyc & bus.stb)
         ]
 
-        If(cs, bus.ack.eq(1)).Elif(bus.ack, bus.ack.eq(0))
+        self.sync += bus.ack.eq(cs & ~bus.ack)
 
         platform.add_sources(
             os.path.join(os.path.abspath(os.path.dirname(__file__)), "verilog", "src", "rtl"),

@@ -4,6 +4,11 @@ KERNELDIR=$(TOP)/kernel/build/linux
 WRKDIR=$(TOP)/kernel/build/busybox
 ROOTFS=$(TOP)/kernel/build/rootfs
 
+ifeq ($(BITS), 32)
+	CFLAGS=-march=rv32imafdc -mabi=ilp32
+	LDFLAGS=$(CFLAGS)
+endif
+
 all:	$(INITRAMFS)
 
 $(INITRAMFS): asroot.sh $(ROOTFS)/bin/busybox $(shell find rootfs)
@@ -16,7 +21,11 @@ $(ROOTFS)/bin/busybox: $(WRKDIR)/busybox
 	cp $< $@
 
 $(WRKDIR)/busybox: $(WRKDIR)/.config
-	make -C busybox CROSS_COMPILE=$(CROSS_COMPILE) O=$(WRKDIR)
+	make -C busybox \
+		CROSS_COMPILE=$(CROSS_COMPILE) \
+		CFLAGS="$(CFLAGS)" \
+		LDFLAGS="$(LDFLAGS)" \
+		O=$(WRKDIR)
 
 $(WRKDIR)/.config: busybox.config
 	mkdir -p $(WRKDIR)
