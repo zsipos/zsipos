@@ -85,7 +85,7 @@ class DTSHelper():
         if index:
             uart += str(index)
         s = ""
-        s += self.tabs(0) + "uart" + str(index) + ": uart@" + self._base(uart)[2:] + " {\n"
+        s += self.tabs(0) + "uart_" + str(index) + ": uart@" + self._base(uart)[2:] + " {\n"
         s += self.tabs(1) + 'compatible = "litex,uart0";\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(uart) + ">;\n"
@@ -98,7 +98,7 @@ class DTSHelper():
             phy += str(index)
             mac += str(index)
         s = ""
-        s += self.tabs(0) + "eth" + str(index) + ": eth@" + self._base(mac)[2:] + " {\n"
+        s += self.tabs(0) + "eth_" + str(index) + ": eth@" + self._base(mac)[2:] + " {\n"
         s += self.tabs(1) + 'compatible = "litex,liteeth";\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(mac) + ">;\n"
@@ -110,12 +110,46 @@ class DTSHelper():
         s += self.tabs(0) + "};\n"
         self.dts += s
 
+    def add_litex_gpio(self, index, gpio, direction, ngpio):
+        assert direction in ["in", "out"]
+        if index:
+            gpio += str(index)
+        s = ""
+        s += self.tabs(0) + "gpio_" + str(index) + ": gpio@" + self._base(gpio)[2:] + " {\n"
+        s += self.tabs(1) + "#gpio-cells = <2>;\n"
+        s += self.tabs(1) + 'compatible = "litex,gpio";\n'
+        s += self.tabs(1) + "gpio-controller;\n"
+        s += self.tabs(1) + 'litex,direction = "' + direction + '";\n'
+        s += self.tabs(1) + "litex,ngpio = <" + str(ngpio) + ">;\n"
+        s += self.tabs(1) + "reg = <" + self._base(gpio) + " " + self._size(gpio) + ">;\n"
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
+    def add_gpio_leds(self, gpio, gpio_index, nleds, triggers={}):
+        gpio += "_" + str(gpio_index)
+        s = ""
+        s += self.tabs(0) + "gpio_leds" + " {\n"
+        s += self.tabs(1) + 'compatible = "gpio-leds";\n'
+        for i in range(nleds):
+            trigger = triggers.get(i)
+            if trigger:
+                s += self.tabs(1) + "led" + str(i) + " {\n"
+                s += self.tabs(2) + 'label = "' + trigger + '";\n'
+                s += self.tabs(2) + "gpios = <&" + gpio + " " + str(i) + " 0>;\n"
+                s += self.tabs(2) + 'linux,default-trigger = "' + trigger + '";\n'
+                s += self.tabs(1) + "};\n"
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
     def add_zsipos_spi(self, index, spi, devices=None):
         if index:
             spi += str(index)
         s = ""
-        s += self.tabs(0) + "spi" + str(index) + ": spi@" + self._membase(spi)[2:] + " {\n"
+        s += self.tabs(0) + "spi_" + str(index) + ": spi@" + self._membase(spi)[2:] + " {\n"
+        s += self.tabs(1) + "#address-cells = <1>;\n"
+        s += self.tabs(1) + "#size-cells = <0>;\n"
         s += self.tabs(1) + 'compatible = "zsipos,spi";\n'
+        s += self.tabs(1) + "clock-frequency = <" + str(self.get_sys_clk_freq()) + ">;\n"
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(spi) + ">;\n"
         s += self.tabs(1) + "reg = <" + self._memreg(spi) + ">;\n"
@@ -128,7 +162,7 @@ class DTSHelper():
         if index:
             aes += str(index)
         s = ""
-        s += self.tabs(0) + "aes" + str(index) + ": aes@" + self._membase(aes)[2:] + " {\n"
+        s += self.tabs(0) + "aes_" + str(index) + ": aes@" + self._membase(aes)[2:] + " {\n"
         s += self.tabs(1) + 'compatible = "zsipos,aes";\n'
         s += self.tabs(1) + "reg = <" + self._memreg(aes) + ">;\n"
         s += self.tabs(0) + "};\n"

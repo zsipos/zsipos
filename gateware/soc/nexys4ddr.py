@@ -9,6 +9,7 @@ from litex.boards.targets.nexys4ddr import *
 
 from litex.soc.integration.soc_sdram import *
 from litex.soc.integration.builder import *
+from litex.soc.cores.gpio import *
 
 from dts import *
 
@@ -42,6 +43,14 @@ class MySoC(EthernetSoC):
         #
         self.submodules.mmc = EXTINT(self.platform, "mmc")
         self.add_interrupt("mmc")
+        # gpio
+        gpio_signals = Cat(
+            self.platform.request("user_led", 0),
+            self.platform.request("user_led", 1),
+            self.platform.request("user_led", 2),
+            self.platform.request("user_led", 3))
+        self.submodules.gpio = GPIOOut(gpio_signals)
+        self.add_csr("gpio")
         # AES
         aes = AES(self.platform)
         self.submodules.aes = aes
@@ -57,6 +66,11 @@ class MySoC(EthernetSoC):
         d = DTSHelper(self)
         d.add_litex_uart(0, "uart")
         d.add_litex_eth (0, "ethphy", "ethmac")
+        d.add_litex_gpio(0, "gpio", direction="out", ngpio=4)
+        led_triggers = {
+            0 : "activity",
+        }
+        d.add_gpio_leds("gpio", 0, nleds=4, triggers=led_triggers)
         d.add_zsipos_spi(1, "spi", devices=d.get_spi_mmc(0, "mmc"))
         d.add_zsipos_aes(0, "aes")
         d.add_zsipos_sha1(0, "sha1")
