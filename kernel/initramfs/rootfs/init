@@ -21,12 +21,9 @@ mount -t tmpfs    tmpfs  /nfs/tmp
 mount -t tmpfs    tmpfs  /nfs/run
 
 exec switch_root /nfs /sbin/init
-
 #
-# should not get here
+# should not get here. for development only.
 #
-
-echo "oops, something went wrong!"
 for i in proc sys tmp run
 do
 	ln -s /nfs/$i /$i
@@ -34,4 +31,6 @@ done
 mount -t devtmpfs udev /dev
 stty erase ^H
 /bin/sh
+# try again
+exec switch_root /nfs /sbin/init
 
