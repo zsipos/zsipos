@@ -17,11 +17,12 @@ class DTSHelper():
         for name, base in self.json["csr_bases"].items():
             size = 0
             for reg, vals in self.json["csr_registers"].items():
+                # find largest addr for this name
                 if reg.startswith(name+"_"):
                     addr = vals["addr"]
                     if addr > size:
                         size = addr
-            size += self.json["constants"]["config_csr_alignment"] // 8 - base
+            size += vals["size"] * self.json["constants"]["config_csr_alignment"] // 8 - base
             self.json["csr_sizes"].update({name: size})
         self.dts = ""
         self.indent = indent
