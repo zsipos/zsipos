@@ -21,13 +21,13 @@ from cores.extint.extint_mod import EXTINT
 # SoC ----------------------------------------------------------------------------------------------
 
 class MySoC(EthernetSoC):
-
     mem_map = {
         "spi1": 0x41000000,
         "aes":  0x42000000,
         "sha1": 0x43000000,
     }
     mem_map.update(EthernetSoC.mem_map)
+    no_wishbone_sdram = True
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
@@ -51,6 +51,9 @@ class MySoC(EthernetSoC):
             self.platform.request("user_led", 3))
         self.submodules.gpio = GPIOOut(gpio_signals)
         self.add_csr("gpio")
+        # waveshare35a
+        self.submodules.waveshare35a = EXTINT(self.platform, "waveshare35a")
+        self.add_interrupt("waveshare35a")
         # AES
         aes = AES(self.platform)
         self.submodules.aes = aes
@@ -70,8 +73,17 @@ class MySoC(EthernetSoC):
         led_triggers = {
             0 : "activity",
         }
-        d.add_gpio_leds("gpio", 0, nleds=4, triggers=led_triggers)
-        d.add_zsipos_spi(1, "spi", devices=d.get_spi_mmc(0, "mmc"))
+        d.add_gpio_leds(0, nleds=4, triggers=led_triggers)
+        spi1devs = ""
+        spi1devs += d.get_spi_mmc(0, "mmc")
+        spi1devs += d.get_spi_waveshare35a(
+            1,
+            "waveshare35a",
+            reset_gpio=(0, 1, 0),
+            dc_gpio=(0, 2, 0),
+            pendown_gpio=(0, 3, 0)
+        )
+        d.add_zsipos_spi(1, "spi", devices=spi1devs)
         d.add_zsipos_aes(0, "aes")
         d.add_zsipos_sha1(0, "sha1")
         s = self.cpu.build_dts(variant=d.get_cpu_variant(),

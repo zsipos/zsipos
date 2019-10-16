@@ -41,8 +41,6 @@ class DTSHelper():
         return self.dts
 
     def get_spi_mmc(self, index, mmc):
-        if index:
-            mmc += str(index)
         s = ""
         s += self.tabs(1) + mmc + "@" + str(index) + " {\n"
         s += self.tabs(2) + 'compatible = "mmc-spi-slot";\n'
@@ -52,6 +50,53 @@ class DTSHelper():
         if self.json["constants"].get(mmc+"_interrupt"):
             s += self.tabs(2) + self._irqparent() + ";\n"
             s += self.tabs(2) + "interrupts = <" + self._irq(mmc) + ">;\n"
+        s += self.tabs(1) + "};\n"
+        return s
+
+    def get_spi_waveshare35a(self, index, ws, reset_gpio, dc_gpio, pendown_gpio, rotation=90):
+        s = ""
+        s += self.tabs(1) + ws + "_display@" + str(index) + " {\n"
+        s += self.tabs(2) + 'compatible = "ilitek,ili9486";\n'
+        s += self.tabs(2) + "reg = <" + str(index) + ">;\n"
+        s += self.tabs(2) + "spi-max-frequency = <16000000>;\n"
+        s += self.tabs(2) + "txbuflen = <32768>;\n"
+        s += self.tabs(2) + "rotation = <" + str(rotation) + ">;\n"
+        s += self.tabs(2) + "bgr = <0>;\n"
+        s += self.tabs(2) + "fps = <30>;\n"
+        s += self.tabs(2) + "buswidth = <8>;\n"
+        s += self.tabs(2) + "regwidth = <16>;\n"
+        s += self.tabs(2) + "reset-gpios = <&" + self._gpio_pin(reset_gpio) + ">;\n"
+        s += self.tabs(2) + "dc-gpios = <&" + self._gpio_pin(dc_gpio) + ">;\n"
+        s += self.tabs(2) + "debug = <0>;\n"
+        s += self.tabs(2) + "init = <0x10000b0 0x00\n"
+        s += self.tabs(3) + "0x1000011\n"
+        s += self.tabs(3) + "0x20000ff\n"
+        s += self.tabs(3) + "0x100003a 0x55\n"
+        s += self.tabs(3) + "0x1000036 0x28\n"
+        s += self.tabs(3) + "0x10000c2 0x44\n"
+        s += self.tabs(3) + "0x10000c5 0x00 0x00 0x00 0x00\n"
+        s += self.tabs(3) + "0x10000e0 0x0f 0x1f 0x1c 0x0c 0x0f 0x08 0x48 0x98 0x37 0x0a 0x13 0x04 0x11 0x0d 0x00\n"
+        s += self.tabs(3) + "0x10000e1 0x0f 0x32 0x2e 0x0b 0x0d 0x05 0x47 0x75 0x37 0x06 0x10 0x03 0x24 0x20 0x00\n"
+        s += self.tabs(3) + "0x10000e2 0x0f 0x32 0x2e 0x0b 0x0d 0x05 0x47 0x75 0x37 0x06 0x10 0x03 0x24 0x20 0x00\n"
+        s += self.tabs(3) + "0x1000036 0x28\n"
+        s += self.tabs(3) + "0x1000011\n"
+        s += self.tabs(3) + "0x1000029>;\n"
+        s += self.tabs(1) + "};\n"
+        s += self.tabs(1) + ws + "_touch@" + str(index+1) + " {\n"
+        s += self.tabs(2) + 'compatible = "ti,ads7846";\n'
+        s += self.tabs(2) + "reg = <" + str(index+1) + ">;\n"
+        s += self.tabs(2) + "spi-max-frequency = <2000000>;\n"
+        s += self.tabs(2) + "interrupt-parent = " + self.irqlabel + ";\n"
+        s += self.tabs(2) + "interrupts = <" + self._irq(ws) + ">;\n"
+        s += self.tabs(2) + "pendown-gpio = <&" + self._gpio_pin(pendown_gpio) + ">;\n"
+        s += self.tabs(2) + "ti,keep-vref-on = <1>;\n"
+        s += self.tabs(2) + "ti,swap-xy = <1>;\n"
+        s += self.tabs(2) + "ti,x-plate-ohms = /bits/ 16 <60>;\n"
+        s += self.tabs(2) + "ti,pressure-max = /bits/ 16 <255>;\n"
+        s += self.tabs(2) + "ti,x-min = /bits/ 16 <200>;\n"
+        s += self.tabs(2) + "ti,x-max = /bits/ 16 <3900>;\n"
+        s += self.tabs(2) + "ti,y-min = /bits/ 16 <200>;\n"
+        s += self.tabs(2) + "ti,y-max = /bits/ 16 <3900>;\n"
         s += self.tabs(1) + "};\n"
         return s
 
@@ -80,6 +125,9 @@ class DTSHelper():
     def _membase(self, name):
         m = self.json["memories"][name]
         return hex(m["base"])
+
+    def _gpio_pin(self, gpio):
+        return "gpio_" + str(gpio[0]) + " " + str(gpio[1]) + " " + str(gpio[2])
 
     def add_litex_uart(self, index, uart):
         if index:
@@ -125,8 +173,7 @@ class DTSHelper():
         s += self.tabs(0) + "};\n"
         self.dts += s
 
-    def add_gpio_leds(self, gpio, gpio_index, nleds, triggers={}):
-        gpio += "_" + str(gpio_index)
+    def add_gpio_leds(self, gpio_index, nleds, triggers={}):
         s = ""
         s += self.tabs(0) + "gpio_leds" + " {\n"
         s += self.tabs(1) + 'compatible = "gpio-leds";\n'
@@ -135,7 +182,7 @@ class DTSHelper():
             if trigger:
                 s += self.tabs(1) + "led" + str(i) + " {\n"
                 s += self.tabs(2) + 'label = "' + trigger + '";\n'
-                s += self.tabs(2) + "gpios = <&" + gpio + " " + str(i) + " 0>;\n"
+                s += self.tabs(2) + "gpios = <&" + self._gpio_pin((gpio_index, i, 0)) + ">;\n"
                 s += self.tabs(2) + 'linux,default-trigger = "' + trigger + '";\n'
                 s += self.tabs(1) + "};\n"
         s += self.tabs(0) + "};\n"
