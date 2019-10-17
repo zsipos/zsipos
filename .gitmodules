@@ -6,7 +6,7 @@
 	url = https://github.com/m-labs/migen
 [submodule "gateware/liteeth"]
 	path = gateware/liteeth
-	url = https://github.com/enjoy-digital/liteeth
+	url = https://github.com/zsipos/liteeth
 [submodule "riscv-gnu-toolchain"]
 	path = toolchain/riscv-gnu-toolchain
 	url = https://github.com/riscv/riscv-gnu-toolchain

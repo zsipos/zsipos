@@ -16,7 +16,7 @@ repos = [
     ("litex",      ("https://github.com/zsipos/", True,  True)),
 
     # LiteX cores ecosystem
-    ("liteeth",    ("https://github.com/enjoy-digital/", False, True)),
+    ("liteeth",    ("https://github.com/zsipos/", False, True)),
     ("litedram",   ("https://github.com/zsipos/", False, True)),
 ]
 repos = OrderedDict(repos)

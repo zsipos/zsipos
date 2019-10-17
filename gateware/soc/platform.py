@@ -4,13 +4,53 @@ from litex.build.xilinx import XilinxPlatform, VivadoProgrammer
 # IOs ----------------------------------------------------------------------------------------------
 
 _io = [
-    #("user_led", 0, Pins("H5"), IOStandard("LVCMOS33")),
-    #("user_sw", 0, Pins("A8"), IOStandard("LVCMOS33")),
-    #("user_btn", 0, Pins("D9"), IOStandard("LVCMOS33")),
+
+    ################
+    # zsipos board #
+    ################
+
+    ("user_led", 0, Pins("F13"), IOStandard("LVCMOS33")),
+    ("user_led", 1, Pins("F14"), IOStandard("LVCMOS33")),
+    ("user_led", 2, Pins("H14"), IOStandard("LVCMOS33")),
+    ("user_led", 3, Pins("G14"), IOStandard("LVCMOS33")),
+
+    ("ws35a_int"  , 0, Pins("B18"), IOStandard("LVCMOS33")),
+    ("ws35a_rs"   , 0, Pins("A18"), IOStandard("LVCMOS33")),
+    ("ws35a_reset", 0, Pins("J14"), IOStandard("LVCMOS33")),
+    ("ws35a_spi", 0,
+        Subsignal("sclk", Pins("H15")),
+        Subsignal("mosi", Pins("B17")),
+        Subsignal("miso", Pins("B16")),
+        Subsignal("ss_n", Pins("A16 A15")),
+        IOStandard("LVCMOS33")
+    ),
+
+    ("sd_spi", 0,
+        Subsignal("sclk", Pins("D12")),
+        Subsignal("mosi", Pins("D13")),
+        Subsignal("miso", Pins("B13")),
+        Subsignal("ss_n", Pins("B14")),
+        IOStandard("LVCMOS33")
+    ),
+
+    ("sd_mmc", 0,
+        Subsignal("sclk", Pins("D12")),
+        Subsignal("cmd",  Pins("D13")),
+        Subsignal("dat0", Pins("B13")),
+        Subsignal("dat1", Pins("D14")),
+        Subsignal("dat2", Pins("C14")),
+        Subsignal("dat3", Pins("B14")),
+        IOStandard("LVCMOS33")
+    ),
+
+    ("cpu_reset", 0, Pins("G18"), IOStandard("LVCMOS33")),
+
+    ################
+    # te0710 board #
+    ################
 
     ("clk100", 0, Pins("F4"), IOStandard("SSTL15")),
-
-    ("cpu_reset", 0, Pins("F5"), IOStandard("LVCMOS15")),
+    #("cpu_reset", 0, Pins("F5"), IOStandard("LVCMOS15")),
 
     ("serial", 0,
         Subsignal("tx", Pins("B8")),
@@ -86,7 +126,7 @@ _io = [
         IOStandard("LVCMOS33"),
     ),
     ("eth", 1,
-        #no rst_n, hardwired to eth.rst_n
+        #rst_n hardwired to eth0 rst_n
         Subsignal("mdio", Pins("P18")),
         Subsignal("mdc", Pins("N14")),
         Subsignal("rx_dv", Pins("R11")),
