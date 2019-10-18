@@ -56,7 +56,6 @@ class BaseSoC(SoCSDRAM):
     def __init__(self, sys_clk_freq=int(75e6), **kwargs):
         platform = Platform()
         SoCSDRAM.__init__(self, platform, clk_freq=sys_clk_freq,
-                          cpu_type="rocket"+getenv("BITS"), cpu_variant="linux",
                           integrated_rom_size=0x8000,
                           integrated_sram_size=0x8000,
                           l2_size=0, **kwargs)
@@ -205,8 +204,7 @@ class MySoC(EthernetSoC):
         d.add_zsipos_spi(1, "spi", devices=spi1devs)
         d.add_zsipos_aes(0, "aes")
         d.add_zsipos_sha1(0, "sha1")
-        s = self.cpu.build_dts(variant=d.get_cpu_variant(),
-                               bootargs="",
+        s = self.cpu.build_dts(bootargs="",
                                sdram_size=d.get_sdram_size(),
                                timebase_frequency=d.get_sys_clk_freq() // 100,
                                devices=d.get_devices())
@@ -224,7 +222,7 @@ def main():
     soc_sdram_args(parser)
     dtshelper_args(parser)
     args = parser.parse_args()
-    soc = MySoC(**soc_sdram_argdict(args))
+    soc = MySoC(sys_clk_freq=int(75e6), **soc_sdram_argdict(args))
     builder = Builder(soc, **builder_argdict(args))
     builder.build()
     if args.dts_file:

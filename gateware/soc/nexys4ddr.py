@@ -86,8 +86,7 @@ class MySoC(EthernetSoC):
         d.add_zsipos_spi(1, "spi", devices=spi1devs)
         d.add_zsipos_aes(0, "aes")
         d.add_zsipos_sha1(0, "sha1")
-        s = self.cpu.build_dts(variant=d.get_cpu_variant(),
-                               bootargs="",
+        s = self.cpu.build_dts(bootargs="",
                                sdram_size=d.get_sdram_size(),
                                timebase_frequency=d.get_sys_clk_freq()//100,
                                devices=d.get_devices())
@@ -105,10 +104,7 @@ def main():
     soc_sdram_args(parser)
     dtshelper_args(parser)
     args = parser.parse_args()
-    soc = MySoC(sys_clk_freq=60e6,
-                cpu_type="rocket"+getenv("BITS"),
-                cpu_variant="linux",
-                **soc_sdram_argdict(args))
+    soc = MySoC(sys_clk_freq=int(60e6), **soc_sdram_argdict(args))
     builder = Builder(soc, **builder_argdict(args))
     builder.build()
     if args.dts_file:
