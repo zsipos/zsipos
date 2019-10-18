@@ -27,6 +27,7 @@ class DTSHelper():
         self.dts = ""
         self.indent = indent
         self.irqlabel = "<&L1>"
+        self.add_zsipos_clock()
 
     def get_sys_clk_freq(self):
         return self.json["constants"]["config_clock_frequency"]
@@ -129,6 +130,16 @@ class DTSHelper():
     def _gpio_pin(self, gpio):
         return "gpio_" + str(gpio[0]) + " " + str(gpio[1]) + " " + str(gpio[2])
 
+    def add_zsipos_clock(self):
+        s = ""
+        s += self.tabs(0) + "zsiposclock: zsiposclock {\n"
+        s += self.tabs(1) + "#clock-cells = <0>;\n"
+        s += self.tabs(1) + 'compatible = "fixed-clock";\n'
+        s += self.tabs(1) + 'clock-output-names = "zsiposclock";\n'
+        s += self.tabs(1) + "clock-frequency = <" + str(self.get_sys_clk_freq()) + ">;\n"
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
     def add_litex_uart(self, index, uart):
         if index:
             uart += str(index)
@@ -196,7 +207,7 @@ class DTSHelper():
         s += self.tabs(1) + "#address-cells = <1>;\n"
         s += self.tabs(1) + "#size-cells = <0>;\n"
         s += self.tabs(1) + 'compatible = "zsipos,spi";\n'
-        s += self.tabs(1) + "clock-frequency = <" + str(self.get_sys_clk_freq()) + ">;\n"
+        s += self.tabs(1) + 'clocks = <&litexclock>;\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(spi) + ">;\n"
         s += self.tabs(1) + "reg = <" + self._memreg(spi) + ">;\n"
