@@ -207,7 +207,7 @@ class DTSHelper():
         s += self.tabs(1) + "#address-cells = <1>;\n"
         s += self.tabs(1) + "#size-cells = <0>;\n"
         s += self.tabs(1) + 'compatible = "zsipos,spi";\n'
-        s += self.tabs(1) + 'clocks = <&litexclock>;\n'
+        s += self.tabs(1) + 'clocks = <&zsiposclock>;\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(spi) + ">;\n"
         s += self.tabs(1) + "reg = <" + self._memreg(spi) + ">;\n"
