@@ -40,9 +40,6 @@ class MySoC(EthernetSoC):
         # nexys4 special
         sdpwdn = self.platform.request("sdpwdn")
         self.comb += sdpwdn.eq(ResetSignal())
-        #
-        self.submodules.mmc = EXTINT(self.platform, "mmc")
-        self.add_interrupt("mmc")
         # gpio
         gpio_signals = Cat(
             self.platform.request("user_led", 0),
@@ -51,9 +48,6 @@ class MySoC(EthernetSoC):
             self.platform.request("user_led", 3))
         self.submodules.gpio = GPIOOut(gpio_signals)
         self.add_csr("gpio")
-        # waveshare35a
-        self.submodules.waveshare35a = EXTINT(self.platform, "waveshare35a")
-        self.add_interrupt("waveshare35a")
         # AES
         aes = AES(self.platform)
         self.submodules.aes = aes
@@ -76,13 +70,6 @@ class MySoC(EthernetSoC):
         d.add_gpio_leds(0, nleds=4, triggers=led_triggers)
         spi1devs = ""
         spi1devs += d.get_spi_mmc(0, "mmc")
-        spi1devs += d.get_spi_waveshare35a(
-            1,
-            "waveshare35a",
-            reset_gpio=(0, 1, 0),
-            dc_gpio=(0, 2, 0),
-            pendown_gpio=(0, 3, 0)
-        )
         d.add_zsipos_spi(1, "spi", devices=spi1devs)
         d.add_zsipos_aes(0, "aes")
         d.add_zsipos_sha1(0, "sha1")

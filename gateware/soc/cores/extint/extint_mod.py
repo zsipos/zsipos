@@ -10,10 +10,7 @@ class IRQ():
 class EXTINT(Module):
 
     def __init__(self, platform, name, number=None):
-
-        if number:
-            name += str(number)
-
         self.ev = IRQ()
-        print("TODO: connect interrupt pin in", __file__)
+        pin = platform.request(name, number)
+        self.comb += self.ev.irq.eq(pin)
 
