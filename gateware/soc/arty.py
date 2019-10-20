@@ -32,7 +32,7 @@ class MySoC(EthernetSoC):
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
 
-    def _get_dts(self):
+    def get_dts(self):
         d = DTSHelper(self)
         d.add_litex_uart(0, "uart")
         d.add_litex_eth (0, "ethphy", "ethmac")
