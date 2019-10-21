@@ -21,12 +21,6 @@ from cores.extint.extint_mod import EXTINT
 # SoC ----------------------------------------------------------------------------------------------
 
 class MySoC(EthernetSoC):
-    mem_map = {
-        "spi1": 0x41000000,
-        "aes":  0x42000000,
-        "sha1": 0x43000000,
-    }
-    mem_map.update(EthernetSoC.mem_map)
     no_wishbone_sdram = True
 
     def __init__(self, **kwargs):
