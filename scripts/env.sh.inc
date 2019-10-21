@@ -15,4 +15,6 @@ export BITS=64
 export BOARD="nexys4ddr"
 
 
+# do not rouch rocket-chip
+export ROCKET_IS_SUBMODULE=true
 
