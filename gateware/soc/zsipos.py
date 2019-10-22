@@ -206,7 +206,7 @@ class MySoC(EthernetSoC):
         d.add_zsipos_sha1(0, "sha1")
         s = self.cpu.build_dts(bootargs="",
                                sdram_size=d.get_sdram_size(),
-                               timebase_frequency=d.get_sys_clk_freq() // 100,
+                               timebase_frequency=d.get_sys_clk_freq(),
                                devices=d.get_devices())
         return s
 
