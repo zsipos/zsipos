@@ -189,6 +189,8 @@ class MySoC(EthernetSoC):
         d.add_litex_gpio(0, "gpio", direction="out", ngpio=6)
         led_triggers = {
             0: "activity",
+            1: "cpu0",
+            2: "cpu1"
         }
         d.add_gpio_leds(0, nleds=4, triggers=led_triggers)
         d.add_litex_gpio(1, "gpio", direction="in", ngpio=1)
