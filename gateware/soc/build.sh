@@ -1,4 +1,7 @@
-#nobuild="--no-compile-gateware --no-compile-software"
+if [ "$nobuild" == "true" ] || [ "$1" == "nobuild" ]
+then
+	nobuild="--no-compile-gateware --no-compile-software"
+fi
 outdir=build_$BOARD
 python3 $BOARD.py \
 	--cpu-type=rocket${BITS} --cpu-variant=linux \
