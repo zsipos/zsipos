@@ -4,10 +4,10 @@ echo "building linux ..."
 cd "$TOP/kernel"
 
 SRCDIR="`pwd`/linux"
-WRKDIR="`pwd`/build/linux"
-CONFIG="zsipos"
+WRKDIR="`pwd`/build_$BITS/linux"
+CONFIG="zsipos_$BITS"
 
-INITRAMFS="$TOP/kernel/build/initramfs.cpio"
+INITRAMFS="$TOP/kernel/build_$BITS/initramfs.cpio"
 
 if [ "$1" == "clean" ]
 then
@@ -26,7 +26,7 @@ linuxmake()
 if [ ! -f "$WRKDIR/.config" ]
 then
 	echo "using default config"
-	DEFCONFIG=${CONFIG}${BITS}_defconfig
+	DEFCONFIG=${CONFIG}_defconfig
 	mkdir -p "$WRKDIR"
 	linuxmake $DEFCONFIG
 fi
@@ -35,7 +35,7 @@ if [ "$1" == "config" ]
 then
 	linuxmake menuconfig
 	linuxmake savedefconfig
-	cp "$WRKDIR/defconfig" "$SRCDIR/arch/riscv/configs/${CONFIG}${BITS}_defconfig"
+	cp "$WRKDIR/defconfig" "$SRCDIR/arch/riscv/configs/${CONFIG}_defconfig"
 else
 	linuxmake -j8 vmlinux
 fi

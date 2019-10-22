@@ -4,7 +4,7 @@ echo "buildling bbl ..."
 cd $TOP/kernel
 
 SRCDIR="`pwd`/riscv-pk"
-WRKDIR="`pwd`/build/bbl"
+WRKDIR="`pwd`/build_$BITS/bbl"
 
 if [ "$1" == "clean" ]
 then
@@ -16,12 +16,14 @@ mkdir -p "$WRKDIR"
 
 cd "$WRKDIR"
 
-"$SRCDIR/configure" \
-	--host=riscv64-unknown-linux-gnu \
-	--with-arch=rv${BITS}imac \
-	--with-payload=../linux/vmlinux \
-	--with-mem-start=0x80000000 \
-	--enable-logo
+if [ ! -f config.status ]
+then
+	"$SRCDIR/configure" \
+		--host=riscv64-unknown-linux-gnu \
+		--with-arch=rv${BITS}imac \
+		--with-payload=../linux/vmlinux \
+		--with-mem-start=0x80000000 
+fi
 
 make
 
