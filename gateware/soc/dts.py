@@ -26,7 +26,7 @@ class DTSHelper():
             self.json["csr_sizes"].update({name: size})
         self.dts = ""
         self.indent = indent
-        self.irqlabel = "<&L1>"
+        self.irqlabel = "L1"
         self.add_zsipos_clock()
 
     def get_sys_clk_freq(self):
@@ -41,7 +41,7 @@ class DTSHelper():
     def get_devices(self):
         return self.dts
 
-    def get_spi_mmc(self, index, mmc):
+    def get_spi_mmc(self, index, mmc = "mmc"):
         s = ""
         s += self.tabs(1) + mmc + "@" + str(index) + " {\n"
         s += self.tabs(2) + 'compatible = "mmc-spi-slot";\n'
@@ -87,7 +87,7 @@ class DTSHelper():
         s += self.tabs(2) + 'compatible = "ti,ads7846";\n'
         s += self.tabs(2) + "reg = <" + str(index+1) + ">;\n"
         s += self.tabs(2) + "spi-max-frequency = <2000000>;\n"
-        s += self.tabs(2) + "interrupt-parent = " + self.irqlabel + ";\n"
+        s += self.tabs(2) + self._irqparent() + ";\n"
         s += self.tabs(2) + "interrupts = <" + self._irq(ws) + ">;\n"
         s += self.tabs(2) + "pendown-gpio = <&" + self._gpio_pin(pendown_gpio) + ">;\n"
         s += self.tabs(2) + "ti,keep-vref-on = <1>;\n"
@@ -114,7 +114,7 @@ class DTSHelper():
         return str(self.json["constants"][name+suffix]+1)
 
     def _irqparent(self):
-        return "interrupt-parent = " + self.irqlabel
+        return "interrupt-parent = <&" + self.irqlabel + ">"
 
     def _const(self, name):
         return str(self.json["constants"][name])
