@@ -45,7 +45,7 @@ class SPI(Module):
             o_ack_o    = bus.ack,
             o_inta_o   = self.ev.irq,
             o_sck_o    = pads.sclk,
-            o_ss_o     = pads.ss_n,
+            o_ss_o     = pads.cs_n,
             o_mosi_o   = pads.mosi,
             i_miso_i   = pads.miso
         )
