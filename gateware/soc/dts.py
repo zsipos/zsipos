@@ -29,6 +29,30 @@ class DTSHelper():
         self.irqlabel = "L1"
         self.add_zsipos_clock()
 
+    def print_csr_offsets(self, names=None):
+        s = ""
+        if names is None:
+            names = [ name for name, _ in self.json["csr_bases"].items() ]
+        align = self.json["constants"]["config_csr_alignment"] // 8
+        for name in names:
+            base = self.json["csr_bases"][name]
+            regs = []
+            maxlen_name = 0
+            maxlen_offset = 0
+            for reg, vals in self.json["csr_registers"].items():
+                if reg.startswith(name+"_"):
+                    maxlen_name = max(maxlen_name, len(reg))
+                    offset = str((vals["addr"] - base) // align)
+                    maxlen_offset = max(maxlen_offset, len(offset))
+                    regs.append((reg, offset, vals["size"]))
+            regs.sort(key=lambda i: int(i[1]))
+            for reg, offset, width in regs:
+                s += "#define LITEX_" + reg.upper() + "_REG"
+                s += " "*(4+maxlen_name-len(reg))
+                s += "LITEX_CSR_OFFSET(" + offset + ")"
+                s += " "*(1+maxlen_offset-len(offset)) + "// u" + str(width*8) + "\n"
+        print(s)
+
     def get_sys_clk_freq(self):
         return self.json["constants"]["config_clock_frequency"]
 
@@ -211,6 +235,26 @@ class DTSHelper():
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(spi) + ">;\n"
         s += self.tabs(1) + "reg = <" + self._memreg(spi) + ">;\n"
+        if devices:
+            s += devices
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
+    def add_zsipos_spim(self, index, spim, devices=None):
+        if index:
+            spim += str(index)
+        s = ""
+        s += self.tabs(0) + "spi_" + str(index) + ": spi@" + self._base(spim)[2:] + " {\n"
+        s += self.tabs(1) + "#address-cells = <1>;\n"
+        s += self.tabs(1) + "#size-cells = <0>;\n"
+        s += self.tabs(1) + 'compatible = "zsipos,spi-m";\n'
+        s += self.tabs(1) + "cs-width = <" + self._const(spim + "_cs_width") + ">;\n"
+        s += self.tabs(1) + "mem-size = <" + self._const(spim + "_mem_size") + ">;\n"
+        s += self.tabs(1) + 'clocks = <&zsiposclock>;\n'
+        s += self.tabs(1) + self._irqparent() + ";\n"
+        s += self.tabs(1) + "interrupts = <" + self._irq(spim) + ">;\n"
+        s += self.tabs(1) + "reg = \t<" + self._base(spim) + " " + self._size(spim) + "\n"
+        s += self.tabs(2) + " " + self._memreg(spim) + ">;\n"
         if devices:
             s += devices
         s += self.tabs(0) + "};\n"

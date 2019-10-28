@@ -16,6 +16,7 @@ from dts import *
 from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
 from cores.spi.spi_mod import SPI
+from cores.spim.spim_mod import SPIMaster
 from cores.extint.extint_mod import EXTINT
 
 # SoC ----------------------------------------------------------------------------------------------
@@ -25,18 +26,28 @@ class MySoC(EthernetSoC):
         "spi1": 0x41000000,
         "aes":  0x42000000,
         "sha1": 0x43000000,
+        "spim": 0x41000000,
     }
     mem_map.update(EthernetSoC.mem_map)
     no_wishbone_sdram = True
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
-        # SPI1
-        spi1 = SPI(self.platform, "sdspi", number=1)
-        self.submodules.spi1 = spi1
-        self.add_wb_slave(self.mem_map["spi1"], spi1.bus, size=spi1.get_size())
-        self.add_memory_region("spi1", self.mem_map["spi1"], spi1.get_size(), io_region=True)
-        self.add_interrupt("spi1")
+        self.mspi = True
+        if not self.mspi:
+            spi1 = SPI(self.platform, "sdspi", number=1)
+            self.submodules.spi1 = spi1
+            self.add_wb_slave(self.mem_map["spi1"], spi1.bus, size=spi1.get_size())
+            self.add_memory_region("spi1", self.mem_map["spi1"], spi1.get_size(), io_region=True)
+            self.add_interrupt("spi1")
+        else:
+            spim = SPIMaster(self.platform.request("sdspi"))
+            self.submodules.spim = spim
+            self.add_wb_slave(self.mem_map["spim"], spim.bus, size=spim.get_size())
+            self.add_memory_region("spim", self.mem_map["spim"], spim.get_size(), io_region=True)
+            self.add_csr("spim")
+            self.add_interrupt("spim")
+
         # nexys4 special
         sdpwdn = self.platform.request("sdpwdn")
         self.comb += sdpwdn.eq(ResetSignal())
@@ -61,6 +72,8 @@ class MySoC(EthernetSoC):
 
     def get_dts(self):
         d = DTSHelper(self)
+        if self.mspi:
+            d.print_csr_offsets(["spim"])
         d.add_litex_uart(0, "uart")
         d.add_litex_eth (0, "ethphy", "ethmac")
         d.add_litex_gpio(0, "gpio", direction="out", ngpio=4)
@@ -72,7 +85,10 @@ class MySoC(EthernetSoC):
         d.add_gpio_leds(0, nleds=4, triggers=led_triggers)
         spi1devs = ""
         spi1devs += d.get_spi_mmc(0, "mmc")
-        d.add_zsipos_spi(1, "spi", devices=spi1devs)
+        if not self.mspi:
+            d.add_zsipos_spi(1, "spi", devices=spi1devs)
+        else:
+            d.add_zsipos_spim(0, "spim", devices=spi1devs)
         d.add_zsipos_aes(0, "aes")
         d.add_zsipos_sha1(0, "sha1")
         s = self.cpu.build_dts(bootargs="",
@@ -84,7 +100,6 @@ class MySoC(EthernetSoC):
     def write_dts(self, dts_file):
         with open(dts_file, "w") as f:
             f.write(self.get_dts())
-
 # Build --------------------------------------------------------------------------------------------
 
 def main():
