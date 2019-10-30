@@ -88,7 +88,7 @@ class EthernetSoC(BaseSoC):
         self.submodules.ethmac = LiteEthMAC(phy=self.ethphy, dw=32,
             interface="wishbone", endianness=self.cpu.endianness)
         self.add_wb_slave(self.mem_map["ethmac"], self.ethmac.bus, 0x2000)
-        self.add_memory_region("ethmac", self.mem_map["ethmac"], 0x2000, io_region=True)
+        self.add_memory_region("ethmac", self.mem_map["ethmac"], 0x2000, type="io")
         self.add_csr("ethmac")
         self.add_interrupt("ethmac")
 
@@ -110,7 +110,7 @@ class EthernetSoC(BaseSoC):
         self.submodules.ethmac1 = LiteEthMAC(phy=self.ethphy1, dw=32,
                                              interface="wishbone", endianness=self.cpu.endianness)
         self.add_wb_slave(self.mem_map["ethmac1"], self.ethmac1.bus, 0x2000)
-        self.add_memory_region("ethmac1", self.mem_map["ethmac1"], 0x2000, io_region=True)
+        self.add_memory_region("ethmac1", self.mem_map["ethmac1"], 0x2000, type="io")
         self.add_csr("ethmac1")
         self.add_interrupt("ethmac1")
 
@@ -135,7 +135,7 @@ class MySoC(EthernetSoC):
         "sha1" : 0x4f000000,
     }
     mem_map.update(EthernetSoC.mem_map)
-    no_wishbone_sdram = True
+    with_busmasters = False
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
@@ -143,13 +143,13 @@ class MySoC(EthernetSoC):
         spi = SPI(self.platform, "sd_spi")
         self.submodules.spi = spi
         self.add_wb_slave(self.mem_map["spi"], spi.bus, size=spi.get_size())
-        self.add_memory_region("spi", self.mem_map["spi"], spi.get_size(), io_region=True)
+        self.add_memory_region("spi", self.mem_map["spi"], spi.get_size(), type="io")
         self.add_interrupt("spi")
         # SPI1: waveshare35a
         spi1 = SPI(self.platform, "ws35a_spi", ss_width=2)
         self.submodules.spi1 = spi1
         self.add_wb_slave(self.mem_map["spi1"], spi1.bus, size=spi1.get_size())
-        self.add_memory_region("spi1", self.mem_map["spi1"], spi1.get_size(), io_region=True)
+        self.add_memory_region("spi1", self.mem_map["spi1"], spi1.get_size(), type="io")
         self.add_interrupt("spi1")
         # waveshare35a
         ws35a_rs    = Signal()
@@ -174,12 +174,12 @@ class MySoC(EthernetSoC):
         aes = AES(self.platform)
         self.submodules.aes = aes
         self.add_wb_slave(self.mem_map["aes"], aes.bus, size=aes.get_size())
-        self.add_memory_region("aes", self.mem_map["aes"], aes.get_size(), io_region=True)
+        self.add_memory_region("aes", self.mem_map["aes"], aes.get_size(), type="io")
         # SHA1
         sha1 = SHA1(self.platform)
         self.submodules.sha1 = sha1
         self.add_wb_slave(self.mem_map["sha1"], sha1.bus, size=sha1.get_size())
-        self.add_memory_region("sha1", self.mem_map["sha1"], sha1.get_size(), io_region=True)
+        self.add_memory_region("sha1", self.mem_map["sha1"], sha1.get_size(), type="io")
 
     def get_dts(self):
         d = DTSHelper(self)
