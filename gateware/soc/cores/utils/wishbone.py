@@ -15,6 +15,13 @@ class WishboneByteStreamTX(Module):
         self.rdlen  = Signal(32)
         self.word   = Signal(32)
 
+        self.comb += [
+            self.source.data.eq(self.word[:8]),
+            self.bus.adr.eq(self.rdadr),
+            self.bus.we.eq(0),
+            self.bus.cti.eq(0),
+        ]
+
         self.submodules.fsm = fsm = FSM(reset_state="IDLE")
         fsm.act("IDLE",
             If(self.start,
@@ -28,11 +35,8 @@ class WishboneByteStreamTX(Module):
                 NextValue(self.word, Replicate(0, 32)),
                 NextState("SEND-BYTE")
             ).Else(
-                NextValue(self.bus.adr, self.rdadr),
-                NextValue(self.bus.we, 0),
                 NextValue(self.bus.cyc, 1),
                 NextValue(self.bus.stb, 1),
-                NextValue(self.bus.cti, 0),
                 If(self.bus.ack,
                     NextValue(self.bus.cyc, 0),
                     NextValue(self.bus.stb, 0),
@@ -63,10 +67,6 @@ class WishboneByteStreamTX(Module):
             )
         )
 
-        self.comb += [
-            self.source.data.eq(self.word[:8]),
-        ]
-
 
 class WishboneByteStreamRX(Module):
     def __init__(self, bus):
@@ -80,6 +80,19 @@ class WishboneByteStreamRX(Module):
         self.wradr  = Signal(len(bus.adr))
         self.wrlen  = Signal(32)
         self.word   = Signal(32)
+
+        self.comb += [
+            self.bus.adr.eq(self.wradr),
+            self.bus.sel.eq(0xf),
+            self.bus.we.eq(1),
+            self.bus.cti.eq(0),
+            Case(self.wrlen & 3, {
+                0: self.bus.dat_w.eq(self.word),
+                1: self.bus.dat_w.eq(Cat(self.word[24:], Replicate(24, 0))),
+                2: self.bus.dat_w.eq(Cat(self.word[16:], Replicate(16, 0))),
+                3: self.bus.dat_w.eq(Cat(self.word[8:], Replicate(8, 0)))
+            }),
+        ]
 
         self.submodules.fsm = fsm = FSM(reset_state="IDLE")
         fsm.act("IDLE",
@@ -119,18 +132,8 @@ class WishboneByteStreamRX(Module):
                     NextState("RECEIVE-BYTE")
                 )
             ).Else(
-                Case(self.wrlen & 3, {
-                    0: NextValue(self.bus.dat_w, self.word),
-                    1: NextValue(self.bus.dat_w, Cat(self.word[24:], Replicate(24, 0))),
-                    2: NextValue(self.bus.dat_w, Cat(self.word[16:], Replicate(16, 0))),
-                    3: NextValue(self.bus.dat_w, Cat(self.word[ 8:], Replicate( 8, 0)))
-                }),
-                NextValue(self.bus.adr, self.wradr),
-                NextValue(self.bus.sel, 0xf),
-                NextValue(self.bus.we, 1),
                 NextValue(self.bus.cyc, 1),
                 NextValue(self.bus.stb, 1),
-                NextValue(self.bus.cti, 0),
                 If(self.bus.ack,
                     self.sink.ready.eq(1),
                     NextValue(self.wradr, self.wradr + 1),
@@ -222,7 +225,7 @@ if __name__ == "__main__":
     class _Dut(Module):
         def __init__(self):
             self.submodules.txmem = wishbone.SRAM(1024)
-            self.submodules.rxmem = self.txmem
+            self.submodules.rxmem = wishbone.SRAM(self.txmem.mem)
             self.submodules.txs = WishboneByteStreamTX(self.txmem.bus)
             self.submodules.rxs = WishboneByteStreamRX(self.rxmem.bus)
 
