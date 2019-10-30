@@ -15,6 +15,9 @@ export BITS=64
 export BOARD="nexys4ddr"
 
 
-# do not rouch rocket-chip
+# do not touch rocket-chip
 export ROCKET_IS_SUBMODULE=true
+
+# cpu-type
+export CPU_TYPE=rocket$BITS
 
