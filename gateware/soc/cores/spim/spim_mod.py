@@ -20,7 +20,6 @@ class _SPIMaster(Module):
         self.cntclk = Signal(16)
         self.tick   = Signal()
         self.byte   = Signal(8)
-        self.bit    = Signal()
         self.count  = Signal(3)
 
         self.submodules.fifo_tx = fifo.SyncFIFO(8, 4)
@@ -47,24 +46,23 @@ class _SPIMaster(Module):
             Case(self.state, {
                 0: [
                     self.cntclk.eq(self.divclk),
-                    self.byte.eq(self.fifo_tx.dout),
                     self.count.eq(7),
                     pads.sclk.eq(self.cpol),
                     If(self.fifo_tx.readable,
+                        self.byte.eq(self.fifo_tx.dout),
                         self.fifo_tx.re.eq(1),
-                        If(self.cpha, pads.sclk.eq(pads.sclk)),
+                        If(self.cpha, pads.sclk.eq(~pads.sclk)),
                         self.state.eq(2),
                     )
                 ],
                 2: [
                     If(self.tick,
-                        self.bit.eq(pads.miso),
                         pads.sclk.eq(~pads.sclk),
                         self.state.eq(1),
                     )
                 ],
                 1: [
-                    self.byte.eq(Cat(self.bit, self.byte[0:7])),
+                    self.byte.eq(Cat(pads.miso, self.byte[0:7])),
                     self.count.eq(self.count - 1),
                     If(self.count == 0,
                         self.fifo_rx.we.eq(1),
@@ -157,7 +155,7 @@ class SPIMaster(Module, AutoCSR):
         # wishbone interface
         if busmaster:
             self.submodules.mem_port1 = wishbone.SRAM(size)
-            self.slave_bus = self.mem_port1.bus
+            self.slave_bus  = self.mem_port1.bus
             self.master_bus = wishbone.Interface()
             self.submodules.arbiter = wishbone.Arbiter([txbus, rxbus], self.master_bus)
             self._can_dma = CSRConstant(1)
@@ -235,7 +233,7 @@ class _Dut(SPIMaster):
     def __init__(self):
         SPIMaster.__init__(self)
         # receive = ~send
-        self.comb += self.pads.miso.eq(~self.pads.mosi)
+        self.sync += self.pads.miso.eq(~self.pads.mosi)
 
 
 if __name__ == "__main__":
