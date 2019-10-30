@@ -80,7 +80,7 @@ class _SPIMaster(Module):
 
 
 class SPIMaster(Module, AutoCSR):
-    def __init__(self, pads=None, cs_width=1, size=1024):
+    def __init__(self, pads=None, cs_width=1, size=1024, busmaster=False):
         if pads is None:
             pads = Record([("sclk", 1), ("cs_n", cs_width), ("mosi", 1), ("miso", 1)])
         self.size   = size
@@ -89,15 +89,13 @@ class SPIMaster(Module, AutoCSR):
         self.done   = Signal()
         self.len    = Signal(32)
 
-        self.submodules.txmem = wishbone.SRAM(size, read_only=True)
-        self.submodules.rxmem = wishbone.SRAM(size)
-        self.submodules.txs = WishboneByteStreamTX(self.txmem.bus)
-        self.submodules.rxs = WishboneByteStreamRX(self.rxmem.bus)
+        txbus = wishbone.Interface()
+        rxbus = wishbone.Interface()
+        self.submodules.txs = WishboneByteStreamTX(txbus)
+        self.submodules.rxs = WishboneByteStreamRX(rxbus)
         self.submodules.spi = _SPIMaster(self.pads)
 
         self.comb += [
-            self.txs.adr.eq(0),
-            self.rxs.adr.eq(0),
             self.txs.len.eq(self.len),
             self.rxs.len.eq(self.len),
             self.txs.start.eq(self.start),
@@ -145,6 +143,7 @@ class SPIMaster(Module, AutoCSR):
             self.rxs.ignore.eq(self._control.storage[2])
         ]
 
+        # take care of start / running flags
         self.sync += [
             If(self.start,
                 self._status.storage[0].eq(1)
@@ -156,19 +155,27 @@ class SPIMaster(Module, AutoCSR):
         ]
 
         # wishbone interface
-        self.bus = wishbone.Interface()
-
-        wb_sram_ifs = [ wishbone.SRAM(self.txmem.mem, read_only=False),
-                        wishbone.SRAM(self.rxmem.mem, read_only=True ) ]
-        decoderoffset = log2_int(size//4, need_pow2=False)
-        decoderbits   = log2_int(len(wb_sram_ifs))
-        wb_slaves = []
-        for n, wb_sram_if in enumerate(wb_sram_ifs):
-            def slave_filter(a, v=n):
-                return a[decoderoffset:decoderoffset+decoderbits] == v
-            wb_slaves.append((slave_filter, wb_sram_if.bus))
-            self.submodules += wb_sram_if
-        self.submodules += wishbone.Decoder(self.bus, wb_slaves, register=True)
+        if busmaster:
+            self.submodules.mem_port1 = wishbone.SRAM(size)
+            self.slave_bus = self.mem_port1.bus
+            self.master_bus = wishbone.Interface()
+            self.submodules.arbiter = wishbone.Arbiter([txbus, rxbus], self.master_bus)
+            self._can_dma = CSRConstant(1)
+            self._txadr = CSRStorage(32)
+            self._rxadr = CSRStorage(32)
+            self.comb += [
+                self.txs.adr.eq(self._txadr.storage[2:]),
+                self.rxs.adr.eq(self._rxadr.storage[2:])
+            ]
+        else:
+            self.submodules.mem_port1 = wishbone.SRAM(size)
+            self.submodules.arbiter = wishbone.Arbiter([txbus, rxbus], self.mem_port1.bus)
+            self.submodules.mem_port2 = wishbone.SRAM(self.mem_port1.mem)
+            self.slave_bus = self.mem_port2.bus
+            self.comb += [
+                self.txs.adr.eq(0),
+                self.rxs.adr.eq(0)
+            ]
 
 
     def get_size(self):
@@ -183,7 +190,7 @@ def _testbenchrw(dut, silent=True):
     # fill tx memory with test pattern
     for i in range(0, dut.size, 4):
         val = i | ((i+1) << 8) | ((i+2) << 16) | ((i+3) << 24)
-        yield from dut.bus.write(i//4, val)
+        yield from dut.slave_bus.write(i//4, val)
     # setup transfer
     yield from dut._mode.write(0)
     yield from dut._divclk.write(0)
@@ -204,12 +211,14 @@ def _testbenchrw(dut, silent=True):
     yield
     # print results
     print("txs=", (yield dut.txs.fsm.state), "rxs=", (yield dut.rxs.fsm.state), "done=", (yield dut.done))
+
     # clear tx memory to be sure of results
-    for i in range(0, dut.size, 4):
-        yield from dut.bus.write(i//4, 0)
+    #for i in range(0, dut.size, 4):
+    #    yield from dut.bus.write(i//4, 0)
+
     # print read memory
     for i in range(0, 32, 4):
-        print(hex((yield from dut.bus.read((dut.size+i)//4))))
+        print(hex((yield from dut.slave_bus.read((dut.size+i)//4))))
 
 
 def _testbench(dut):
@@ -225,7 +234,8 @@ def _testbench(dut):
 class _Dut(SPIMaster):
     def __init__(self):
         SPIMaster.__init__(self)
-        self.comb += self.pads.miso.eq(self.pads.mosi)
+        # receive = ~send
+        self.comb += self.pads.miso.eq(~self.pads.mosi)
 
 
 if __name__ == "__main__":

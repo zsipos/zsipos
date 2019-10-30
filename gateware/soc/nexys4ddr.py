@@ -29,24 +29,24 @@ class MySoC(EthernetSoC):
         "spim": 0x41000000,
     }
     mem_map.update(EthernetSoC.mem_map)
-    no_wishbone_sdram = True
+    no_wishbone_sdram = False
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
         self.mspi = True
-        if not self.mspi:
-            spi1 = SPI(self.platform, "sdspi", number=1)
-            self.submodules.spi1 = spi1
-            self.add_wb_slave(self.mem_map["spi1"], spi1.bus, size=spi1.get_size())
-            self.add_memory_region("spi1", self.mem_map["spi1"], spi1.get_size(), io_region=True)
-            self.add_interrupt("spi1")
-        else:
-            spim = SPIMaster(self.platform.request("sdspi"))
-            self.submodules.spim = spim
-            self.add_wb_slave(self.mem_map["spim"], spim.bus, size=spim.get_size())
+        if self.mspi:
+            self.submodules.spim = spim = SPIMaster(self.platform.request("sdspi"), busmaster=True)
+            if hasattr(self.spim, "master_bus"):
+                self.add_wb_master(spim.master_bus)
+            self.add_wb_slave(self.mem_map["spim"], spim.slave_bus, size=spim.get_size())
             self.add_memory_region("spim", self.mem_map["spim"], spim.get_size(), io_region=True)
             self.add_csr("spim")
             self.add_interrupt("spim")
+        else:
+            self.submodules.spi1 = spi1 = SPI(self.platform, "sdspi", number=1)
+            self.add_wb_slave(self.mem_map["spi1"], spi1.bus, size=spi1.get_size())
+            self.add_memory_region("spi1", self.mem_map["spi1"], spi1.get_size(), io_region=True)
+            self.add_interrupt("spi1")
 
         # nexys4 special
         sdpwdn = self.platform.request("sdpwdn")
@@ -85,10 +85,10 @@ class MySoC(EthernetSoC):
         d.add_gpio_leds(0, nleds=4, triggers=led_triggers)
         spi1devs = ""
         spi1devs += d.get_spi_mmc(0, "mmc")
-        if not self.mspi:
-            d.add_zsipos_spi(1, "spi", devices=spi1devs)
-        else:
+        if self.mspi:
             d.add_zsipos_spim(0, "spim", devices=spi1devs)
+        else:
+            d.add_zsipos_spi(1, "spi", devices=spi1devs)
         d.add_zsipos_aes(0, "aes")
         d.add_zsipos_sha1(0, "sha1")
         s = self.cpu.build_dts(bootargs="",

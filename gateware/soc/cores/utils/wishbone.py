@@ -2,7 +2,6 @@ from migen import *
 
 from litex.soc.interconnect import wishbone, stream
 
-
 class WishboneByteStreamTX(Module):
     def __init__(self, bus):
         self.source = stream.Endpoint([("data", 8)])
@@ -29,10 +28,11 @@ class WishboneByteStreamTX(Module):
                 NextValue(self.word, Replicate(0, 32)),
                 NextState("SEND-BYTE")
             ).Else(
-                NextValue(self.bus.adr, self.rdadr[2:]),
+                NextValue(self.bus.adr, self.rdadr),
                 NextValue(self.bus.we, 0),
                 NextValue(self.bus.cyc, 1),
                 NextValue(self.bus.stb, 1),
+                NextValue(self.bus.cti, 0),
                 If(self.bus.ack,
                     NextValue(self.bus.cyc, 0),
                     NextValue(self.bus.stb, 0),
@@ -55,7 +55,7 @@ class WishboneByteStreamTX(Module):
         )
         fsm.act("NEXT-BYTE",
             If((self.rdlen & 3) == 0,
-                NextValue(self.rdadr, self.rdadr + 4),
+                NextValue(self.rdadr, self.rdadr + 1),
                 NextState("READ-WORD")
             ).Else(
                 NextValue(self.word, Cat(self.word[8:], Replicate(0, 24))),
@@ -125,14 +125,15 @@ class WishboneByteStreamRX(Module):
                     2: NextValue(self.bus.dat_w, Cat(self.word[16:], Replicate(16, 0))),
                     3: NextValue(self.bus.dat_w, Cat(self.word[ 8:], Replicate( 8, 0)))
                 }),
-                NextValue(self.bus.adr, self.wradr[2:]),
+                NextValue(self.bus.adr, self.wradr),
                 NextValue(self.bus.sel, 0xf),
                 NextValue(self.bus.we, 1),
                 NextValue(self.bus.cyc, 1),
                 NextValue(self.bus.stb, 1),
+                NextValue(self.bus.cti, 0),
                 If(self.bus.ack,
                     self.sink.ready.eq(1),
-                    NextValue(self.wradr, self.wradr + 4),
+                    NextValue(self.wradr, self.wradr + 1),
                     NextValue(self.bus.cyc, 0),
                     NextValue(self.bus.stb, 0),
                     If(self.wrlen == self.len,

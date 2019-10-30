@@ -253,6 +253,8 @@ class DTSHelper():
         s += self.tabs(1) + 'clocks = <&zsiposclock>;\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(spim) + ">;\n"
+        if self.json["constants"].get(spim + "_can_dma"):
+            s += self.tabs(1) + "can-dma = <1>;\n"
         s += self.tabs(1) + "reg = \t<" + self._base(spim) + " " + self._size(spim) + "\n"
         s += self.tabs(2) + " " + self._memreg(spim) + ">;\n"
         if devices:
