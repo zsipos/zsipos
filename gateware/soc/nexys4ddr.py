@@ -29,7 +29,7 @@ class MySoC(EthernetSoC):
         "spim": 0x41000000,
     }
     mem_map.update(EthernetSoC.mem_map)
-    with_busmasters = False
+    with_busmasters = True
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
@@ -72,8 +72,7 @@ class MySoC(EthernetSoC):
 
     def get_dts(self):
         d = DTSHelper(self)
-        if self.mspi:
-            d.print_csr_offsets(["spim"])
+        #d.print_csr_offsets(["spim"])
         d.add_litex_uart(0, "uart")
         d.add_litex_eth (0, "ethphy", "ethmac")
         d.add_litex_gpio(0, "gpio", direction="out", ngpio=4)
@@ -91,10 +90,7 @@ class MySoC(EthernetSoC):
             d.add_zsipos_spi(1, "spi", devices=spi1devs)
         d.add_zsipos_aes(0, "aes")
         d.add_zsipos_sha1(0, "sha1")
-        s = self.cpu.build_dts(bootargs="",
-                               sdram_size=d.get_sdram_size(),
-                               timebase_frequency=d.get_sys_clk_freq(),
-                               devices=d.get_devices())
+        s = self.cpu.build_dts(devices=d.get_devices())
         return s
 
     def write_dts(self, dts_file):

@@ -206,10 +206,7 @@ class MySoC(EthernetSoC):
         d.add_zsipos_spi(1, "spi", devices=spi1devs)
         d.add_zsipos_aes(0, "aes")
         d.add_zsipos_sha1(0, "sha1")
-        s = self.cpu.build_dts(bootargs="",
-                               sdram_size=d.get_sdram_size(),
-                               timebase_frequency=d.get_sys_clk_freq(),
-                               devices=d.get_devices())
+        s = self.cpu.build_dts(devices=d.get_devices())
         return s
 
     def write_dts(self, dts_file):
