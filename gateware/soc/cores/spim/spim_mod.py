@@ -22,8 +22,8 @@ class _SPIMaster(Module):
         self.byte   = Signal(8)
         self.count  = Signal(3)
 
-        self.submodules.fifo_tx = fifo.SyncFIFO(8, 4)
-        self.submodules.fifo_rx = fifo.SyncFIFO(8, 4)
+        self.submodules.fifo_tx = fifo.SyncFIFO(8, 32)
+        self.submodules.fifo_rx = fifo.SyncFIFO(8, 32)
 
         self.comb += [
             pads.mosi.eq(self.byte[7]),
@@ -48,7 +48,7 @@ class _SPIMaster(Module):
                     self.cntclk.eq(self.divclk),
                     self.count.eq(7),
                     pads.sclk.eq(self.cpol),
-                    If(self.fifo_tx.readable,
+                    If(self.fifo_tx.readable & self.fifo_rx.writable,
                         self.byte.eq(self.fifo_tx.dout),
                         self.fifo_tx.re.eq(1),
                         If(self.cpha, pads.sclk.eq(~pads.sclk)),
