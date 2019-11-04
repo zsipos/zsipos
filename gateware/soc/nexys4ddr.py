@@ -36,8 +36,8 @@ class MySoC(EthernetSoC):
         self.mspi = True
         if self.mspi:
             self.submodules.spim = spim = SPIMaster(self.platform.request("sdspi"), busmaster=self.with_busmasters)
-            if hasattr(self.spim, "master_bus"):
-                self.add_wb_master(spim.master_bus)
+            if self.with_busmasters:
+                self.add_wb_master(self.spim.master_bus)
             self.add_wb_slave(self.mem_map["spim"], spim.slave_bus, size=spim.get_size())
             self.add_memory_region("spim", self.mem_map["spim"], spim.get_size(), type="io")
             self.add_csr("spim")
