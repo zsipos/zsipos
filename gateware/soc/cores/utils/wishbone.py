@@ -83,14 +83,25 @@ class WishboneByteStreamRX(Module):
 
         self.comb += [
             self.bus.adr.eq(self.wradr),
-            self.bus.sel.eq(0xf),
             self.bus.we.eq(1),
             self.bus.cti.eq(0),
             Case(self.wrlen & 3, {
-                0: self.bus.dat_w.eq(self.word),
-                1: self.bus.dat_w.eq(Cat(self.word[24:], Replicate(24, 0))),
-                2: self.bus.dat_w.eq(Cat(self.word[16:], Replicate(16, 0))),
-                3: self.bus.dat_w.eq(Cat(self.word[8:], Replicate(8, 0)))
+                0: [
+                    self.bus.dat_w.eq(self.word),
+                    self.bus.sel.eq(0b1111)
+                ],
+                1: [
+                    self.bus.dat_w.eq(Cat(self.word[24:], Replicate(24, 0))),
+                    self.bus.sel.eq(0b0111)
+                ],
+                2: [
+                    self.bus.dat_w.eq(Cat(self.word[16:], Replicate(16, 0))),
+                    self.bus.sel.eq(0b0011)
+                ],
+                3: [
+                    self.bus.dat_w.eq(Cat(self.word[8:], Replicate(8, 0))),
+                    self.bus.sel.eq(0b0001)
+                ]
             }),
         ]
 
