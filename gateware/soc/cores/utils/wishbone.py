@@ -61,7 +61,7 @@ class WishboneByteStreamTX(Module):
                 NextValue(self.rdadr, self.rdadr + 1),
                 NextState("READ-WORD")
             ).Else(
-                NextValue(self.word, Cat(self.word[8:], Replicate(0, 24))),
+                NextValue(self.word, Cat(self.word[8:], Replicate(0, 8))),
                 NextState("SEND-BYTE")
             )
         )
@@ -90,7 +90,7 @@ class WishboneByteStreamRX(Module):
                 ],
                 1: [
                     self.bus.dat_w.eq(Cat(self.word[24:], Replicate(24, 0))),
-                    self.bus.sel.eq(0b0111)
+                    self.bus.sel.eq(0b0001)
                 ],
                 2: [
                     self.bus.dat_w.eq(Cat(self.word[16:], Replicate(16, 0))),
@@ -98,7 +98,7 @@ class WishboneByteStreamRX(Module):
                 ],
                 3: [
                     self.bus.dat_w.eq(Cat(self.word[8:], Replicate(8, 0))),
-                    self.bus.sel.eq(0b0001)
+                    self.bus.sel.eq(0b0111)
                 ]
             }),
         ]
@@ -121,9 +121,13 @@ class WishboneByteStreamRX(Module):
         )
         fsm.act("CHECK-WRITE",
             If(self.wrlen == self.len,
+                NextValue(self.bus.cyc, ~self.ignore),
+                NextValue(self.bus.stb, ~self.ignore),
                 NextState("WRITE-WORD")
             ).Else(
                 If((self.wrlen & 3) == 0,
+                    NextValue(self.bus.cyc, ~self.ignore),
+                    NextValue(self.bus.stb, ~self.ignore),
                     NextState("WRITE-WORD")
                 ).Else(
                     self.sink.ready.eq(1),
@@ -141,8 +145,6 @@ class WishboneByteStreamRX(Module):
                     NextState("RECEIVE-BYTE")
                 )
             ).Else(
-                NextValue(self.bus.cyc, 1),
-                NextValue(self.bus.stb, 1),
                 If(self.bus.ack,
                     self.sink.ready.eq(1),
                     NextValue(self.wradr, self.wradr + 1),
