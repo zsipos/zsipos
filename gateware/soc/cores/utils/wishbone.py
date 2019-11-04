@@ -19,7 +19,6 @@ class WishboneByteStreamTX(Module):
             self.source.data.eq(self.word[:8]),
             self.bus.adr.eq(self.rdadr),
             self.bus.we.eq(0),
-            self.bus.cti.eq(0),
         ]
 
         self.submodules.fsm = fsm = FSM(reset_state="IDLE")
@@ -84,7 +83,6 @@ class WishboneByteStreamRX(Module):
         self.comb += [
             self.bus.adr.eq(self.wradr),
             self.bus.we.eq(1),
-            self.bus.cti.eq(0),
             Case(self.wrlen & 3, {
                 0: [
                     self.bus.dat_w.eq(self.word),
