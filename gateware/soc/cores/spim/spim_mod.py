@@ -28,7 +28,7 @@ class _SPIMaster(Module):
         self.comb += [
             pads.mosi.eq(self.byte[7]),
             self.tick.eq(self.cntclk == 0),
-            self.fifo_rx.din.eq(self.byte),
+            self.fifo_rx.din.eq(self.byte)
         ]
 
         self.sync += [
@@ -48,7 +48,7 @@ class _SPIMaster(Module):
                     self.cntclk.eq(self.divclk),
                     self.count.eq(7),
                     pads.sclk.eq(self.cpol),
-                    If(self.fifo_tx.readable & self.fifo_rx.writable,
+                    If(self.fifo_tx.readable,
                         self.byte.eq(self.fifo_tx.dout),
                         self.fifo_tx.re.eq(1),
                         If(self.cpha, pads.sclk.eq(~pads.sclk)),
@@ -120,7 +120,7 @@ class SPIMaster(Module, AutoCSR):
         # csr interface
         self._mode    = CSRStorage(3)
         self._divclk  = CSRStorage(16)
-        self._length  = CSRStorage(16)
+        self._length  = CSRStorage(32)
         self._control = CSRStorage(3)
         self._cs      = CSRStorage(cs_width)
         self._status  = CSRStorage(1)
@@ -135,7 +135,7 @@ class SPIMaster(Module, AutoCSR):
                 self.pads.cs_n.eq(~self._cs.storage)
             ),
             self.spi.divclk.eq(self._divclk.storage),
-            self.len.eq(Cat(self._length.storage, Replicate(0, 16))),
+            self.len.eq(self._length.storage),
             self.start.eq(self._control.storage[0]),
             self.txs.ignore.eq(self._control.storage[1]),
             self.rxs.ignore.eq(self._control.storage[2])
@@ -191,8 +191,8 @@ def _testbenchrw(dut, silent=True):
         yield from dut.slave_bus.write(i//4, val)
     # setup transfer
     yield from dut._mode.write(0)
-    yield from dut._divclk.write(0)
-    yield from dut._length.write(15)
+    yield from dut._divclk.write(1)
+    yield from dut._length.write(17)
     # start transfer
     yield from dut._control.write(1)
     # wait ready
