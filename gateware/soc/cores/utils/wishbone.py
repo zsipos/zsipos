@@ -26,6 +26,8 @@ class WishboneByteStreamTX(Module):
             If(self.start,
                 NextValue(self.rdadr, self.adr),
                 NextValue(self.rdlen, 0),
+                NextValue(self.bus.cyc, ~self.ignore),
+                NextValue(self.bus.stb, ~self.ignore),
                 NextState("READ-WORD")
             )
         )
@@ -34,8 +36,6 @@ class WishboneByteStreamTX(Module):
                 NextValue(self.word, Replicate(0, 32)),
                 NextState("SEND-BYTE")
             ).Else(
-                NextValue(self.bus.cyc, 1),
-                NextValue(self.bus.stb, 1),
                 If(self.bus.ack,
                     NextValue(self.bus.cyc, 0),
                     NextValue(self.bus.stb, 0),
@@ -59,6 +59,8 @@ class WishboneByteStreamTX(Module):
         fsm.act("NEXT-BYTE",
             If((self.rdlen & 3) == 0,
                 NextValue(self.rdadr, self.rdadr + 1),
+                NextValue(self.bus.cyc, ~self.ignore),
+                NextValue(self.bus.stb, ~self.ignore),
                 NextState("READ-WORD")
             ).Else(
                 NextValue(self.word, Cat(self.word[8:], Replicate(0, 8))),
@@ -120,19 +122,13 @@ class WishboneByteStreamRX(Module):
             )
         )
         fsm.act("CHECK-WRITE",
-            If(self.wrlen == self.len,
+            If((self.wrlen == self.len) | ((self.wrlen & 3) == 0),
                 NextValue(self.bus.cyc, ~self.ignore),
                 NextValue(self.bus.stb, ~self.ignore),
                 NextState("WRITE-WORD")
             ).Else(
-                If((self.wrlen & 3) == 0,
-                    NextValue(self.bus.cyc, ~self.ignore),
-                    NextValue(self.bus.stb, ~self.ignore),
-                    NextState("WRITE-WORD")
-                ).Else(
-                    self.sink.ready.eq(1),
-                    NextState("RECEIVE-BYTE")
-                )
+                self.sink.ready.eq(1),
+                NextState("RECEIVE-BYTE")
             )
         )
         fsm.act("WRITE-WORD",
