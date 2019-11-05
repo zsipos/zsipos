@@ -120,7 +120,7 @@ class SPIMaster(Module, AutoCSR):
         # csr interface
         self._mode    = CSRStorage(3)
         self._divclk  = CSRStorage(16)
-        self._length  = CSRStorage(32)
+        self._length  = CSRStorage(16)
         self._control = CSRStorage(3)
         self._cs      = CSRStorage(cs_width)
         self._status  = CSRStorage(1)
@@ -136,7 +136,7 @@ class SPIMaster(Module, AutoCSR):
             ),
             self.spi.divclk.eq(self._divclk.storage),
             self.len.eq(self._length.storage),
-            self.start.eq(self._control.storage[0]),
+            self.start.eq(Cat(self._control.storage[0], Replicate(0, 16))),
             self.txs.ignore.eq(self._control.storage[1]),
             self.rxs.ignore.eq(self._control.storage[2])
         ]
