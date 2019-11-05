@@ -91,7 +91,7 @@ class SPIMaster(Module, AutoCSR):
         rxbus = wishbone.Interface()
         self.submodules.txs = WishboneByteStreamTX(txbus)
         self.submodules.rxs = WishboneByteStreamRX(rxbus)
-        self.submodules.spi = _SPIMaster(self.pads, size)
+        self.submodules.spi = _SPIMaster(self.pads, 32)
 
         self.comb += [
             self.txs.len.eq(self.len),
