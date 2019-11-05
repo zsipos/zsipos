@@ -11,7 +11,7 @@ class _SPIMaster(Module):
     #
     # ported to migen from: https://github.com/olofk/simple_spi
     #
-    def __init__(self, pads):
+    def __init__(self, pads, size):
         self.divclk = Signal(16)
         self.cpol   = Signal()
         self.cpha   = Signal()
@@ -22,8 +22,8 @@ class _SPIMaster(Module):
         self.byte   = Signal(8)
         self.count  = Signal(3)
 
-        self.submodules.fifo_tx = fifo.SyncFIFO(8, 32)
-        self.submodules.fifo_rx = fifo.SyncFIFO(8, 32)
+        self.submodules.fifo_tx = fifo.SyncFIFO(8, size)
+        self.submodules.fifo_rx = fifo.SyncFIFO(8, size)
 
         self.comb += [
             pads.mosi.eq(self.byte[7]),
@@ -91,7 +91,7 @@ class SPIMaster(Module, AutoCSR):
         rxbus = wishbone.Interface()
         self.submodules.txs = WishboneByteStreamTX(txbus)
         self.submodules.rxs = WishboneByteStreamRX(rxbus)
-        self.submodules.spi = _SPIMaster(self.pads)
+        self.submodules.spi = _SPIMaster(self.pads, size)
 
         self.comb += [
             self.txs.len.eq(self.len),
@@ -230,9 +230,11 @@ def _testbench(dut):
 
 
 class _Dut(SPIMaster):
-    def __init__(self):
-        SPIMaster.__init__(self)
-        # receive = ~send
+    def __init__(self, busmaster=True):
+        SPIMaster.__init__(self, busmaster=busmaster)
+        if busmaster:
+            self.submodules.mem_port2 = wishbone.SRAM(self.mem_port1.mem)
+            self.submodules.arbiter = wishbone.Arbiter([self.master_bus], self.mem_port2.bus)
         self.sync += self.pads.miso.eq(~self.pads.mosi)
 
 
