@@ -30,5 +30,6 @@ if [ ! -d bscan_spi_bitstreams ]
 then
 	git clone https://github.com/quartiq/bscan_spi_bitstreams
 fi
+popd
 
 
