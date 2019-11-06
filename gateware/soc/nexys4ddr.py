@@ -114,6 +114,8 @@ def main():
         soc.write_dts(args.dts_file)
     if args.load:
         load_bistream(soc)
+    if args.flash:
+        load_flash(soc)
 
 
 if __name__ == "__main__":
