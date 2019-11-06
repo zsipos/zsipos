@@ -28,3 +28,6 @@
 [submodule "gateware/soc/cores/sha1/verilog"]
 	path = gateware/soc/cores/sha1/verilog
 	url = https://github.com/zsipos/sha1
+[submodule "toolchain/riscv-openocd"]
+	path = toolchain/riscv-openocd
+	url = https://github.com/riscv/riscv-openocd
