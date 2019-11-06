@@ -9,5 +9,5 @@ then
 	exit
 fi
 
-./build.sh $1
+./build.sh $*
 

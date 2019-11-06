@@ -13,6 +13,7 @@ from litex.soc.cores.gpio import *
 from litex.soc.cores.spi_flash import SpiFlash
 
 from dts import *
+from flash import *
 
 from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
@@ -104,12 +105,16 @@ def main():
     builder_args(parser)
     soc_sdram_args(parser)
     dtshelper_args(parser)
+    flashhelper_args(parser)
     args = parser.parse_args()
     soc = MySoC(sys_clk_freq=int(60e6), **soc_sdram_argdict(args))
     builder = Builder(soc, **builder_argdict(args))
     builder.build()
     if args.dts_file:
         soc.write_dts(args.dts_file)
+    if args.load:
+        load_bistream(soc)
+
 
 if __name__ == "__main__":
     main()

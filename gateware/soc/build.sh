@@ -1,4 +1,9 @@
-if [ "$nobuild" == "true" ] || [ "$1" == "nobuild" ]
+if [ "$1" == "--nobuild" ]
+then
+  nobuild="true"
+  shift
+fi
+if [ "$nobuild" == "true" ]
 then
 	nobuild="--no-compile-gateware --no-compile-software"
 fi
@@ -8,5 +13,5 @@ python3 $BOARD.py \
 	--output-dir $outdir \
 	--dts-file $outdir/software/include/generated/devicetree.dts \
  	--csr-json $outdir/$BOARD.json \
-	$nobuild
+	$nobuild $*
 
