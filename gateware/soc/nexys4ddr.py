@@ -10,6 +10,7 @@ from litex.boards.targets.nexys4ddr import *
 from litex.soc.integration.soc_sdram import *
 from litex.soc.integration.builder import *
 from litex.soc.cores.gpio import *
+from litex.soc.cores.spi_flash import SpiFlash
 
 from dts import *
 
@@ -23,31 +24,36 @@ from cores.extint.extint_mod import EXTINT
 
 class MySoC(EthernetSoC):
     mem_map = {
-        "spi1": 0x41000000,
-        "aes":  0x42000000,
-        "sha1": 0x43000000,
-        "spim": 0x41000000,
+        "spim"     : 0x41000000,
+        "aes"      : 0x42000000,
+        "sha1"     : 0x43000000,
+        "spiflash" : 0x50000000,
     }
     mem_map.update(EthernetSoC.mem_map)
-    with_busmasters = True
+    with_busmasters = False
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
-        self.mspi = True
-        if self.mspi:
-            self.submodules.spim = spim = SPIMaster(self.platform.request("sdspi"), busmaster=self.with_busmasters)
-            if self.with_busmasters:
-                self.add_wb_master(self.spim.master_bus)
-            self.add_wb_slave(self.mem_map["spim"], spim.slave_bus, size=spim.get_size())
-            self.add_memory_region("spim", self.mem_map["spim"], spim.get_size(), type="io")
-            self.add_csr("spim")
-            self.add_interrupt("spim")
-        else:
-            self.submodules.spi1 = spi1 = SPI(self.platform, "sdspi", number=1)
-            self.add_wb_slave(self.mem_map["spi1"], spi1.bus, size=spi1.get_size())
-            self.add_memory_region("spi1", self.mem_map["spi1"], spi1.get_size(), type="io")
-            self.add_interrupt("spi1")
-
+        # flash-rom
+        flash_size = 0x10000000
+        self.submodules.spiflash = SpiFlash(
+            self.platform.request("spiflash4x"),
+            dummy=11,
+            div=2,
+            with_bitbang=True,
+            endianness=self.cpu.endianness)
+        self.spiflash.add_clk_primitive(self.platform.device)
+        self.add_wb_slave(self.mem_map["spiflash"], self.spiflash.bus, size=flash_size)
+        self.add_memory_region("spiflash", self.mem_map["spiflash"], flash_size, type="io")
+        self.add_csr("spiflash")
+        # sd-card
+        self.submodules.spim = SPIMaster(self.platform.request("sdspi"), busmaster=self.with_busmasters)
+        if self.with_busmasters:
+            self.add_wb_master(self.spim.master_bus)
+        self.add_wb_slave(self.mem_map["spim"], self.spim.slave_bus, size=self.spim.get_size())
+        self.add_memory_region("spim", self.mem_map["spim"], self.spim.get_size(), type="io")
+        self.add_csr("spim")
+        self.add_interrupt("spim")
         # nexys4 special
         sdpwdn = self.platform.request("sdpwdn")
         self.comb += sdpwdn.eq(ResetSignal())
@@ -72,7 +78,7 @@ class MySoC(EthernetSoC):
 
     def get_dts(self):
         d = DTSHelper(self)
-        #d.print_csr_offsets(["spim"])
+        d.print_csr_offsets(["spim"])
         d.add_litex_uart(0, "uart")
         d.add_litex_eth (0, "ethphy", "ethmac")
         d.add_litex_gpio(0, "gpio", direction="out", ngpio=4)
@@ -82,12 +88,7 @@ class MySoC(EthernetSoC):
             2: "cpu1"
         }
         d.add_gpio_leds(0, nleds=4, triggers=led_triggers)
-        spi1devs = ""
-        spi1devs += d.get_spi_mmc(0, "mmc")
-        if self.mspi:
-            d.add_zsipos_spim(0, "spim", devices=spi1devs)
-        else:
-            d.add_zsipos_spi(1, "spi", devices=spi1devs)
+        d.add_zsipos_spim(0, "spim", devices=d.get_spi_mmc(0, "mmc"))
         d.add_zsipos_aes(0, "aes")
         d.add_zsipos_sha1(0, "sha1")
         s = self.cpu.build_dts(devices=d.get_devices())
