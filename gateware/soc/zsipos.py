@@ -16,6 +16,10 @@ from liteeth.phy.mii import LiteEthPHYMII
 from liteeth.mac import LiteEthMAC
 
 from platforms import zsipos
+
+from flashmap import *
+
+from tools.flash import *
 from tools.dts import *
 
 from cores.aes.aes_mod import AES
@@ -161,14 +165,14 @@ class MySoC(EthernetSoC):
         self.submodules.ws35a = EXTINT(self.platform, "ws35a_int")
         self.add_interrupt("ws35a")
         # gpio0: leds, ws35a controls
-        gpio_signals = Cat(
+        gpio0_signals = Cat(
             self.platform.request("user_led", 0),
             self.platform.request("user_led", 1),
             self.platform.request("user_led", 2),
             self.platform.request("user_led", 3),
             ws35a_rs,
             ws35a_reset)
-        self.submodules.gpio0 = GPIOOut(gpio_signals)
+        self.submodules.gpio0 = GPIOOut(gpio0_signals)
         self.add_csr("gpio0")
         # gpio1: touchscreen pendown
         gpio1_signals = Cat(self.ws35a.ev.irq)
@@ -194,7 +198,7 @@ class MySoC(EthernetSoC):
             1: "cpu0",
             2: "cpu1"
         }
-        d.add_gpio_leds(0, nleds=4, triggers=led_triggers)
+        d.add_gpio_leds("gpio0", nleds=4, triggers=led_triggers)
         d.add_litex_gpio("gpio1", direction="in", ngpio=1)
         spidevs = d.get_spi_mmc(0, "mmc")
         d.add_zsipos_spim("spi0", devices=spidevs)
@@ -222,12 +226,17 @@ def main():
     builder_args(parser)
     soc_sdram_args(parser)
     dtshelper_args(parser)
+    flashhelper_args(parser)
     args = parser.parse_args()
     soc = MySoC(sys_clk_freq=int(75e6), **soc_sdram_argdict(args))
     builder = Builder(soc, **builder_argdict(args))
     builder.build()
     if args.dts_file:
         soc.write_dts(args.dts_file)
+    if args.load:
+        load_bistream(soc)
+    if args.flash:
+        load_flash(soc, FLASH_MAP)
 
 if __name__ == "__main__":
     main()
