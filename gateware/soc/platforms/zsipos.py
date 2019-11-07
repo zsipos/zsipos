@@ -21,19 +21,19 @@ _io = [
         Subsignal("sclk", Pins("H15")),
         Subsignal("mosi", Pins("B17")),
         Subsignal("miso", Pins("B16")),
-        Subsignal("ss_n", Pins("A16 A15")),
+        Subsignal("cs_n", Pins("A16 A15")),
         IOStandard("LVCMOS33")
     ),
 
-    ("sd_spi", 0,
+    ("sdspi", 0,
         Subsignal("sclk", Pins("D12")),
         Subsignal("mosi", Pins("D13")),
         Subsignal("miso", Pins("B13")),
-        Subsignal("ss_n", Pins("B14")),
+        Subsignal("cs_n", Pins("B14")),
         IOStandard("LVCMOS33")
     ),
 
-    ("sd_mmc", 0,
+    ("sdmmc", 0,
         Subsignal("sclk", Pins("D12")),
         Subsignal("cmd",  Pins("D13")),
         Subsignal("dat0", Pins("B13")),

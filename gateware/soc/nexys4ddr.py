@@ -12,8 +12,8 @@ from litex.soc.integration.builder import *
 from litex.soc.cores.gpio import *
 from litex.soc.cores.spi_flash import SpiFlash
 
-from dts import *
-from flash import *
+from tools.dts import *
+from tools.flash import *
 
 from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
@@ -32,11 +32,11 @@ class MySoC(EthernetSoC):
     }
     mem_map.update(EthernetSoC.mem_map)
     with_busmasters = False
+    flash_size = 0x10000000
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
         # flash-rom
-        flash_size = 0x10000000
         self.submodules.spiflash = SpiFlash(
             self.platform.request("spiflash4x"),
             dummy=11,
@@ -44,8 +44,8 @@ class MySoC(EthernetSoC):
             with_bitbang=True,
             endianness=self.cpu.endianness)
         self.spiflash.add_clk_primitive(self.platform.device)
-        self.add_wb_slave(self.mem_map["spiflash"], self.spiflash.bus, size=flash_size)
-        self.add_memory_region("spiflash", self.mem_map["spiflash"], flash_size, type="io")
+        self.add_wb_slave(self.mem_map["spiflash"], self.spiflash.bus, size=self.flash_size)
+        self.add_memory_region("spiflash", self.mem_map["spiflash"], self.flash_size, type="io")
         self.add_csr("spiflash")
         # sd-card
         self.submodules.spim = SPIMaster(self.platform.request("sdspi"), busmaster=self.with_busmasters)
@@ -80,18 +80,18 @@ class MySoC(EthernetSoC):
     def get_dts(self):
         d = DTSHelper(self)
         d.print_csr_offsets(["spim"])
-        d.add_litex_uart(0, "uart")
-        d.add_litex_eth (0, "ethphy", "ethmac")
-        d.add_litex_gpio(0, "gpio", direction="out", ngpio=4)
+        d.add_litex_uart("uart")
+        d.add_litex_eth ("ethphy", "ethmac")
+        d.add_litex_gpio("gpio", direction="out", ngpio=4)
         led_triggers = {
             0: "activity",
             1: "cpu0",
             2: "cpu1"
         }
         d.add_gpio_leds(0, nleds=4, triggers=led_triggers)
-        d.add_zsipos_spim(0, "spim", devices=d.get_spi_mmc(0, "mmc"))
-        d.add_zsipos_aes(0, "aes")
-        d.add_zsipos_sha1(0, "sha1")
+        d.add_zsipos_spim("spim", devices=d.get_spi_mmc(0, "mmc"))
+        d.add_zsipos_aes("aes")
+        d.add_zsipos_sha1("sha1")
         s = self.cpu.build_dts(devices=d.get_devices())
         return s
 

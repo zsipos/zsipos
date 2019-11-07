@@ -15,12 +15,12 @@ from litedram.phy import s7ddrphy
 from liteeth.phy.mii import LiteEthPHYMII
 from liteeth.mac import LiteEthMAC
 
-from platform import Platform
-from dts import *
+from platforms import zsipos
+from tools.dts import *
 
 from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
-from cores.spi.spi_mod import SPI
+from cores.spim.spim_mod import SPIMaster
 from cores.extint.extint_mod import EXTINT
 
 # CRG ----------------------------------------------------------------------------------------------
@@ -54,7 +54,7 @@ class _CRG(Module):
 
 class BaseSoC(SoCSDRAM):
     def __init__(self, sys_clk_freq=int(75e6), **kwargs):
-        platform = Platform()
+        platform = zsipos.Platform()
         SoCSDRAM.__init__(self, platform, clk_freq=sys_clk_freq,
                           integrated_rom_size=0x8000,
                           integrated_sram_size=0x8000,
@@ -74,7 +74,7 @@ class BaseSoC(SoCSDRAM):
 
 class EthernetSoC(BaseSoC):
     mem_map = {
-        "ethmac"  : 0x30000000,
+        "ethmac0" : 0x30000000,
         "ethmac1" : 0x31000000,
     }
     mem_map.update(BaseSoC.mem_map)
@@ -82,24 +82,24 @@ class EthernetSoC(BaseSoC):
     def __init__(self, **kwargs):
         BaseSoC.__init__(self, **kwargs)
 
-        self.submodules.ethphy = LiteEthPHYMII(self.platform.request("eth_clocks", 0),
-                                               self.platform.request("eth", 0))
-        self.add_csr("ethphy")
-        self.submodules.ethmac = LiteEthMAC(phy=self.ethphy, dw=32,
+        self.submodules.ethphy0 = LiteEthPHYMII(self.platform.request("eth_clocks", 0),
+                                                self.platform.request("eth", 0))
+        self.add_csr("ethphy0")
+        self.submodules.ethmac0 = LiteEthMAC(phy=self.ethphy0, dw=32,
             interface="wishbone", endianness=self.cpu.endianness)
-        self.add_wb_slave(self.mem_map["ethmac"], self.ethmac.bus, 0x2000)
-        self.add_memory_region("ethmac", self.mem_map["ethmac"], 0x2000, type="io")
-        self.add_csr("ethmac")
-        self.add_interrupt("ethmac")
+        self.add_wb_slave(self.mem_map["ethmac0"], self.ethmac0.bus, 0x2000)
+        self.add_memory_region("ethmac0", self.mem_map["ethmac0"], 0x2000, type="io")
+        self.add_csr("ethmac0")
+        self.add_interrupt("ethmac0")
 
-        self.ethphy.crg.cd_eth_rx.clk.attr.add("keep")
-        self.ethphy.crg.cd_eth_tx.clk.attr.add("keep")
-        self.platform.add_period_constraint(self.ethphy.crg.cd_eth_rx.clk, 1e9/25e6)
-        self.platform.add_period_constraint(self.ethphy.crg.cd_eth_tx.clk, 1e9/25e6)
+        self.ethphy0.crg.cd_eth_rx.clk.attr.add("keep")
+        self.ethphy0.crg.cd_eth_tx.clk.attr.add("keep")
+        self.platform.add_period_constraint(self.ethphy0.crg.cd_eth_rx.clk, 1e9/25e6)
+        self.platform.add_period_constraint(self.ethphy0.crg.cd_eth_tx.clk, 1e9/25e6)
         self.platform.add_false_path_constraints(
             self.crg.cd_sys.clk,
-            self.ethphy.crg.cd_eth_rx.clk,
-            self.ethphy.crg.cd_eth_tx.clk)
+            self.ethphy0.crg.cd_eth_rx.clk,
+            self.ethphy0.crg.cd_eth_tx.clk)
 
         pwdn = self.platform.request("eth_pwdn", 0)
         self.comb += pwdn.eq(1)
@@ -129,7 +129,7 @@ class EthernetSoC(BaseSoC):
 
 class MySoC(EthernetSoC):
     mem_map = {
-        "spi"  : 0x41000000,
+        "spi0" : 0x41000000,
         "spi1" : 0x42000000,
         "aes"  : 0x4e000000,
         "sha1" : 0x4f000000,
@@ -140,16 +140,20 @@ class MySoC(EthernetSoC):
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
         # SPI0: sd-card
-        spi = SPI(self.platform, "sd_spi")
-        self.submodules.spi = spi
-        self.add_wb_slave(self.mem_map["spi"], spi.bus, size=spi.get_size())
-        self.add_memory_region("spi", self.mem_map["spi"], spi.get_size(), type="io")
-        self.add_interrupt("spi")
+        self.submodules.spi0 = SPIMaster(self.platform.request("sdspi"), busmaster=self.with_busmasters)
+        if self.with_busmasters:
+            self.add_wb_master(self.spi0.master_bus)
+        self.add_wb_slave(self.mem_map["spi0"], self.spi0.slave_bus, size=self.spi0.get_size())
+        self.add_memory_region("spi0", self.mem_map["spi0"], self.spi0.get_size(), type="io")
+        self.add_csr("spi0")
+        self.add_interrupt("spi0")
         # SPI1: waveshare35a
-        spi1 = SPI(self.platform, "ws35a_spi", ss_width=2)
-        self.submodules.spi1 = spi1
-        self.add_wb_slave(self.mem_map["spi1"], spi1.bus, size=spi1.get_size())
-        self.add_memory_region("spi1", self.mem_map["spi1"], spi1.get_size(), type="io")
+        self.submodules.spi1 = SPIMaster(self.platform.request("ws35a_spi"), cs_width=2)
+        if self.with_busmasters:
+            self.add_wb_master((self.spi1.master_bus))
+        self.add_wb_slave(self.mem_map["spi1"], self.spi1.slave_bus, size=self.spi1.get_size())
+        self.add_memory_region("spi1", self.mem_map["spi1"], self.spi1.get_size(), type="io")
+        self.add_csr("spi1")
         self.add_interrupt("spi1")
         # waveshare35a
         ws35a_rs    = Signal()
@@ -164,38 +168,36 @@ class MySoC(EthernetSoC):
             self.platform.request("user_led", 3),
             ws35a_rs,
             ws35a_reset)
-        self.submodules.gpio = GPIOOut(gpio_signals)
-        self.add_csr("gpio")
+        self.submodules.gpio0 = GPIOOut(gpio_signals)
+        self.add_csr("gpio0")
         # gpio1: touchscreen pendown
         gpio1_signals = Cat(self.ws35a.ev.irq)
         self.submodules.gpio1 = GPIOIn(gpio1_signals)
         self.add_csr("gpio1")
         # AES
-        aes = AES(self.platform)
-        self.submodules.aes = aes
-        self.add_wb_slave(self.mem_map["aes"], aes.bus, size=aes.get_size())
-        self.add_memory_region("aes", self.mem_map["aes"], aes.get_size(), type="io")
+        self.submodules.aes = AES(self.platform)
+        self.add_wb_slave(self.mem_map["aes"], self.aes.bus, size=self.aes.get_size())
+        self.add_memory_region("aes", self.mem_map["aes"], self.aes.get_size(), type="io")
         # SHA1
-        sha1 = SHA1(self.platform)
-        self.submodules.sha1 = sha1
-        self.add_wb_slave(self.mem_map["sha1"], sha1.bus, size=sha1.get_size())
-        self.add_memory_region("sha1", self.mem_map["sha1"], sha1.get_size(), type="io")
+        self.submodules.sha1 = SHA1(self.platform)
+        self.add_wb_slave(self.mem_map["sha1"], self.sha1.bus, size=self.sha1.get_size())
+        self.add_memory_region("sha1", self.mem_map["sha1"], self.sha1.get_size(), type="io")
 
     def get_dts(self):
         d = DTSHelper(self)
-        d.add_litex_uart(0, "uart")
-        d.add_litex_eth(0, "ethphy", "ethmac")
-        d.add_litex_eth(1, "ethphy", "ethmac")
-        d.add_litex_gpio(0, "gpio", direction="out", ngpio=6)
+        d.add_litex_uart("uart")
+        d.add_litex_eth("ethphy0", "ethmac0")
+        d.add_litex_eth("ethphy1", "ethmac1")
+        d.add_litex_gpio("gpio0", direction="out", ngpio=6)
         led_triggers = {
             0: "activity",
             1: "cpu0",
             2: "cpu1"
         }
         d.add_gpio_leds(0, nleds=4, triggers=led_triggers)
-        d.add_litex_gpio(1, "gpio", direction="in", ngpio=1)
+        d.add_litex_gpio("gpio1", direction="in", ngpio=1)
         spidevs = d.get_spi_mmc(0, "mmc")
-        d.add_zsipos_spi(0, "spi", devices=spidevs)
+        d.add_zsipos_spim("spi0", devices=spidevs)
         spi1devs = d.get_spi_waveshare35a(
             1,
             "ws35a",
@@ -203,9 +205,9 @@ class MySoC(EthernetSoC):
             reset_gpio=(0, 5, 0),
             pendown_gpio=(1, 0, 0)
         )
-        d.add_zsipos_spi(1, "spi", devices=spi1devs)
-        d.add_zsipos_aes(0, "aes")
-        d.add_zsipos_sha1(0, "sha1")
+        d.add_zsipos_spim("spi1", devices=spi1devs)
+        d.add_zsipos_aes("aes")
+        d.add_zsipos_sha1("sha1")
         s = self.cpu.build_dts(devices=d.get_devices())
         return s
 
