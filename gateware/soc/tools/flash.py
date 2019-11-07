@@ -16,7 +16,10 @@ class XilinxProgrammer(Programmer):
         Programmer.__init__(self, soc)
         openocddir = os.path.join(os.environ["RISCV"], "share", "openocd")
         cfg = os.path.join(openocddir, "openocd_xilinx.cfg")
-        flash_proxy = os.path.join("bscan_spi_bitstreams", "bscan_spi_"+soc.platform.device.split("-", 1)[0]+".bit")
+        device = soc.platform.device.split("-", 1)[0]
+        if device == "xc7a35ticsg324":
+            device = "xc7a35t"
+        flash_proxy = os.path.join("bscan_spi_bitstreams", "bscan_spi_"+device+".bit")
         self.prog = OpenOCD(cfg, flash_proxy_basename=flash_proxy)
         self.prog.set_flash_proxy_dir(openocddir)
 
