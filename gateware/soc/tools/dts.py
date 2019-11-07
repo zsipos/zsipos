@@ -152,7 +152,7 @@ class DTSHelper():
         return hex(m["base"])
 
     def _gpio_pin(self, gpio):
-        return "gpio_" + str(gpio[0]) + " " + str(gpio[1]) + " " + str(gpio[2])
+        return str(gpio[0]) + " " + str(gpio[1]) + " " + str(gpio[2])
 
     def add_zsipos_clock(self):
         s = ""
@@ -201,7 +201,7 @@ class DTSHelper():
         s += self.tabs(0) + "};\n"
         self.dts += s
 
-    def add_gpio_leds(self, gpio_index, nleds, triggers={}):
+    def add_gpio_leds(self, gpio, nleds, triggers={}):
         s = ""
         s += self.tabs(0) + "gpio_leds" + " {\n"
         s += self.tabs(1) + 'compatible = "gpio-leds";\n'
@@ -210,7 +210,7 @@ class DTSHelper():
             if trigger:
                 s += self.tabs(1) + "led" + str(i) + " {\n"
                 s += self.tabs(2) + 'label = "' + trigger + '";\n'
-                s += self.tabs(2) + "gpios = <&" + self._gpio_pin((gpio_index, i, 0)) + ">;\n"
+                s += self.tabs(2) + "gpios = <&" + self._gpio_pin((gpio, i, 0)) + ">;\n"
                 s += self.tabs(2) + 'linux,default-trigger = "' + trigger + '";\n'
                 s += self.tabs(1) + "};\n"
         s += self.tabs(0) + "};\n"
