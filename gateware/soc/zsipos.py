@@ -203,7 +203,7 @@ class MySoC(EthernetSoC):
         spidevs = d.get_spi_mmc(0, "mmc")
         d.add_zsipos_spim("spi0", devices=spidevs)
         spi1devs = d.get_spi_waveshare35a(
-            1,
+            0,
             "ws35a",
             dc_gpio=(0, 4, 0),
             reset_gpio=(0, 5, 0),
