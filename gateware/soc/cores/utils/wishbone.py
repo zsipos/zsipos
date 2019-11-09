@@ -1,6 +1,8 @@
 from migen import *
 
 from litex.soc.interconnect import wishbone, stream
+from litex.soc.interconnect.csr import *
+from litex.soc.integration.common import mem_decoder
 
 class WishboneByteStreamTX(Module):
     def __init__(self, bus):
@@ -158,6 +160,62 @@ class WishboneByteStreamRX(Module):
         )
 
 
+class DMATest(Module, AutoCSR):
+    def __init__(self):
+
+        self.start  = Signal()
+        self.done   = Signal()
+        self.len    = Signal(32)
+
+        txbus = wishbone.Interface()
+        rxbus = wishbone.Interface()
+        self.submodules.txs = WishboneByteStreamTX(txbus)
+        self.submodules.rxs = WishboneByteStreamRX(rxbus)
+
+        self.comb += [
+            self.txs.len.eq(self.len),
+            self.rxs.len.eq(self.len),
+            self.txs.start.eq(self.start),
+            self.rxs.start.eq(self.start),
+            self.done.eq(self.rxs.done),
+        ]
+
+        self.comb += [
+            self.rxs.sink.data.eq(self.txs.source.data),
+            self.rxs.sink.valid.eq(self.txs.source.valid),
+            self.txs.source.ready.eq(self.rxs.sink.ready)
+        ]
+
+        # csr interface
+        self._length  = CSRStorage(32)
+        self._txadr   = CSRStorage(32)
+        self._rxadr   = CSRStorage(32)
+        self._control = CSRStorage(1)
+        self._status  = CSRStorage(1)
+
+        self.comb += [
+            self.len.eq(self._length.storage),
+            self.txs.adr.eq(self._txadr.storage[2:]),
+            self.rxs.adr.eq(self._rxadr.storage[2:]),
+            self.start.eq(self._control.storage[0]),
+        ]
+
+        # take care of start / running flags
+        self.sync += [
+            If(self.start,
+                self._status.storage[0].eq(1)
+            ),
+            If (self.done,
+                self._status.storage[0].eq(0)
+            ),
+            self._control.storage[0].eq(0)
+        ]
+
+        # wishbone interface
+        self.master_bus = wishbone.Interface()
+        self.submodules.arbiter = wishbone.Arbiter([txbus, rxbus], self.master_bus)
+
+
 #
 # unit tests
 #
@@ -219,8 +277,8 @@ def _testbench_writer(dut, cnt, silent):
     yield
 
 
-def _testbench(dut):
-    print("running testbench...")
+def _testbench1(dut):
+    print("running testbench 1 ...")
     cnt = 5
     silent = True
     yield from _testbench_writer(dut, cnt, silent)
@@ -228,14 +286,49 @@ def _testbench(dut):
     print("done.")
 
 
+def _testbench2(dut):
+    print("running testbench 2 ...")
+    len = 20
+    for i in range(len):
+        yield from dut.bus.write((0x1000>>2)+i, ~i)
+    yield from dut.dma._length.write(len*4)
+    yield from dut.dma._txadr.write(0x1000)
+    yield from dut.dma._rxadr.write(0x2000)
+    yield from dut.dma._control.write(1)
+    yield
+    while (yield from dut.dma._status.read()):
+        yield
+    for i in range(len):
+        print(i, ":", hex((yield from dut.bus.read((0x2000>>2)+i))))
+    print("done")
+
+
 if __name__ == "__main__":
-    class _Dut(Module):
+    class _Dut1(Module):
         def __init__(self):
             self.submodules.txmem = wishbone.SRAM(1024)
             self.submodules.rxmem = wishbone.SRAM(self.txmem.mem)
             self.submodules.txs = WishboneByteStreamTX(self.txmem.bus)
             self.submodules.rxs = WishboneByteStreamRX(self.rxmem.bus)
 
+    class _Dut2(Module):
+        def __init__(self):
+            self.submodules.txmem = wishbone.SRAM(1024)
+            self.submodules.rxmem = wishbone.SRAM(1024)
+            self.sysbus = wishbone.Interface()
+            self.submodules.decoder = wishbone.Decoder(
+                self.sysbus,
+                [
+                    (mem_decoder(0x1000, 1024), self.txmem.bus),
+                    (mem_decoder(0x2000, 1024), self.rxmem.bus),
+                ],
+                register=True
+            )
+            self.bus = wishbone.Interface()
+            self.submodules.dma = DMATest()
+            self.submodules.arbiter = wishbone.Arbiter([self.bus, self.dma.master_bus], self.sysbus)
 
-    dut = _Dut()
-    run_simulation(dut, _testbench(dut), vcd_name="/tmp/test.vcd")
+    dut1 = _Dut1()
+    run_simulation(dut1, _testbench1(dut1), vcd_name="/tmp/test1.vcd")
+    dut2 = _Dut2()
+    run_simulation(dut2, _testbench2(dut2), vcd_name="/tmp/test2.vcd")

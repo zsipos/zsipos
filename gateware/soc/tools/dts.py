@@ -267,6 +267,14 @@ class DTSHelper():
         s += self.tabs(0) + "};\n"
         self.dts += s
 
+    def add_zsipos_dmatest(self, dma):
+        s = ""
+        s += self.tabs(0) + dma + ": dmatest@" + self._base(dma)[2:] + " {\n"
+        s += self.tabs(1) + 'compatible = "zsipos,dma-test";\n'
+        s += self.tabs(1) + "reg = <" + self._base(dma) + " " + self._size(dma) + ">;\n"
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
 
 def dtshelper_args(parser):
     parser.add_argument("--dts-file", default=None, help="device tree file")

@@ -21,6 +21,8 @@ from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
 from cores.spim.spim_mod import SPIMaster
 
+from cores.utils.wishbone import DMATest
+
 # SoC ----------------------------------------------------------------------------------------------
 
 class MySoC(EthernetSoC):
@@ -77,10 +79,15 @@ class MySoC(EthernetSoC):
         self.submodules.sha1 = sha1
         self.add_wb_slave(self.mem_map["sha1"], sha1.bus, size=sha1.get_size())
         self.add_memory_region("sha1", self.mem_map["sha1"], sha1.get_size(), type="io")
+        # test
+        self.submodules.dmatest = DMATest()
+        self.add_wb_master(self.dmatest.master_bus)
+        self.add_csr("dmatest")
+
 
     def get_dts(self):
         d = DTSHelper(self)
-        d.print_csr_offsets(["spim"])
+        d.print_csr_offsets(["dmatest"])
         d.add_litex_uart("uart")
         d.add_litex_eth ("ethphy", "ethmac")
         d.add_litex_gpio("gpio0", direction="out", ngpio=4)
@@ -93,6 +100,7 @@ class MySoC(EthernetSoC):
         d.add_zsipos_spim("spim", devices=d.get_spi_mmc(0, "mmc"))
         d.add_zsipos_aes("aes")
         d.add_zsipos_sha1("sha1")
+        d.add_zsipos_dmatest("dmatest")
         s = self.cpu.build_dts(devices=d.get_devices())
         return s
 
