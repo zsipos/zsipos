@@ -26,7 +26,7 @@ from cores.extint.extint_mod import EXTINT
 
 class MySoC(EthernetSoC):
     mem_map = {
-        "spiflash" : 0x50000000,
+        "spiflash" : 0x20000000,
     }
     mem_map.update(EthernetSoC.mem_map)
     with_busmasters = False
@@ -35,17 +35,17 @@ class MySoC(EthernetSoC):
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
         # flash-rom
-        # self.add_constant("FLASH_BOOT_ADDRESS", FLASH_BOOT_ADDRESS)
-        # self.submodules.spiflash = SpiFlash(
-        #     self.platform.request("spiflash4x"),
-        #     dummy=11,
-        #     div=2,
-        #     with_bitbang=True,
-        #     endianness=self.cpu.endianness)
-        #self.spiflash.add_clk_primitive(self.platform.device)
-        # self.add_wb_slave(self.mem_map["spiflash"], self.spiflash.bus, size=self.flash_size)
-        # self.add_memory_region("spiflash", self.mem_map["spiflash"], self.flash_size, type="io")
-        # self.add_csr("spiflash")
+        self.add_constant("FLASH_BOOT_ADDRESS", self.mem_map["spiflash"] + FLASH_BOOT_OFFSET)
+        self.submodules.spiflash = SpiFlash(
+            self.platform.request("spiflash4x"),
+            dummy=11,
+            div=2,
+            with_bitbang=True,
+            endianness=self.cpu.endianness)
+        self.spiflash.add_clk_primitive(self.platform.device)
+        self.add_wb_slave(self.mem_map["spiflash"], self.spiflash.bus, size=self.flash_size)
+        self.add_memory_region("spiflash", self.mem_map["spiflash"], self.flash_size, type="io")
+        self.add_csr("spiflash")
 
     def get_dts(self):
         if not hasattr(self.cpu, "build_dts"):
