@@ -135,8 +135,8 @@ class SPIMaster(Module, AutoCSR):
                 self.pads.cs_n.eq(~self._cs.storage)
             ),
             self.spi.divclk.eq(self._divclk.storage),
-            self.len.eq(self._length.storage),
-            self.start.eq(Cat(self._control.storage[0], Replicate(0, 16))),
+            self.len.eq(Cat(self._length.storage, Replicate(0, 16))),
+            self.start.eq(self._control.storage[0]),
             self.txs.ignore.eq(self._control.storage[1]),
             self.rxs.ignore.eq(self._control.storage[2])
         ]
@@ -177,7 +177,7 @@ class SPIMaster(Module, AutoCSR):
 
 
     def get_size(self):
-        return max(self.size*2, 0x1000)
+        return max(self.size, 0x1000)
 
 
 #
