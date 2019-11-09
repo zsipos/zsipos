@@ -152,7 +152,7 @@ class MySoC(EthernetSoC):
         self.add_csr("spi0")
         self.add_interrupt("spi0")
         # SPI1: waveshare35a
-        self.submodules.spi1 = SPIMaster(self.platform.request("ws35a_spi"), cs_width=2)
+        self.submodules.spi1 = SPIMaster(self.platform.request("ws35a_spi"), cs_width=2, busmaster=self.with_busmasters)
         if self.with_busmasters:
             self.add_wb_master((self.spi1.master_bus))
         self.add_wb_slave(self.mem_map["spi1"], self.spi1.slave_bus, size=self.spi1.get_size())
