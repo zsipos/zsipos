@@ -1,4 +1,4 @@
-
+set -e
 echo "building kernel ..."
 
 build-initramfs.sh $1
