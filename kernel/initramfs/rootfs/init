@@ -1,38 +1,50 @@
 #!/bin/busybox sh
 
-/bin/busybox --install
+timeout=2
 
-export PATH=/bin:/sbin:/usr/bin:/usr/sbin
+bb() { 
+	/bin/busybox $* 
+}
 
-ifconfig eth0 192.168.0.55 netmask 255.255.255.0 up
-route add default gw 192.168.0.2
+special_mounts() {
+	for i in mnt proc sys dev tmp run
+	do
+		bb mkdir -p /$i
+	done
+	bb mount -t proc     none   $1/proc
+	bb mount -t sysfs    none   $1/sys
+	bb mount -t devtmpfs udev   $1/dev
+	bb mkdir -p $1/dev/pts
+	bb mount -t devpts   devpts $1/dev/pts
+	bb mount -t tmpfs    tmpfs  $1/tmp
+	bb mount -t tmpfs    tmpfs  $1/run
+}
 
-mkdir -p /nfs
-mount -t nfs -o nolock 192.168.0.45:/opt/riscv-root /nfs 
-for i in proc sys dev tmp run
-do
-	mkdir -p /nfs/$i
-done
+enter_shell() {
+	echo entering shell..
+	export PATH=/bin:/usr/bin:/sbin:/usr/sbin
+	special_mounts
+	bb --install
+	stty erase ^H
+	/bin/sh
+	/sbin/halt
+}
 
-mount -t proc     none   /nfs/proc
-mount -t sysfs    none   /nfs/sys
-mount -t devtmpfs udev   /nfs/dev
-mkdir -p /nfs/dev/pts
-mount -t devpts   devpts /nfs/dev/pts
-mount -t tmpfs    tmpfs  /nfs/tmp
-mount -t tmpfs    tmpfs  /nfs/run
+start_from() {
+	special_mounts $1
+	exec /bin/busybox switch_root $1 /sbin/init
+}
 
-exec switch_root /nfs /sbin/init
-#
-# should not get here. for development only.
-#
-for i in proc sys tmp run
-do
-	ln -s /nfs/$i /$i
-done
-mount -t devtmpfs udev /dev
-stty erase ^H
-/bin/sh
-# try again
-exec switch_root /nfs /sbin/init
+echo 
+read -p "Hit enter within $timeout seconds to enter shell" -t $timeout dummy && enter_shell
 
+echo
+echo Normal startup ...
+
+bb ifconfig eth0 192.168.0.55 netmask 255.255.255.0 up
+bb route add default gw 192.168.0.2
+
+bb mkdir /nfs
+bb mount -t nfs -o nolock 192.168.0.45:/opt/riscv-root /nfs 
+
+start_from /nfs
