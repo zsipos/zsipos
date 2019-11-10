@@ -178,9 +178,6 @@ class DMATest(Module, AutoCSR):
             self.txs.start.eq(self.start),
             self.rxs.start.eq(self.start),
             self.done.eq(self.rxs.done),
-        ]
-
-        self.comb += [
             self.rxs.sink.data.eq(self.txs.source.data),
             self.rxs.sink.valid.eq(self.txs.source.valid),
             self.txs.source.ready.eq(self.rxs.sink.ready)
@@ -203,12 +200,12 @@ class DMATest(Module, AutoCSR):
         # take care of start / running flags
         self.sync += [
             If(self.start,
-                self._status.storage[0].eq(1)
+                self._status.storage[0].eq(1),
+                self._control.storage[0].eq(0)
             ),
             If (self.done,
                 self._status.storage[0].eq(0)
             ),
-            self._control.storage[0].eq(0)
         ]
 
         # wishbone interface
@@ -286,11 +283,7 @@ def _testbench1(dut):
     print("done.")
 
 
-def _testbench2(dut):
-    print("running testbench 2 ...")
-    len = 20
-    for i in range(len):
-        yield from dut.bus.write((0x1000>>2)+i, ~i)
+def _testbench_copy(dut, len):
     yield from dut.dma._length.write(len*4)
     yield from dut.dma._txadr.write(0x1000)
     yield from dut.dma._rxadr.write(0x2000)
@@ -300,7 +293,19 @@ def _testbench2(dut):
         yield
     for i in range(len):
         print(i, ":", hex((yield from dut.bus.read((0x2000>>2)+i))))
-    print("done")
+
+
+def _testbench2(dut):
+    print("running testbench 2 ...")
+    len = 20
+    for i in range(len):
+        yield from dut.bus.write((0x1000>>2)+i, i)
+    yield from _testbench_copy(dut, len)
+    print("(second run)")
+    for i in range(len):
+        yield from dut.bus.write((0x1000>>2)+i, ~i)
+    yield from _testbench_copy(dut, len)
+    print("done.")
 
 
 if __name__ == "__main__":

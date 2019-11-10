@@ -33,7 +33,7 @@ class MySoC(EthernetSoC):
         "sha1"     : 0x43000000,
     }
     mem_map.update(EthernetSoC.mem_map)
-    with_busmasters = False
+    with_busmasters = True
     flash_size = 0x1000000
 
     def __init__(self, **kwargs):
@@ -51,8 +51,8 @@ class MySoC(EthernetSoC):
         self.add_memory_region("spiflash", self.mem_map["spiflash"], self.flash_size, type="io")
         self.add_csr("spiflash")
         # sd-card
-        self.submodules.spim = SPIMaster(self.platform.request("sdspi"), busmaster=self.with_busmasters)
-        if self.with_busmasters:
+        self.submodules.spim = SPIMaster(self.platform.request("sdspi"), busmaster=False)
+        if hasattr(self.spim, "master_bus"):
             self.add_wb_master(self.spim.master_bus)
         self.add_wb_slave(self.mem_map["spim"], self.spim.slave_bus, size=self.spim.get_size())
         self.add_memory_region("spim", self.mem_map["spim"], self.spim.get_size(), type="io")

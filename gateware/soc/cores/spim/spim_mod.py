@@ -144,12 +144,12 @@ class SPIMaster(Module, AutoCSR):
         # take care of start / running flags
         self.sync += [
             If(self.start,
-                self._status.storage[0].eq(1)
+                self._status.storage[0].eq(1),
+                self._control.storage[0].eq(0)
             ),
             If (self.done,
                 self._status.storage[0].eq(0)
             ),
-            self._control.storage[0].eq(0)
         ]
 
         # wishbone interface
