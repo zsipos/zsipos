@@ -9,7 +9,7 @@ then
 fi
 outdir=build_$BOARD
 python3 $BOARD.py \
-	--cpu-type=$CPU_TYPE --cpu-variant=linux \
+	--cpu-type=$CPU_TYPE --cpu-variant=$CPU_VARIANT \
 	--output-dir $outdir \
 	--dts-file $outdir/software/include/generated/devicetree.dts \
  	--csr-json $outdir/$BOARD.json \

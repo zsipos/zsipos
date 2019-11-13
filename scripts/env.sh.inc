@@ -20,4 +20,4 @@ export ROCKET_IS_SUBMODULE=true
 
 # cpu-type
 export CPU_TYPE=rocket$BITS
-
+export CPU_VARIANT=linux
