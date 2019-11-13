@@ -32,7 +32,13 @@ enter_shell() {
 
 start_from() {
 	special_mounts $1
-	exec /bin/busybox switch_root $1 /sbin/init
+	if [ -x $1/sbin/init ]
+	then
+		exec /bin/busybox switch_root $1 /sbin/init
+	else
+		echo "/sbin/init is not executeable. entering shell..."
+		enter_shell
+	fi
 }
 
 echo 
