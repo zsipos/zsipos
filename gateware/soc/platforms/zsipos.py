@@ -43,14 +43,14 @@ _io = [
         IOStandard("LVCMOS33")
     ),
 
-    ("cpu_reset", 0, Pins("G18"), IOStandard("LVCMOS33")),
 
     ################
     # te0710 board #
     ################
 
     ("clk100", 0, Pins("F4"), IOStandard("SSTL15")),
-    #("cpu_reset", 0, Pins("F5"), IOStandard("LVCMOS15")),
+    ("cpu_reset", 0, Pins("G18"), IOStandard("LVCMOS33")),
+    ("cpu_reset_trenz", 0, Pins("F5"), IOStandard("LVCMOS15")),
 
     ("serial", 0,
         Subsignal("tx", Pins("B8")),
@@ -150,13 +150,13 @@ class Platform(XilinxPlatform):
     default_clk_period = 1e9/100e6
 
     def __init__(self):
-        XilinxPlatform.__init__(self, "xc7a100tcsg324-2", _io, _connectors, toolchain="vivado")
+        XilinxPlatform.__init__(self, "xc7a100t-csg324-2", _io, _connectors, toolchain="vivado")
         self.toolchain.bitstream_commands = \
             ["set_property BITSTREAM.CONFIG.SPI_BUSWIDTH 4 [current_design]"]
         self.toolchain.additional_commands = \
-            ["write_cfgmem -force -format bin -interface spix4 -size 16 "
+            ["write_cfgmem -force -format bin -interface spix4 -size 32 "
              "-loadbit \"up 0x0 {build_name}.bit\" -file {build_name}.bin"]
         #self.add_platform_command("set_property INTERNAL_VREF 0.675 [get_iobanks 34]")
 
     def create_programmer(self):
-        return VivadoProgrammer(flash_part="n25q128-3.3v-spi-x1_x2_x4")
+        return VivadoProgrammer(flash_part="s25fl256sxxxxxx0-spi-x1_x2_x4")
