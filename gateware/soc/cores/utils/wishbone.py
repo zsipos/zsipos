@@ -240,7 +240,10 @@ def _testbench_reader(dut, cnt, silent):
                   "ack=", (yield dut.txs.bus.ack),
             )
         if (yield dut.txs.source.valid):
-            print("adr=", (yield dut.txs.bus.adr), "trlen=", (yield dut.txs.rdlen), "dat_r=", _h((yield dut.txs.bus.dat_r)), "data=", hex((yield dut.txs.source.data)))
+            print("adr=", (yield dut.txs.bus.adr),
+                  "trlen=", (yield dut.txs.rdlen),
+                  "dat_r=", _h((yield dut.txs.bus.dat_r)),
+                  "data=", hex((yield dut.txs.source.data)))
             yield dut.txs.source.ready.eq(1)
         yield
         yield dut.txs.source.ready.eq(0)
