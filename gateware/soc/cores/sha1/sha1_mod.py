@@ -20,13 +20,6 @@ class SHA1(Module):
 
         self.sync += bus.ack.eq(cs & ~bus.ack)
 
-        platform.add_sources(
-            os.path.join(os.path.abspath(os.path.dirname(__file__)), "verilog", "src", "rtl"),
-            "sha1.v",
-            "sha1_core.v",
-            "sha1_w_mem.v"
-        )
-
         self.specials += Instance("sha1",
             i_clk        = ClockSignal(),
             i_reset_n    = reset_n,
@@ -36,6 +29,10 @@ class SHA1(Module):
             i_write_data = bus.dat_w,
             o_read_data  = bus.dat_r
         )
+
+        # add sources
+        dir=os.path.join(os.path.abspath(os.path.dirname(__file__)), "verilog", "src", "rtl")
+        platform.add_source_dir(dir)
 
     def get_size(self):
         return 0x1000
