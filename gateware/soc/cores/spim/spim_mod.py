@@ -78,7 +78,7 @@ class _SPIMaster(Module):
 
 
 class SPIMaster(Module, AutoCSR):
-    def __init__(self, pads=None, cs_width=1, size=1024, busmaster=False):
+    def __init__(self, pads=None, cs_width=1, size=1024, fifo_size=16, busmaster=False):
         if pads is None:
             pads = Record([("sclk", 1), ("cs_n", cs_width), ("mosi", 1), ("miso", 1)])
         self.size   = size
@@ -91,7 +91,7 @@ class SPIMaster(Module, AutoCSR):
         rxbus = wishbone.Interface()
         self.submodules.txs = WishboneByteStreamTX(txbus)
         self.submodules.rxs = WishboneByteStreamRX(rxbus)
-        self.submodules.spi = _SPIMaster(self.pads, 32)
+        self.submodules.spi = _SPIMaster(self.pads, fifo_size)
 
         self.comb += [
             self.txs.len.eq(self.len),
