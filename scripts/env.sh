@@ -7,10 +7,8 @@ if [ ! -f scripts/env.sh.inc ]
 then
 	echo "please run this script from program root."
 else
-	export TOP=`pwd`
-	. "$TOP/scripts/env.sh.inc"
-
+	export ZTOP=`pwd`
+	. "$ZTOP/scripts/env.sh.inc"
 	set +e
-
-	export PATH="$TOP/scripts:$PATH"
+	export PATH="$ZTOP/scripts:$PATH"
 fi

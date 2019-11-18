@@ -1,7 +1,7 @@
 set -e
 echo "building riscv-openocd .."
 
-cd "$TOP/toolchain"
+cd "$ZTOP/toolchain"
 
 if [ "$1" == "clean" ]
 then

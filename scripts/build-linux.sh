@@ -1,13 +1,13 @@
-
+set -e
 echo "building linux ..."
 
-cd "$TOP/kernel"
+cd "$ZTOP/kernel"
 
 SRCDIR="`pwd`/linux"
 WRKDIR="`pwd`/build_$BITS/linux"
 CONFIG="zsipos_$BITS"
 
-INITRAMFS="$TOP/kernel/build_$BITS/initramfs.cpio"
+INITRAMFS="$ZTOP/kernel/build_$BITS/initramfs.cpio"
 
 if [ "$1" == "clean" ]
 then

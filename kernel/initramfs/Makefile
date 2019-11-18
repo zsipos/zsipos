@@ -1,8 +1,8 @@
 
-INITRAMFS=$(TOP)/kernel/build_$(BITS)/initramfs.cpio
-KERNELDIR=$(TOP)/kernel/build_$(BITS)/linux
-WRKDIR=$(TOP)/kernel/build_$(BITS)/busybox
-ROOTFS=$(TOP)/kernel/build_$(BITS)/rootfs
+INITRAMFS=$(ZTOP)/kernel/build_$(BITS)/initramfs.cpio
+KERNELDIR=$(ZTOP)/kernel/build_$(BITS)/linux
+WRKDIR=$(ZTOP)/kernel/build_$(BITS)/busybox
+ROOTFS=$(ZTOP)/kernel/build_$(BITS)/rootfs
 
 ifeq ($(BITS), 32)
 	CFLAGS=-march=rv32imafdc -mabi=ilp32

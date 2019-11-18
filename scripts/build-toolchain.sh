@@ -1,7 +1,7 @@
-
+set -e
 echo "building riscv toolchain .."
 
-cd "$TOP/toolchain"
+cd "$ZTOP/toolchain"
 
 if [ "$1" == "clean" ]
 then
@@ -12,6 +12,6 @@ fi
 mkdir -p build
 cd build
 ../riscv-gnu-toolchain/configure --prefix="$RISCV" --enable-multilib
-make $J newlib linux
+make $J linux newlib
 
 

@@ -1,7 +1,7 @@
-
+set -e
 echo "buildling bbl ..."
 
-cd $TOP/kernel
+cd "$ZTOP/kernel"
 
 SRCDIR="`pwd`/riscv-pk"
 WRKDIR="`pwd`/build_$BITS/bbl"

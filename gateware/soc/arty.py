@@ -20,7 +20,7 @@ from tools.dts import *
 from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
 from cores.spi.spi_mod import SPI
-from cores.extint.extint_mod import EXTINT
+from cores.interrupt.interrupt_mod import ExtInterrupt
 
 # SoC ----------------------------------------------------------------------------------------------
 

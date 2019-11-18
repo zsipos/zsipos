@@ -1,7 +1,7 @@
-
+set -e
 echo "building board gateware .."
 
-cd $TOP/gateware/soc
+cd "$ZTOP/gateware/soc"
 
 if [ "$1" == "clean" ]
 then

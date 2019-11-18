@@ -1,7 +1,7 @@
-
+set -e
 echo "building rocket-chip .."
 
-cd $TOP/gateware/litex/litex/soc/cores/cpu/rocket2/verilog
+cd "$ZTOP/gateware/litex/litex/soc/cores/cpu/rocket2/verilog"
 
 if [ "$1" == "clean" ]
 then
