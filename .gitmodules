@@ -31,3 +31,6 @@
 [submodule "toolchain/riscv-openocd"]
 	path = toolchain/riscv-openocd
 	url = https://github.com/riscv/riscv-openocd
+[submodule "gateware/soc/cores/sdcard/verilog"]
+	path = gateware/soc/cores/sdcard/verilog
+	url = https://github.com/mczerski/SD-card-controller

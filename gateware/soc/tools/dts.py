@@ -216,6 +216,17 @@ class DTSHelper():
         s += self.tabs(0) + "};\n"
         self.dts += s
 
+    def add_opencores_sdc(self, sdmmc):
+        s = ""
+        s += self.tabs(0) + sdmmc + ": ocsdc@" + self._membase(sdmmc)[2:] + " {\n"
+        s += self.tabs(1) + 'compatible = "opencores,ocsdc";\n'
+        s += self.tabs(1) + 'clocks = <&zsiposclock>;\n'
+        s += self.tabs(1) + self._irqparent() + ";\n"
+        s += self.tabs(1) + "interrupts = <" + self._irq(sdmmc+"_cmd_irq") + " " + self._irq(sdmmc+"_dat_irq") + ">;\n"
+        s += self.tabs(1) + "reg = <" + self._memreg(sdmmc) + ">;\n"
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
     def add_zsipos_spi(self, spi, devices=None):
         s = ""
         s += self.tabs(0) + spi + ": spi@" + self._membase(spi)[2:] + " {\n"

@@ -20,6 +20,7 @@ from tools.flash import *
 from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
 from cores.spim.spim_mod import SPIMaster
+from cores.sdcard.sdcard_mod import SDCard
 
 from cores.utils.wishbone import DMATest
 
@@ -31,10 +32,12 @@ class MySoC(EthernetSoC):
         "spim"     : 0x41000000,
         "aes"      : 0x42000000,
         "sha1"     : 0x43000000,
+        "sdmmc"    : 0x44000000,
     }
     mem_map.update(EthernetSoC.mem_map)
     with_busmasters = True
     flash_size = 0x1000000
+    fast_sd = True
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
@@ -51,13 +54,23 @@ class MySoC(EthernetSoC):
         self.add_memory_region("spiflash", self.mem_map["spiflash"], self.flash_size, type="io")
         self.add_csr("spiflash")
         # sd-card
-        self.submodules.spim = SPIMaster(self.platform.request("sdspi"), busmaster=False)
-        if hasattr(self.spim, "master_bus"):
-            self.add_wb_master(self.spim.master_bus)
-        self.add_wb_slave(self.mem_map["spim"], self.spim.slave_bus, size=self.spim.get_size())
-        self.add_memory_region("spim", self.mem_map["spim"], self.spim.get_size(), type="io")
-        self.add_csr("spim")
-        self.add_interrupt("spim")
+        if self.fast_sd:
+            self.submodules.sdmmc = SDCard(self.platform, "sdmmc")
+            self.add_wb_master(self.sdmmc.master_bus)
+            self.add_wb_slave(self.mem_map["sdmmc"], self.sdmmc.slave_bus, size=self.sdmmc.get_size())
+            self.add_memory_region("sdmmc", self.mem_map["sdmmc"], self.sdmmc.get_size(), type="io")
+            self.sdmmc_cmd_irq = self.sdmmc.cmd_irq
+            self.sdmmc_dat_irq = self.sdmmc.dat_irq
+            self.add_interrupt("sdmmc_cmd_irq")
+            self.add_interrupt("sdmmc_dat_irq")
+        else:
+            self.submodules.spim = SPIMaster(self.platform.request("sdspi"), busmaster=False)
+            if hasattr(self.spim, "master_bus"):
+                self.add_wb_master(self.spim.master_bus)
+            self.add_wb_slave(self.mem_map["spim"], self.spim.slave_bus, size=self.spim.get_size())
+            self.add_memory_region("spim", self.mem_map["spim"], self.spim.get_size(), type="io")
+            self.add_csr("spim")
+            self.add_interrupt("spim")
         # nexys4 special
         sdpwdn = self.platform.request("sdpwdn")
         self.comb += sdpwdn.eq(ResetSignal())
@@ -97,16 +110,21 @@ class MySoC(EthernetSoC):
             2: "cpu1"
         }
         d.add_gpio_leds("gpio0", nleds=4, triggers=led_triggers)
-        d.add_zsipos_spim("spim", devices=d.get_spi_mmc(0, "mmc"))
+        if self.fast_sd:
+            d.add_opencores_sdc("sdmmc")
+        else:
+            d.add_zsipos_spim("spim", devices=d.get_spi_mmc(0, "mmc"))
         d.add_zsipos_aes("aes")
         d.add_zsipos_sha1("sha1")
         d.add_zsipos_dmatest("dmatest")
         s = self.cpu.build_dts(devices=d.get_devices())
         return s
 
+
     def write_dts(self, dts_file):
         with open(dts_file, "w") as f:
             f.write(self.get_dts())
+
 # Build --------------------------------------------------------------------------------------------
 
 def main():
