@@ -137,7 +137,7 @@ _io = [
         Subsignal("col", Pins("P14")),
         Subsignal("crs", Pins("V16")),
         IOStandard("LVCMOS33"),
-     ),
+    ),
 ]
 
 _connectors = [
