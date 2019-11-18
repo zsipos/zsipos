@@ -6,6 +6,8 @@ from os import getenv
 
 from litex.soc.cores.clock import *
 from litex.soc.cores.gpio import *
+from litex.soc.cores.spi_flash import SpiFlash
+
 from litex.soc.integration.soc_sdram import *
 from litex.soc.integration.builder import *
 
@@ -25,7 +27,7 @@ from tools.dts import *
 from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
 from cores.spim.spim_mod import SPIMaster
-from cores.extint.extint_mod import EXTINT
+from cores.interrupt.interrupt_mod import ExtInterrupt
 
 # CRG ----------------------------------------------------------------------------------------------
 
@@ -138,29 +140,43 @@ class EthernetSoC(BaseSoC):
 
 class MySoC(EthernetSoC):
     mem_map = {
-        "spi0" : 0x41000000,
-        "spi1" : 0x42000000,
-        "aes"  : 0x4e000000,
-        "sha1" : 0x4f000000,
+        "spi0"     : 0x40000000,
+        "spi1"     : 0x41000000,
+        "aes"      : 0x4e000000,
+        "sha1"     : 0x4f000000,
+        "spiflash" : 0x50000000,
     }
     mem_map.update(EthernetSoC.mem_map)
-    with_busmasters = False
-    full_board = False
+    with_busmasters = True
+    flash_size = 0x2000000
+    full_board = True
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
+        # flash-rom
+        self.add_constant("FLASH_BOOT_ADDRESS", self.mem_map["spiflash"] + FLASH_BOOT_OFFSET)
+        self.submodules.spiflash = SpiFlash(
+            self.platform.request("spiflash4x"),
+            dummy=11,
+            div=2,
+            with_bitbang=True,
+            endianness=self.cpu.endianness)
+        self.spiflash.add_clk_primitive(self.platform.device)
+        self.add_wb_slave(self.mem_map["spiflash"], self.spiflash.bus, size=self.flash_size)
+        self.add_memory_region("spiflash", self.mem_map["spiflash"], self.flash_size, type="io")
+        self.add_csr("spiflash")
         if self.full_board:
             # SPI0: sd-card
-            self.submodules.spi0 = SPIMaster(self.platform.request("sdspi"), busmaster=self.with_busmasters)
-            if self.with_busmasters:
+            self.submodules.spi0 = SPIMaster(self.platform.request("sdspi"), busmaster=False)
+            if hasattr(self.spi0, "master_bus"):
                 self.add_wb_master(self.spi0.master_bus)
             self.add_wb_slave(self.mem_map["spi0"], self.spi0.slave_bus, size=self.spi0.get_size())
             self.add_memory_region("spi0", self.mem_map["spi0"], self.spi0.get_size(), type="io")
             self.add_csr("spi0")
             self.add_interrupt("spi0")
             # SPI1: waveshare35a
-            self.submodules.spi1 = SPIMaster(self.platform.request("ws35a_spi"), cs_width=2, busmaster=self.with_busmasters)
-            if self.with_busmasters:
+            self.submodules.spi1 = SPIMaster(self.platform.request("ws35a_spi"), cs_width=2, busmaster=False)
+            if hasattr(self.spi1, "master_bus"):
                 self.add_wb_master((self.spi1.master_bus))
             self.add_wb_slave(self.mem_map["spi1"], self.spi1.slave_bus, size=self.spi1.get_size())
             self.add_memory_region("spi1", self.mem_map["spi1"], self.spi1.get_size(), type="io")
@@ -169,7 +185,7 @@ class MySoC(EthernetSoC):
             # waveshare35a
             ws35a_rs    = Signal()
             ws35a_reset = Signal()
-            self.submodules.ws35a = EXTINT(self.platform, "ws35a_int")
+            self.submodules.ws35a = ExtInterrupt(self.platform, "ws35a_int")
             self.add_interrupt("ws35a")
             # gpio0: leds, ws35a controls
             gpio0_signals = Cat(
@@ -193,6 +209,7 @@ class MySoC(EthernetSoC):
             self.submodules.sha1 = SHA1(self.platform)
             self.add_wb_slave(self.mem_map["sha1"], self.sha1.bus, size=self.sha1.get_size())
             self.add_memory_region("sha1", self.mem_map["sha1"], self.sha1.get_size(), type="io")
+
 
     def get_dts(self):
         d = DTSHelper(self)
@@ -222,6 +239,7 @@ class MySoC(EthernetSoC):
             d.add_zsipos_sha1("sha1")
         s = self.cpu.build_dts(devices=d.get_devices())
         return s
+
 
     def write_dts(self, dts_file):
         with open(dts_file, "w") as f:
