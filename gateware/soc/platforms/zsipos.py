@@ -30,27 +30,26 @@ _io = [
         Subsignal("mosi", Pins("D13")),
         Subsignal("miso", Pins("B13")),
         Subsignal("cs_n", Pins("B14")),
-        IOStandard("LVCMOS33")
+        IOStandard("LVCMOS33"), Misc("PULLUP TRUE"), Misc("SLEW=FAST")
     ),
 
     ("sdmmc", 0,
-        Subsignal("sclk", Pins("D12")),
+        Subsignal("clk",  Pins("D12")),
         Subsignal("cmd",  Pins("D13")),
-        Subsignal("dat0", Pins("B13")),
-        Subsignal("dat1", Pins("D14")),
-        Subsignal("dat2", Pins("C14")),
-        Subsignal("dat3", Pins("B14")),
-        IOStandard("LVCMOS33")
+        Subsignal("data", Pins("B13 D14 C14 B14")),
+        IOStandard("LVCMOS33"), Misc("PULLUP TRUE"), Misc("SLEW=FAST"),
     ),
 
+    ("cpu_reset", 0, Pins("G18"), IOStandard("LVCMOS33")),
 
     ################
     # te0710 board #
     ################
 
     ("clk100", 0, Pins("F4"), IOStandard("SSTL15")),
-    ("cpu_reset", 0, Pins("G18"), IOStandard("LVCMOS33")),
-    ("cpu_reset_trenz", 0, Pins("F5"), IOStandard("LVCMOS15")),
+    ("reset_trenz", 0, Pins("F5"), IOStandard("LVCMOS15")),
+
+    ("board_led", 0, Pins("L15"), IOStandard("LVCMOS33")),
 
     ("serial", 0,
         Subsignal("tx", Pins("B8")),
