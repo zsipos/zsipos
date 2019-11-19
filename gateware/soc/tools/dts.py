@@ -164,6 +164,30 @@ class DTSHelper():
         s += self.tabs(0) + "};\n"
         self.dts += s
 
+    def add_gpio_leds(self, gpio, nleds, triggers={}):
+        s = ""
+        s += self.tabs(0) + "gpio_leds" + " {\n"
+        s += self.tabs(1) + 'compatible = "gpio-leds";\n'
+        for i in range(nleds):
+            trigger = triggers.get(i)
+            if trigger:
+                s += self.tabs(1) + "led" + str(i) + " {\n"
+                s += self.tabs(2) + 'label = "' + trigger + '";\n'
+                s += self.tabs(2) + "gpios = <&" + self._gpio_pin((gpio, i, 0)) + ">;\n"
+                s += self.tabs(2) + 'linux,default-trigger = "' + trigger + '";\n'
+                s += self.tabs(1) + "};\n"
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
+    def add_gpio_restart(self, gpio, pin):
+        s = ""
+        s += self.tabs(0) + "gpio_restart" + " {\n"
+        s += self.tabs(1) + 'compatible = "gpio-restart";\n'
+        s += self.tabs(2) + "gpios = <&" + self._gpio_pin((gpio, pin, 0)) + ">;\n"
+        s += self.tabs(2) + "priority = <128>;\n"
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
     def add_litex_uart(self, uart):
         s = ""
         s += self.tabs(0) + uart + ": uart@" + self._base(uart)[2:] + " {\n"
@@ -198,21 +222,6 @@ class DTSHelper():
         s += self.tabs(1) + 'litex,direction = "' + direction + '";\n'
         s += self.tabs(1) + "litex,ngpio = <" + str(ngpio) + ">;\n"
         s += self.tabs(1) + "reg = <" + self._base(gpio) + " " + self._size(gpio) + ">;\n"
-        s += self.tabs(0) + "};\n"
-        self.dts += s
-
-    def add_gpio_leds(self, gpio, nleds, triggers={}):
-        s = ""
-        s += self.tabs(0) + "gpio_leds" + " {\n"
-        s += self.tabs(1) + 'compatible = "gpio-leds";\n'
-        for i in range(nleds):
-            trigger = triggers.get(i)
-            if trigger:
-                s += self.tabs(1) + "led" + str(i) + " {\n"
-                s += self.tabs(2) + 'label = "' + trigger + '";\n'
-                s += self.tabs(2) + "gpios = <&" + self._gpio_pin((gpio, i, 0)) + ">;\n"
-                s += self.tabs(2) + 'linux,default-trigger = "' + trigger + '";\n'
-                s += self.tabs(1) + "};\n"
         s += self.tabs(0) + "};\n"
         self.dts += s
 

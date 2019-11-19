@@ -26,13 +26,14 @@ from tools.dts import *
 
 from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
+from cores.sdcard.sdcard_mod import SDCard
 from cores.spim.spim_mod import SPIMaster
 from cores.interrupt.interrupt_mod import ExtInterrupt
 
 # CRG ----------------------------------------------------------------------------------------------
 
 class _CRG(Module):
-    def __init__(self, platform, sys_clk_freq, full_board):
+    def __init__(self, platform, sys_clk_freq, reset_signal):
         self.clock_domains.cd_sys = ClockDomain()
         self.clock_domains.cd_sys4x = ClockDomain(reset_less=True)
         self.clock_domains.cd_sys4x_dqs = ClockDomain(reset_less=True)
@@ -46,11 +47,7 @@ class _CRG(Module):
 
         self.submodules.pll = pll = S7MMCM(speedgrade=-2)
 
-        if full_board:
-            self.comb += pll.reset.eq(~platform.request("cpu_reset"))
-        else:
-            self.comb += pll.reset.eq(platform.request("cpu_reset_trenz"))
-            print("using settings for te0706 carrier board")
+        self.comb += pll.reset.eq(reset_signal)
 
         pll.register_clkin(platform.request("clk100"), 100e6)
         pll.create_clkout(self.cd_sys, sys_clk_freq)
@@ -70,7 +67,16 @@ class BaseSoC(SoCSDRAM):
                           integrated_sram_size=0x8000,
                           l2_size=0, **kwargs)
 
-        self.submodules.crg = _CRG(platform, sys_clk_freq, self.full_board)
+        self.reset = Signal()
+        reset      = Signal()
+
+        if self.full_board:
+            self.comb += reset.eq(self.reset | ~platform.request("cpu_reset"))
+        else:
+            self.comb += reset.eq(self.reset | platform.request("reset_trenz"))
+            print("using settings for te0710 only")
+
+        self.submodules.crg = _CRG(platform, sys_clk_freq, reset)
 
         # sdram
         self.submodules.ddrphy = s7ddrphy.A7DDRPHY(platform.request("ddram"), sys_clk_freq=sys_clk_freq)
@@ -140,16 +146,18 @@ class EthernetSoC(BaseSoC):
 
 class MySoC(EthernetSoC):
     mem_map = {
-        "spi0"     : 0x40000000,
-        "spi1"     : 0x41000000,
+        "sdmmc"    : 0x40000000,
+        "spi0"     : 0x41000000,
+        "spi1"     : 0x42000000,
         "aes"      : 0x4e000000,
         "sha1"     : 0x4f000000,
         "spiflash" : 0x50000000,
     }
     mem_map.update(EthernetSoC.mem_map)
-    with_busmasters = True
     flash_size = 0x2000000
+    with_busmasters = True
     full_board = True
+    fast_sd = False
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
@@ -166,14 +174,24 @@ class MySoC(EthernetSoC):
         self.add_memory_region("spiflash", self.mem_map["spiflash"], self.flash_size, type="io")
         self.add_csr("spiflash")
         if self.full_board:
-            # SPI0: sd-card
-            self.submodules.spi0 = SPIMaster(self.platform.request("sdspi"), busmaster=False)
-            if hasattr(self.spi0, "master_bus"):
-                self.add_wb_master(self.spi0.master_bus)
-            self.add_wb_slave(self.mem_map["spi0"], self.spi0.slave_bus, size=self.spi0.get_size())
-            self.add_memory_region("spi0", self.mem_map["spi0"], self.spi0.get_size(), type="io")
-            self.add_csr("spi0")
-            self.add_interrupt("spi0")
+            if self.fast_sd:
+                self.submodules.sdmmc = SDCard(self.platform, "sdmmc")
+                self.add_wb_master(self.sdmmc.master_bus)
+                self.add_wb_slave(self.mem_map["sdmmc"], self.sdmmc.slave_bus, size=self.sdmmc.get_size())
+                self.add_memory_region("sdmmc", self.mem_map["sdmmc"], self.sdmmc.get_size(), type="io")
+                self.sdmmc_cmd_irq = self.sdmmc.cmd_irq
+                self.sdmmc_dat_irq = self.sdmmc.dat_irq
+                self.add_interrupt("sdmmc_cmd_irq")
+                self.add_interrupt("sdmmc_dat_irq")
+            else:
+                # SPI0: sd-card
+                self.submodules.spi0 = SPIMaster(self.platform.request("sdspi"), busmaster=False)
+                if hasattr(self.spi0, "master_bus"):
+                    self.add_wb_master(self.spi0.master_bus)
+                self.add_wb_slave(self.mem_map["spi0"], self.spi0.slave_bus, size=self.spi0.get_size())
+                self.add_memory_region("spi0", self.mem_map["spi0"], self.spi0.get_size(), type="io")
+                self.add_csr("spi0")
+                self.add_interrupt("spi0")
             # SPI1: waveshare35a
             self.submodules.spi1 = SPIMaster(self.platform.request("ws35a_spi"), cs_width=2, busmaster=False)
             if hasattr(self.spi1, "master_bus"):
@@ -188,13 +206,18 @@ class MySoC(EthernetSoC):
             self.submodules.ws35a = ExtInterrupt(self.platform, "ws35a_int")
             self.add_interrupt("ws35a")
             # gpio0: leds, ws35a controls
+            board_led = Signal()
+            self.comb += self.platform.request("board_led").eq(~board_led)
             gpio0_signals = Cat(
                 self.platform.request("user_led", 0),
                 self.platform.request("user_led", 1),
                 self.platform.request("user_led", 2),
                 self.platform.request("user_led", 3),
+                board_led,
+                self.reset,
                 ws35a_rs,
-                ws35a_reset)
+                ws35a_reset,
+            )
             self.submodules.gpio0 = GPIOOut(gpio0_signals)
             self.add_csr("gpio0")
             # gpio1: touchscreen pendown
@@ -217,21 +240,26 @@ class MySoC(EthernetSoC):
         d.add_litex_eth("ethphy", "ethmac")
         d.add_litex_eth("ethphy1", "ethmac1")
         if self.full_board:
-            d.add_litex_gpio("gpio0", direction="out", ngpio=6)
+            d.add_litex_gpio("gpio0", direction="out", ngpio=7)
             led_triggers = {
                 0: "activity",
                 1: "cpu0",
-                2: "cpu1"
+                2: "cpu1",
+                4: "heartbeat"
             }
-            d.add_gpio_leds("gpio0", nleds=4, triggers=led_triggers)
+            d.add_gpio_leds("gpio0", nleds=5, triggers=led_triggers)
+            d.add_gpio_restart("gpio0", 5)
             d.add_litex_gpio("gpio1", direction="in", ngpio=1)
-            spidevs = d.get_spi_mmc(0, "mmc")
-            d.add_zsipos_spim("spi0", devices=spidevs)
+            if self.fast_sd:
+                d.add_opencores_sdc("sdmmc")
+            else:
+                spidevs = d.get_spi_mmc(0, "mmc")
+                d.add_zsipos_spim("spi0", devices=spidevs)
             spi1devs = d.get_spi_waveshare35a(
                 0,
                 "ws35a",
-                dc_gpio=("gpio0", 4, 0),
-                reset_gpio=("gpio0", 5, 0),
+                dc_gpio=("gpio0", 6, 0),
+                reset_gpio=("gpio0", 7, 0),
                 pendown_gpio=("gpio1", 0, 0)
             )
             d.add_zsipos_spim("spi1", devices=spi1devs)
