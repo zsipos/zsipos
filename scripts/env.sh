@@ -8,6 +8,7 @@ then
 	echo "please run this script from program root."
 else
 	export ZTOP=`pwd`
+	. "$ZTOP/scripts/setup-venv.sh"
 	. "$ZTOP/scripts/env.sh.inc"
 	set +e
 	export PATH="$ZTOP/scripts:$PATH"
