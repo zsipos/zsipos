@@ -1,4 +1,4 @@
-VDIR="$ZTOP/venv-zsipos"
+VDIR="$ZTOP/.venv-zsipos"
 if [ -d "$VDIR" ]
 then
 	. "$VDIR/bin/activate"
