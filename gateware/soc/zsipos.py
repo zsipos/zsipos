@@ -33,7 +33,7 @@ from cores.interrupt.interrupt_mod import ExtInterrupt
 # CRG ----------------------------------------------------------------------------------------------
 
 class _CRG(Module):
-    def __init__(self, platform, sys_clk_freq, reset_signal):
+    def __init__(self, platform, sys_clk_freq, clock_reset):
         self.clock_domains.cd_sys = ClockDomain()
         self.clock_domains.cd_sys4x = ClockDomain(reset_less=True)
         self.clock_domains.cd_sys4x_dqs = ClockDomain(reset_less=True)
@@ -47,7 +47,7 @@ class _CRG(Module):
 
         self.submodules.pll = pll = S7MMCM(speedgrade=-2)
 
-        self.comb += pll.reset.eq(reset_signal)
+        self.comb += pll.reset.eq(clock_reset)
 
         pll.register_clkin(platform.request("clk100"), 100e6)
         pll.create_clkout(self.cd_sys, sys_clk_freq)
@@ -67,16 +67,18 @@ class BaseSoC(SoCSDRAM):
                           integrated_sram_size=0x8000,
                           l2_size=0, **kwargs)
 
+        # clock_reset is top level reset
+        clock_reset = Signal()
+        self.submodules.crg = _CRG(platform, sys_clk_freq, clock_reset)
+
+        # reset logic for logic triggered reset
+        # soc.reset can be used e.g. for gpio reset
         self.reset = Signal()
-        reset      = Signal()
-
         if self.full_board:
-            self.comb += reset.eq(self.reset | ~platform.request("cpu_reset"))
+            self.comb += clock_reset.eq((self.reset & self.crg.pll.locked) | ~platform.request("cpu_reset"))
         else:
-            self.comb += reset.eq(self.reset | platform.request("reset_trenz"))
+            self.comb += clock_reset.eq((self.reset & self.crg.pll.locked) | platform.request("reset_trenz"))
             print("using settings for te0710 only")
-
-        self.submodules.crg = _CRG(platform, sys_clk_freq, reset)
 
         # sdram
         self.submodules.ddrphy = s7ddrphy.A7DDRPHY(platform.request("ddram"), sys_clk_freq=sys_clk_freq)
@@ -240,7 +242,7 @@ class MySoC(EthernetSoC):
         d.add_litex_eth("ethphy", "ethmac")
         d.add_litex_eth("ethphy1", "ethmac1")
         if self.full_board:
-            d.add_litex_gpio("gpio0", direction="out", ngpio=7)
+            d.add_litex_gpio("gpio0", direction="out", ngpio=8)
             led_triggers = {
                 0: "activity",
                 1: "cpu0",

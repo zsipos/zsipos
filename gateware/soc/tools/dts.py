@@ -184,7 +184,7 @@ class DTSHelper():
         s += self.tabs(0) + "gpio_restart" + " {\n"
         s += self.tabs(1) + 'compatible = "gpio-restart";\n'
         s += self.tabs(2) + "gpios = <&" + self._gpio_pin((gpio, pin, 0)) + ">;\n"
-        s += self.tabs(2) + "priority = <128>;\n"
+        s += self.tabs(2) + "priority = <255>;\n"
         s += self.tabs(0) + "};\n"
         self.dts += s
 
