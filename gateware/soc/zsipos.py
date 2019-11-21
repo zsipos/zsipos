@@ -28,7 +28,7 @@ from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
 from cores.sdcard.sdcard_mod import SDCard
 from cores.spim.spim_mod import SPIMaster
-from cores.interrupt.interrupt_mod import ExtInterrupt
+from cores.interrupt.interrupt_mod import Interrupt
 
 # CRG ----------------------------------------------------------------------------------------------
 
@@ -146,6 +146,20 @@ class EthernetSoC(BaseSoC):
         self.comb += pwdn1.eq(1)
 
 
+class TouchscreenInterrupt(Interrupt):
+    def __init__(self, pin):
+        Interrupt.__init__(self)
+        pin_last = Signal(reset=1)
+        self.sync += [
+            If(pin != pin_last,
+                pin_last.eq(pin),
+                self.ev.irq.eq(~pin)
+            ).Else(
+                self.ev.irq.eq(0)
+            )
+        ]
+
+
 class MySoC(EthernetSoC):
     mem_map = {
         "sdmmc"    : 0x40000000,
@@ -203,9 +217,10 @@ class MySoC(EthernetSoC):
             self.add_csr("spi1")
             self.add_interrupt("spi1")
             # waveshare35a
-            ws35a_rs    = Signal()
-            ws35a_reset = Signal()
-            self.submodules.ws35a = ExtInterrupt(self.platform, "ws35a_int")
+            ws35a_rs      = self.platform.request("ws35a_rs")
+            ws35a_reset   = self.platform.request("ws35a_reset")
+            ws35a_pendown = self.platform.request("ws35a_int")
+            self.submodules.ws35a = TouchscreenInterrupt(ws35a_pendown)
             self.add_interrupt("ws35a")
             # gpio0: leds, ws35a controls
             board_led = Signal()
@@ -223,7 +238,7 @@ class MySoC(EthernetSoC):
             self.submodules.gpio0 = GPIOOut(gpio0_signals)
             self.add_csr("gpio0")
             # gpio1: touchscreen pendown
-            gpio1_signals = Cat(self.ws35a.ev.irq)
+            gpio1_signals = Cat(ws35a_pendown)
             self.submodules.gpio1 = GPIOIn(gpio1_signals)
             self.add_csr("gpio1")
             # AES
