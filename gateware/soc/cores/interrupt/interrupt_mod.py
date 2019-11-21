@@ -11,8 +11,13 @@ class Interrupt(Module):
         self.ev = _IRQ()
 
 class ExtInterrupt(Interrupt):
-    def __init__(self, platform, name, number=None):
+    def __init__(self, platform, name, number=None, type="high"):
         Interrupt.__init__(self)
         pin = platform.request(name, number)
-        self.comb += self.ev.irq.eq(pin)
+        if type == "high":
+            self.comb += self.ev.irq.eq(pin)
+        elif type == "low":
+            self.comb += self.ev.irq.eq(~pin)
+        else:
+            assert False, 'type must be in ["high", "low"]'
 
