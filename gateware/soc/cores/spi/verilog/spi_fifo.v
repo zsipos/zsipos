@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////
 ////                                                             ////
-//// FIFO 256 entries deep                                       ////
+//// FIFO 1024 entries deep                                      ////
 ////                                                             ////
 //// Authors: Rudolf Usselmann, Richard Herveille                ////
 ////          rudi@asics.ws     richard@asics.ws                 ////
@@ -54,11 +54,11 @@ module zsipos_spififo(clk, rst, clr,  din, we, dout, re, full, empty);
 // Local Wires
 //
 
-    reg     [dw:1]  mem[0:255];
-    reg     [7:0]   wp;
-    reg     [7:0]   rp;
-    wire    [7:0]   wp_p1;
-    wire    [7:0]   rp_p1;
+    reg     [dw:1]  mem[0:1023];
+    reg     [10:0]  wp;
+    reg     [10:0]  rp;
+    wire    [10:0]  wp_p1;
+    wire    [10:0]  rp_p1;
     wire            full, empty;
     reg             gb;
 

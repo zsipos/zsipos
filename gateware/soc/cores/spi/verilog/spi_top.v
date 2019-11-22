@@ -75,6 +75,7 @@ module zsipos_spi #(
     wire       rfre, rffull, rfempty;
     wire [7:0] wfdout;
     wire       wfwe, wffull, wfempty;
+    wire       fifoclr;
 
 // misc signals
     wire      tirq;     // transfer interrupt (selected number of transfers done)
@@ -83,8 +84,7 @@ module zsipos_spi #(
     reg [2:0] bcnt;
 
 // count number of transfers (for interrupt generation)
-    reg [7:0] icnt; // interrupt on transfer count
-    reg [7:0] tcnt; // transfer count
+    reg [10:0] tcnt; // transfer count
 
 // Wishbone interface
     wire wb_acc = cyc_i & stb_i;       // WISHBONE access
@@ -108,9 +108,6 @@ module zsipos_spi #(
 
                 if (adr_i == 3'd4)
                     ss_r <= dat_i[SS_WIDTH-1:0];
-
-                if (adr_i == 3'd5)
-                    icnt <= dat_i;
             end
 
     // slave select (active low)
@@ -128,8 +125,7 @@ module zsipos_spi #(
             3'd2 : dat_o <= rfdout;
             3'd3 : dat_o <= sper;
             3'd4 : dat_o <= {{ (8-SS_WIDTH){1'b0} }, ss_r};
-            3'd5 : dat_o <= icnt;
-            3'd6 : dat_o <= tcnt;
+            3'd5 : dat_o <= tcnt;
         endcase
 
 // read fifo
@@ -182,11 +178,14 @@ module zsipos_spi #(
         inta_o <= spif & spie;
 
 // hookup read/write buffer fifo
+
+    assign fifoclr = ~spe | ((wb_wr & (adr_i == 3'd5)));
+
     zsipos_spififo #(8)
     rfifo(
         .clk   ( clk_i   ),
         .rst   ( ~rst_i  ),
-        .clr   ( ~spe    ),
+        .clr   ( fifoclr ),
         .din   ( treg    ),
         .we    ( rfwe    ),
         .dout  ( rfdout  ),
@@ -197,7 +196,7 @@ module zsipos_spi #(
     wfifo(
         .clk   ( clk_i   ),
         .rst   ( ~rst_i  ),
-        .clr   ( ~spe    ),
+        .clr   ( fifoclr ),
         .din   ( dat_i   ),
         .we    ( wfwe    ),
         .dout  ( wfdout  ),
@@ -281,7 +280,7 @@ module zsipos_spi #(
                         bcnt <= bcnt - 3'h1;
                         if (!bcnt) begin
                             if (tcnt)
-                                tcnt <= tcnt - 8'h1;
+                                tcnt <= tcnt - 11'h1;
                             else
                                 spif = 1'b1;
                             state <= 2'b00;
