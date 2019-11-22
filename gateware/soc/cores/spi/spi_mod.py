@@ -7,13 +7,13 @@ class IRQ():
         self.irq = Signal(1)
 
 
-class SPI(Module):
+class SPIMaster(Module):
 
-    def __init__(self, platform, name = "spi", number=None, ss_width = 1):
+    def __init__(self, platform, name = "spi", number=None, cs_width = 1, busmaster=False):
 
         pads = platform.request(name, number)
 
-        self.bus = bus = wishbone.Interface()
+        self.slave_bus = bus = wishbone.Interface()
         self.ev  = IRQ()
 
         adri = Signal(3)
@@ -33,7 +33,7 @@ class SPI(Module):
         )
 
         self.specials += Instance("zsipos_spi",
-            p_SS_WIDTH = ss_width,
+            p_SS_WIDTH = cs_width,
             i_clk_i    = ClockSignal(),
             i_rst_i    = ResetSignal(),
             i_cyc_i    = bus.cyc,

@@ -22,7 +22,7 @@ _io = [
         Subsignal("mosi", Pins("B17")),
         Subsignal("miso", Pins("B16")),
         Subsignal("cs_n", Pins("A16 A15")),
-        IOStandard("LVCMOS33")
+        IOStandard("LVCMOS33"), Misc("PULLUP TRUE"), Misc("SLEW=FAST")
     ),
 
     ("sdspi", 0,

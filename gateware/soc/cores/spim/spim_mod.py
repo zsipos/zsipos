@@ -78,9 +78,11 @@ class _SPIMaster(Module):
 
 
 class SPIMaster(Module, AutoCSR):
-    def __init__(self, pads=None, cs_width=1, size=1024, fifo_size=16, busmaster=False):
-        if pads is None:
+    def __init__(self, platform, name="spim", number=None, cs_width=1, size=1024, fifo_size=16, busmaster=False):
+        if platform is None:
             pads = Record([("sclk", 1), ("cs_n", cs_width), ("mosi", 1), ("miso", 1)])
+        else:
+            pads = platform.request(name, number)
         self.size   = size
         self.pads   = pads
         self.start  = Signal()
@@ -231,7 +233,7 @@ def _testbench(dut):
 
 class _Dut(SPIMaster):
     def __init__(self, busmaster=True):
-        SPIMaster.__init__(self, busmaster=busmaster)
+        SPIMaster.__init__(self, None, busmaster=busmaster)
         if busmaster:
             self.submodules.mem_port2 = wishbone.SRAM(self.mem_port1.mem)
             self.submodules.arbiter = wishbone.Arbiter([self.master_bus], self.mem_port2.bus)

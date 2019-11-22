@@ -27,7 +27,8 @@ from tools.dts import *
 from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
 from cores.sdcard.sdcard_mod import SDCard
-from cores.spim.spim_mod import SPIMaster
+#from cores.spim.spim_mod import SPIMaster
+from cores.spi.spi_mod import SPIMaster
 from cores.interrupt.interrupt_mod import Interrupt
 
 # CRG ----------------------------------------------------------------------------------------------
@@ -201,7 +202,7 @@ class MySoC(EthernetSoC):
                 self.add_interrupt("sdmmc_dat_irq")
             else:
                 # SPI0: sd-card
-                self.submodules.spi0 = SPIMaster(self.platform.request("sdspi"), busmaster=False)
+                self.submodules.spi0 = SPIMaster(self.platform, name="sdspi", busmaster=False)
                 if hasattr(self.spi0, "master_bus"):
                     self.add_wb_master(self.spi0.master_bus)
                 self.add_wb_slave(self.mem_map["spi0"], self.spi0.slave_bus, size=self.spi0.get_size())
@@ -209,7 +210,7 @@ class MySoC(EthernetSoC):
                 self.add_csr("spi0")
                 self.add_interrupt("spi0")
             # SPI1: waveshare35a
-            self.submodules.spi1 = SPIMaster(self.platform.request("ws35a_spi"), cs_width=2, busmaster=False)
+            self.submodules.spi1 = SPIMaster(self.platform, name="ws35a_spi", cs_width=2, busmaster=False)
             if hasattr(self.spi1, "master_bus"):
                 self.add_wb_master((self.spi1.master_bus))
             self.add_wb_slave(self.mem_map["spi1"], self.spi1.slave_bus, size=self.spi1.get_size())
@@ -271,7 +272,7 @@ class MySoC(EthernetSoC):
                 d.add_opencores_sdc("sdmmc")
             else:
                 spidevs = d.get_spi_mmc(0, "mmc")
-                d.add_zsipos_spim("spi0", devices=spidevs)
+                d.add_zsipos_spi("spi0", devices=spidevs)
             spi1devs = d.get_spi_waveshare35a(
                 0,
                 "ws35a",
@@ -279,7 +280,7 @@ class MySoC(EthernetSoC):
                 reset_gpio=("gpio0", 7, 0),
                 pendown_gpio=("gpio1", 0, 0)
             )
-            d.add_zsipos_spim("spi1", devices=spi1devs)
+            d.add_zsipos_spi("spi1", devices=spi1devs)
             d.add_zsipos_aes("aes")
             d.add_zsipos_sha1("sha1")
         s = self.cpu.build_dts(devices=d.get_devices())

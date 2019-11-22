@@ -64,7 +64,7 @@ class MySoC(EthernetSoC):
             self.add_interrupt("sdmmc_cmd_irq")
             self.add_interrupt("sdmmc_dat_irq")
         else:
-            self.submodules.spim = SPIMaster(self.platform.request("sdspi"), busmaster=False)
+            self.submodules.spim = SPIMaster(self.platform, name="sdspi", busmaster=False)
             if hasattr(self.spim, "master_bus"):
                 self.add_wb_master(self.spim.master_bus)
             self.add_wb_slave(self.mem_map["spim"], self.spim.slave_bus, size=self.spim.get_size())
