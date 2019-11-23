@@ -27,9 +27,9 @@ from tools.dts import *
 from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
 from cores.sdcard.sdcard_mod import SDCard
-#from cores.spim.spim_mod import SPIMaster
 from cores.spi.spi_mod import SPIMaster
 from cores.interrupt.interrupt_mod import Interrupt
+from cores.utils.wishbone import DMATest
 
 # CRG ----------------------------------------------------------------------------------------------
 
@@ -250,6 +250,10 @@ class MySoC(EthernetSoC):
             self.submodules.sha1 = SHA1(self.platform)
             self.add_wb_slave(self.mem_map["sha1"], self.sha1.bus, size=self.sha1.get_size())
             self.add_memory_region("sha1", self.mem_map["sha1"], self.sha1.get_size(), type="io")
+            # dma test
+            self.submodules.dmatest = DMATest()
+            self.add_wb_master(self.dmatest.master_bus)
+            self.add_csr("dmatest")
 
 
     def get_dts(self):
@@ -283,6 +287,7 @@ class MySoC(EthernetSoC):
             d.add_zsipos_spi("spi1", devices=spi1devs)
             d.add_zsipos_aes("aes")
             d.add_zsipos_sha1("sha1")
+            d.add_zsipos_dmatest("dmatest")
         s = self.cpu.build_dts(devices=d.get_devices())
         return s
 
