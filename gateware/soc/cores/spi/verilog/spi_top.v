@@ -1,5 +1,10 @@
 /////////////////////////////////////////////////////////////////////
 ////                                                             ////
+////  Copyright (C) 2019 Stefan Adams <stefan.adams@vipcomag.de> ////
+////                                                             ////
+////  derived from:                                              ////
+/////////////////////////////////////////////////////////////////////
+////                                                             ////
 ////  OpenCores                    MC68HC11E based SPI interface ////
 ////                                                             ////
 ////  Author: Richard Herveille                                  ////
@@ -33,12 +38,6 @@
 /////////////////////////////////////////////////////////////////////
 
 
-//
-// Motorola MC68HC11E based SPI interface, with large fifo.
-//
-// Currently only MASTER mode is supported
-//
-
 module zsipos_spi #(
   parameter SS_WIDTH = 1
 )(
@@ -55,10 +54,10 @@ module zsipos_spi #(
   output reg        inta_o,        // interrupt output
 
   // SPI port
-  output reg        sck_o,         // serial clock output
+  output reg            sck_o,     // serial clock output
   output [SS_WIDTH-1:0] ss_o,      // slave select (active low)
-  output wire       mosi_o,        // MasterOut SlaveIN
-  input  wire       miso_i         // MasterIn SlaveOut
+  output wire           mosi_o,    // MasterOut SlaveIN
+  input  wire           miso_i     // MasterIn SlaveOut
 );
 
     reg  [7:0]          spcr;       // Serial Peripheral Control   Register ('HC11 naming)
@@ -269,14 +268,13 @@ module zsipos_spi #(
 
                 2'b01: // clock phase2, next data
                     if (ena) begin
-                        ibit  <= miso_i;
                         sck_o <= ~sck_o;
                         state <= 2'b11;
                     end
 
                 2'b11: // clock phase1
                     if (ena) begin
-                        treg <= {treg[6:0], ibit};
+                        treg <= {treg[6:0], miso_i};
                         bcnt <= bcnt - 3'h1;
                         if (!bcnt) begin
                             if (tcnt)
