@@ -11,10 +11,12 @@ then
 	exit 0
 fi
 
+export PATH="$ZTC_TOOLS_DIR/bin:$PATH"
+
 mkdir -p "$WRKDIR"
 cd "$WRKDIR"
 ../../riscv-gnu-toolchain/qemu/configure \
-	--prefix="$RISCV" \
+	--prefix="$ZTC_TOOLS_DIR" \
 	--static --target-list="riscv32-linux-user riscv64-linux-user" \
 	--disable-tools \
 	--disable-docs \

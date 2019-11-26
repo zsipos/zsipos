@@ -1,12 +1,33 @@
 # add script directory to PATH
 export PATH="$ZTOP/scripts:$PATH"
 
-# add toolchain to PATH
-export RISCV="$ZTOP/toolchain/riscv64"
-export PATH="$RISCV/bin:$PATH"
+export ZTC_TYPE="buildroot" # "native"
 
-# cross compile
-export CROSS_COMPILE="riscv64-unknown-linux-gnu-"
+if [ "$ZTC_TYPE" == "buildroot" ]
+then
+	export ZTC_BUILDROOT="$ZTOP/system/buildroot/buildroot"
+	export ZTC_ROOT="$ZTC_BUILDROOT/output/host"
+	export ZTC_SYSROOT="$ZTC_ROOT/usr/riscv64-buildroot-linux-gnu/sysroot"
+	export ZTC_PREFIX="riscv64-buildroot-linux-gnu"
+else
+	export ZTC_ROOT="$ZTOP/toolchain/riscv64"
+	export ZTC_SYSROOT="$ZTC_ROOT/sysroot"
+	export ZTC_PREFIX="riscv64-unknown-linux-gnu"
+fi
+
+export ZTC_CC="$ZTC_PREFIX-gcc"
+export ZTC_CXX="$ZTC_PREFIX-g++"
+export ZTC_LD="$ZTC_PREFIX-ld"
+export ZTC_AR="$ZTC_PREFIX-ar"
+export ZTC_OBJCOPY="$ZTC_PREFIX-objcopy"
+export ZTC_GDB="$ZTC_PREFIX-gdb"
+
+export ZTC_TOOLS_DIR="$ZTOP/toolchain/riscv64"
+export PATH="$PATH:$ZTC_TOOLS_DIR/bin"
+
+export RISCV="$ZTC_ROOT"
+export PATH="$PATH:$RISCV/bin"
+export CROSS_COMPILE="$ZTC_PREFIX-"
 
 
 # do not touch rocket-chip

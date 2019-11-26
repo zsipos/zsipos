@@ -14,7 +14,7 @@ class Programmer():
 class XilinxProgrammer(Programmer):
     def __init__(self, soc):
         Programmer.__init__(self, soc)
-        openocddir = os.path.join(os.environ["RISCV"], "share", "openocd")
+        openocddir = os.path.join(os.environ["ZTC_TOOLS_DIR"], "share", "openocd")
         cfg = os.path.join(openocddir, "openocd_xilinx.cfg")
         device = soc.platform.device.split("-", 1)[0]
         if device == "xc7a35ticsg324":

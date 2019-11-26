@@ -7,6 +7,6 @@ build-bbl.sh $1
 
 if [ -d /tftpboot ] && [ -w /tftpboot/boot.bin ]
 then
-	cp "$ZTOP/kernel/build_$BITS/boot.bin" /tftpboot
-	echo "boot.bin installed to /tftpboot."
+	cp "$ZTOP/kernel/build_$BITS/bbl/bbl.bin" /tftpboot/boot.bin
+	echo "bbl.bin installed to /tftpboot/boot.bin"
 fi
