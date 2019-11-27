@@ -34,3 +34,18 @@
 [submodule "gateware/soc/cores/sdcard/verilog"]
 	path = gateware/soc/cores/sdcard/verilog
 	url = https://github.com/mczerski/SD-card-controller
+[submodule "software/fltk"]
+	path = software/fltk
+	url = https://github.com/zsipos/fltk
+[submodule "software/microwindows"]
+	path = software/microwindows
+	url = https://github.com/zsipos/microwindows
+[submodule "software/pjproject"]
+	path = software/pjproject
+	url = https://github.com/zsipos/pjproject
+[submodule "software/zrtpcpp"]
+	path = software/zrtpcpp
+	url = https://github.com/zsipos/ZRTPCPP
+[submodule "system/buildroot/buildroot"]
+	path = system/buildroot/buildroot
+	url = https://github.com/buildroot/buildroot
