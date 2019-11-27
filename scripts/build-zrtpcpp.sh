@@ -34,18 +34,18 @@ build_for_processor()
 	CFLAGS="-fpic -pthread"
 	CXXFLAGS="$CFLAGS"
 	CMAKEOPTS="-DCORE_LIB=ON -DBUILD_STATIC=ON -DBUILD_SHARED=OFF -DSDES=true"
-	if [ "$1" == "openrisc" ]
+	if [ "$1" == "zsipos" ]
 	then
 		create_zsipos_cmake_toolchain >cmake.toolchain
 		CMAKEOPTS+=" -DCMAKE_TOOLCHAIN_FILE=cmake.toolchain -DCRYPTO_STANDALONE=false"
 	fi
 	cmake $CMAKEOPTS -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CXXFLAGS" ../../zrtpcpp
-	if [ "$1" == "openrisc" ]
+	if [ "$1" == "zsipos" ]
 	then
 		echo fix cmake bug ..
 		f=clients/no_client/CMakeFiles/zrtpcppcore.dir/link.txt
 		mv $f $f.bak
-		echo -n "$OR1K_AR" >$f
+		echo -n "$ZTC_AR" >$f
 		sed 's/\"\"//g' <$f.bak >>$f
 		rm $f.bak
 	fi
