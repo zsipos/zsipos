@@ -5,24 +5,26 @@ cd "$ZTOP/software"
 
 build_for_processor() 
 {
-	BUILDDIR=`pwd`/build_$1
+	BUILDDIR=`pwd`/build_$1/fltk
 	if [ x"$2" == x"clean" ]
 	then
-		make clean
+		(cd fltk; make clean)
 		rm -rf "$BUILDDIR"
 		return
 	fi
 	if [ x"$1" == x"zsipos" ]
 	then
-		HOST="--host=$TC_PREFIX"
-		X_INCLUDES="--x-include=\"$ZTOP/software/microwindows/src/nxlib\""
-		X_LIBRARIES="--x-libraries=\"$ZTOP/software/microwindows/src/lib\""
+		export HOST="--host=$ZTC_PREFIX"
+		export X_INCLUDES="--x-include=\"$ZTOP/software/microwindows/src/include\""
+		export X_LIBRARIES="--x-libraries=\"$ZTOP/software/microwindows/src/lib\""
+		export X_EXTRA_LIBS="-lnano-X -lfreetype -lts -lz"
 	else
+		unset LIBS
 		unset HOST
 		unset X_INCLUDES
 		unset X_LIBRARIES
+		export X_EXTRA_LIBS="-lfreetype"
 	fi
-	export X_EXTRA_LIBS="-lfreetype"
 	export CFLAGS="-fpic"
 	export CXXFLAGS="$CFLAGS"
 	pushd fltk
