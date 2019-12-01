@@ -26,7 +26,7 @@ make_site_config()
 {
 	echo "#define PJ_ICE_MAX_CAND 16"
 	echo "#define PJ_ICE_MAX_CHECKS 256"
-	echo "#define PJ_IOQUEUE_HAS_SAFE_UNREG	0"
+	echo "#define PJ_IOQUEUE_HAS_SAFE_UNREG	1"
 	echo "#define PJ_IOQUEUE_DEFAULT_ALLOW_CONCURRENCY 1"
 	echo "#define PJ_QOS_IMPLEMENTATION PJ_QOS_BSD"
 	#echo "#ifdef __or1k__"
