@@ -85,7 +85,7 @@ class DTSHelper():
         s += self.tabs(2) + "reg = <" + str(index) + ">;\n"
         s += self.tabs(2) + "spi-max-frequency = <16000000>;\n"
         s += self.tabs(2) + "txbuflen = <32768>;\n"
-        s += self.tabs(2) + "rotation = <" + str(rotation) + ">;\n"
+        s += self.tabs(2) + "rotate = <" + str(rotation) + ">;\n"
         s += self.tabs(2) + "bgr = <0>;\n"
         s += self.tabs(2) + "fps = <30>;\n"
         s += self.tabs(2) + "buswidth = <8>;\n"
