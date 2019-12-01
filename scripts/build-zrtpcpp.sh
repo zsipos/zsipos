@@ -37,7 +37,7 @@ build_for_processor()
 	if [ "$1" == "zsipos" ]
 	then
 		create_zsipos_cmake_toolchain >cmake.toolchain
-		CMAKEOPTS+=" -DCMAKE_TOOLCHAIN_FILE=cmake.toolchain -DCRYPTO_STANDALONE=false"
+		CMAKEOPTS+=" -DCMAKE_TOOLCHAIN_FILE=cmake.toolchain -DCRYPTO_STANDALONE=true"
 	fi
 	cmake $CMAKEOPTS -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CXXFLAGS" ../../zrtpcpp
 	if [ "$1" == "zsipos" ]
