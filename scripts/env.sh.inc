@@ -51,9 +51,13 @@ export RISCV="$ZTC_ROOT"
 export PATH="$PATH:$RISCV/bin"
 export CROSS_COMPILE="$ZTC_PREFIX-"
 
+export TC_DBGFLAGS=-g
+
 #
 # misc
 #
+
+export HOST_PYTHON_VERSION=`python -V | cut -d' ' -f2 | cut -d'.' -f1,2`
 
 # do not touch rocket-chip
 export ROCKET_IS_SUBMODULE=true
