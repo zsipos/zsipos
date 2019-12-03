@@ -2,4 +2,6 @@ build_*
 *.pyc
 *.o
 *.so
+zsipos.cfg*
+zsipos.zid
 

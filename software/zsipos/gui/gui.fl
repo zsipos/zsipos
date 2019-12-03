@@ -1,0 +1,875 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0302 
+header_name {.h} 
+code_name {.cxx}
+class MAINUI {open
+} {
+  Function {MAINUI()} {open
+  } {
+    Fl_Window window {open
+      xywh {1032 675 480 320} type Double labelsize 32 visible
+    } {
+      Fl_Button btn_onhook {
+        image {icons/phone.png} xywh {140 75 200 200} box NO_BOX deactivate
+      }
+      Fl_Tabs tab_call {open
+        xywh {0 0 480 320}
+      } {}
+      Fl_Button btn_mute {
+        label mute
+        image {icons/rtp_on.png} xywh {300 0 60 60} deactivate
+      }
+      Fl_Button btn_info {
+        label info
+        image {icons/info.png} xywh {360 0 60 60} deactivate
+      }
+      Fl_Button btn_config {
+        label config
+        image {icons/gear.png} xywh {420 0 60 60}
+      }
+    }
+  }
+} 
+
+class CALLUI {open
+} {
+  decl {void *pyobj;} {private local
+  }
+  Function {CALLUI(void *pyobj)} {open
+  } {
+    code {this->pyobj = pyobj;} {}
+    Fl_Window window {open
+      xywh {1039 347 480 260} type Double labelfont 14
+      class Fl_Group visible
+    } {
+      Fl_Button btn_callinfo {
+        label { 049529974904 (Sandra Elizabeth Jimenez de Adams)}
+        xywh {0 0 480 30} box NO_BOX labelsize 24 align 272
+      }
+      Fl_Button btn_status {
+        label Status
+        xywh {0 29 480 30} box NO_BOX
+      }
+      Fl_Button btn_direction {
+        image {icons/info_call_o.png} xywh {60 140 80 80} box NO_BOX labelsize 1 align 512 deactivate
+      }
+      Fl_Group {} {open
+        xywh {160 98 160 160} align 0
+      } {}
+      Fl_Button btn_secstate {
+        label 80 selected
+        image {icons/unlocked_inactive.png} xywh {338 133 82 80} box NO_BOX labeltype NO_LABEL align 512 deactivate
+      }
+      Fl_Button btn_encrypt {
+        label encrypt
+        image {icons/lock_call.png} xywh {170 110 135 130} hide
+      }
+      Fl_Button btn_ringing {
+        image {icons/alarm.png} xywh {170 110 135 130} box NO_BOX deactivate
+      }
+      Fl_Group grp_sas {
+        label {SAS:} open
+        xywh {160 98 160 160} labeltype NO_LABEL hide
+      } {
+        Fl_Button {} {
+          label {SAS:}
+          xywh {209 108 61 30} box NO_BOX labelsize 20
+        }
+        Fl_Button btn_sas {
+          label {----}
+          xywh {165 130 150 55} box NO_BOX labelsize 50
+        }
+        Fl_Button btn_verify {
+          label verify
+          xywh {190 193 100 60} deactivate
+        }
+      }
+      Fl_Progress progress {
+        label connecting
+        xywh {25 58 425 35} hide
+      }
+      Fl_Button btn_stop {
+        image {icons/stop.png} xywh {170 110 135 130} box NO_BOX hide deactivate
+      }
+    }
+  }
+} 
+
+class CONFIGUI {open
+} {
+  Function {CONFIGUI()} {open
+  } {
+    Fl_Window window {
+      label Configuration open
+      xywh {794 224 480 320} type Double visible
+    } {
+      Fl_Button btn_back {
+        label Back
+        image {icons/left.png} xywh {0 2 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Box box_configuration {
+        label Configuration
+        xywh {155 5 149 35} align 128
+      }
+      Fl_Button btn_help {
+        label help
+        image {icons/help.png} xywh {434 2 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Button btn_warn {
+        label Warning
+        xywh {35 93 407 59} labelcolor 1 align 128 hide
+      }
+      Fl_Tabs tab_config {open
+        xywh {0 45 535 310} box UP_BOX
+      } {
+        Fl_Group group_ip {
+          label {IP Config} open
+          xywh {0 75 480 245} align 129 hide
+        } {
+          Fl_Group group_btn_dhcp {open
+            xywh {13 80 199 40} box BORDER_BOX align 129
+          } {
+            Fl_Round_Button btn_dhcp {
+              label DHCP
+              xywh {20 85 81 30} type Radio down_box ROUND_DOWN_BOX labelsize 18
+            }
+            Fl_Round_Button btn_static_ip {
+              label {Static IP}
+              xywh {106 85 81 30} type Radio down_box ROUND_DOWN_BOX labelsize 18
+            }
+          }
+          Fl_Group group_btn_dns {open
+            xywh {225 80 242 40} box BORDER_BOX align 129
+          } {
+            Fl_Round_Button btn_static_dns {
+              label {Static DNS}
+              xywh {342 85 81 30} type Radio down_box ROUND_DOWN_BOX labelsize 18
+            }
+            Fl_Round_Button btn_auto_dns {
+              label {Auto DNS}
+              xywh {230 85 81 30} type Radio down_box ROUND_DOWN_BOX labelsize 18
+            }
+          }
+          Fl_Group group_static_ip {open
+            xywh {10 109 465 159} labelsize 18 align 129
+          } {
+            Fl_Output btn_ext_phone {
+              label {My IP Address}
+              xywh {10 125 150 35} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+            }
+            Fl_Output btn_subnet_mask {
+              label {Subnet Mask}
+              xywh {10 175 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+            }
+            Fl_Output btn_gateway {
+              label Gateway
+              xywh {10 225 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+            }
+            Fl_Box framep1 {
+              xywh {165 125 255 35} box DOWN_FRAME
+            }
+            Fl_Box framep2 {
+              xywh {165 175 255 30} box DOWN_FRAME
+            }
+            Fl_Box framep3 {
+              xywh {165 225 250 30} box DOWN_FRAME
+            }
+            Fl_Button btn_ping_gateway {
+              label ping
+              xywh {425 225 50 30}
+            }
+          }
+          Fl_Group group_dns {open
+            xywh {10 265 470 50} labelsize 18 align 129
+          } {
+            Fl_Output btn_dns_server {
+              label {DNS Server}
+              xywh {10 275 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+            }
+            Fl_Box framed1 {
+              xywh {165 275 255 30} box DOWN_FRAME
+            }
+            Fl_Button btn_ping_dns {
+              label ping
+              xywh {425 275 50 30}
+            }
+          }
+        }
+        Fl_Group group_server {
+          label Server open
+          xywh {0 75 480 245} hide
+        } {
+          Fl_Output btn_sip_proxy {
+            label {SIP Proxy  }
+            xywh {10 95 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+          }
+          Fl_Output btn_ice_storage {
+            label {ICE Storage  }
+            xywh {10 140 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+          }
+          Fl_Output btn_stun_server {
+            label {STUN Server  }
+            xywh {10 185 150 30} box UP_BOX color 29 selection_color 4 labelsize 18 align 8 textsize 18
+          }
+          Fl_Output btn_turn_server {
+            label {TURN Server  }
+            xywh {10 230 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+          }
+          Fl_Output btn_ntp_server {
+            label {NTP Server  }
+            xywh {10 275 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+          }
+          Fl_Box frames1 {
+            xywh {165 95 255 30} box DOWN_FRAME
+          }
+          Fl_Box frames2 {
+            xywh {165 140 255 30} box DOWN_FRAME
+          }
+          Fl_Box frames3 {
+            xywh {165 185 255 30} box DOWN_FRAME
+          }
+          Fl_Box frames4 {
+            xywh {165 230 255 30} box DOWN_FRAME
+          }
+          Fl_Box frames5 {
+            xywh {165 275 255 30} box DOWN_FRAME
+          }
+          Fl_Button btn_ping_sip {
+            label ping
+            xywh {425 95 50 30}
+          }
+          Fl_Button btn_ping_ice {
+            label ping
+            xywh {425 140 50 30}
+          }
+          Fl_Button btn_ping_stun {
+            label ping
+            xywh {425 185 50 30}
+          }
+          Fl_Button btn_ping_turn {
+            label ping
+            xywh {425 230 50 30}
+          }
+          Fl_Button btn_ping_ntp {
+            label ping
+            xywh {425 275 50 30}
+          }
+        }
+        Fl_Group group_log {
+          label Logs
+          xywh {0 75 480 245} hide
+        } {
+          Fl_Check_Button log_external {
+            label {  External Log}
+            xywh {15 86 134 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_local {
+            label {  Local Log}
+            xywh {15 119 134 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_full {
+            label {  Log Full Message}
+            xywh {15 152 134 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_cc_events {
+            label {  Log CC Events}
+            xywh {15 185 134 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_cc_messages {
+            label {  Log CC Messages}
+            xywh {15 218 134 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_bm_events {
+            label {  Log BM Events}
+            xywh {15 251 134 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_timers {
+            label {  Log Timers}
+            xywh {15 284 134 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_sip_proctime {
+            label {  Log SIP Processing Time}
+            xywh {185 86 134 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_sip_debug_delay {
+            label {  SIP Debug Delay}
+            xywh {186 119 135 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_zrtp_events {
+            label {  Log ZRTP Events}
+            xywh {185 152 134 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_zsession_events {
+            label {  Log ZSession Events}
+            xywh {185 185 134 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_ice {
+            label {  Log ICE}
+            xywh {185 218 134 25} down_box DOWN_BOX
+          }
+          Fl_Check_Button log_dtmf {
+            label {  Log DTMF}
+            xywh {185 251 134 25} down_box DOWN_BOX
+          }
+          Fl_Counter log_level {
+            label {  PJLIB Log Level}
+            xywh {166 282 61 25} align 8 minimum 0 maximum 7 step 1
+            class Fl_Simple_Counter
+          }
+          Fl_Box box_warn_logs {
+            label {Do not activate logs unless advised.}
+            xywh {375 120 79 132} box BORDER_BOX labelsize 18 labelcolor 1 align 128
+          }
+        }
+        Fl_Group group_experts {
+          label Experts open
+          xywh {0 75 480 245}
+        } {
+          Fl_Output btn_local_proxy {
+            label {Local Proxy  }
+            xywh {10 85 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+          }
+          Fl_Box framee1 {
+            xywh {165 85 255 30} box DOWN_FRAME
+          }
+          Fl_Check_Button btn_sshd {
+            label {  SSH Daemon }
+            xywh {312 125 150 30} down_box DOWN_BOX hide
+          }
+          Fl_Check_Button btn_skipzrtp1 {
+            label {  skip zrtp1}
+            xywh {40 135 150 30} down_box DOWN_BOX
+          }
+          Fl_Button btn_ping_local_proxy {
+            label ping
+            xywh {425 85 50 30}
+          }
+          Fl_Output out_git_magic {
+            xywh {190 195 255 80} type Multiline color 29 labelsize 18 textsize 18
+          }
+          Fl_Button btn_show_git {
+            label gitversions
+            xywh {35 195 100 30}
+          }
+        }
+        Fl_Group group_passwd {
+          label Password open
+          xywh {0 75 480 245} hide
+        } {
+          Fl_Button btn_root_pw {
+            label {Change root password}
+            xywh {35 125 203 29}
+          }
+        }
+        Fl_Group group_reset {
+          label Reset open
+          xywh {0 80 480 245} hide
+        } {
+          Fl_Button btn_restart {
+            label {Restart Program}
+            xywh {30 110 200 35}
+          }
+          Fl_Button btn_reconfig {
+            label {Reconfigure Net}
+            xywh {30 170 200 35}
+          }
+          Fl_Button btn_reboot {
+            label Reboot
+            xywh {30 230 200 35}
+          }
+          Fl_Button btn_shutdown {
+            label Shutdown
+            xywh {255 245 200 35} labelcolor 1 hide
+          }
+          Fl_Button btn_nxcal {
+            label {Calibrate Display}
+            xywh {260 110 200 35}
+          }
+          Fl_Button btn_zid_reset {
+            label {Delete Trust Information}
+            xywh {260 170 200 35}
+          }
+          Fl_Button btn_fac_reset {
+            label {Factory Reset}
+            image {icons/warning-sign-mini.png} xywh {260 230 200 35} selection_color 0 labelcolor 1 align 288
+          }
+        }
+        Fl_Group group_sysinfo {
+          label SysInfo open
+          xywh {0 75 480 245}
+        } {
+          Fl_Button btn_zsipos_cfg {
+            label {zsipos.cfg}
+            xywh {45 115 100 30}
+          }
+          Fl_Button btn_zsipos_log {
+            label {zsipos.log}
+            xywh {45 160 100 30}
+          }
+          Fl_Button btn_nohup_out {
+            label {nohup.out}
+            xywh {45 205 100 30}
+          }
+          Fl_Button btn_ifconfig {
+            label ifconfig
+            xywh {165 115 100 30}
+          }
+          Fl_Button btn_resolv_conf {
+            label {resolv.conf}
+            xywh {165 160 100 30}
+          }
+          Fl_Button btn_messages {
+            label messages
+            xywh {165 205 100 30}
+          }
+        }
+      }
+    }
+    Fl_Window winSave {open
+      xywh {117 652 480 320} type Double hide
+    } {
+      Fl_Group group_save {open
+        xywh {0 0 435 200} color 7 selection_color 7
+      } {
+        Fl_Button btn_save {
+          label Save
+          xywh {224 147 75 50} labelsize 18
+        }
+        Fl_Button btn_cancel {
+          label Cancel
+          xywh {353 147 75 50} labelsize 18
+        }
+        Fl_Button btn_save_and_restart {
+          label {Save+Restart}
+          xywh {28 147 152 50} labelsize 18
+        }
+        Fl_Box box_restart {
+          label {Changes require a restart.}
+          xywh {68 54 334 25} labelsize 22 labelcolor 88
+        }
+      }
+    }
+    Fl_Window winHelp {
+      label Help open
+      xywh {816 332 480 320} type Double hide
+    } {
+      Fl_Button btn_help_back {
+        label Back
+        image {icons/left.png} xywh {0 2 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Text_Display helpDisplay {
+        label Help
+        xywh {20 60 440 240} box DOWN_BOX labelsize 18 textfont 1 textsize 18
+      }
+    }
+    Fl_Window winEditAddress {
+      label EditAddress open
+      xywh {909 655 480 320} type Double hide
+    } {
+      Fl_Button btn_address_back {
+        label Back
+        image {icons/left.png} xywh {0 2 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Button btn_address_ok {
+        label OK
+        image {icons/ok.png} xywh {403 2 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Button btn_address_next {
+        label Next
+        image {icons/right.png} xywh {403 2 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Button btn_address_cancel {
+        label Abort
+        image {icons/abort.png} xywh {441 2 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Group addressgroup {
+        label address open
+        xywh {0 30 516 370} labelsize 18
+      } {
+        Fl_Group ipgroup {open
+          xywh {15 34 343 88} labelsize 18
+        } {
+          Fl_Input input_text {
+            label {IP Address}
+            xywh {119 63 239 44} labelsize 18 align 1 textsize 18
+          }
+          Fl_Button btn_address_warn {
+            label Warning
+            xywh {35 85 380 60} labelcolor 1 hide
+          }
+          Fl_Round_Button btn_https {
+            label https
+            xywh {25 63 70 44} down_box ROUND_DOWN_BOX labelsize 18
+          }
+        }
+        Fl_Group keyboardgroup_func {open
+          xywh {0 130 481 189}
+        } {
+          Fl_Button key_del {
+            image {icons/del.png} xywh {395 225 50 40} labelcolor 8
+          }
+          Fl_Button key_back {
+            image {icons/pos_left.png} xywh {75 275 40 40}
+          }
+          Fl_Button key_forward {
+            image {icons/pos_right.png} xywh {435 275 40 40}
+          }
+          Fl_Button key_abc {
+            label ABC
+            xywh {10 275 58 40}
+          }
+          Fl_Button key_space {
+            xywh {174 275 203 40}
+          }
+          Fl_Button key_123 {
+            label {123!?}
+            xywh {10 275 58 40}
+          }
+          Fl_Button key_shift {
+            image {icons/shift.png} xywh {5 223 45 45}
+          }
+          Fl_Button key_nextlayer {
+            label {1 | 2}
+            xywh {9 231 57 40} align 16 hide deactivate
+          }
+        }
+        Fl_Group keyboardgroup_alpha {open
+          xywh {-20 111 511 208}
+        } {
+          Fl_Button key_comma_alpha {
+            label {,}
+            xywh {122 275 40 40} labelfont 1
+          }
+          Fl_Button key_dot_alpha {
+            label {.}
+            xywh {385 275 40 40} labelfont 1
+          }
+          Fl_Group keyboardgroup_alpha_lower {
+            xywh {0 130 480 189}
+          } {
+            Fl_Button key_q {
+              label q
+              xywh {4 130 40 40}
+            }
+            Fl_Button key_w {
+              label w
+              xywh {52 130 40 40}
+            }
+            Fl_Button key_e {
+              label e
+              xywh {100 130 40 40}
+            }
+            Fl_Button key_r {
+              label r
+              xywh {148 130 40 40}
+            }
+            Fl_Button key_t {
+              label t
+              xywh {196 130 40 40}
+            }
+            Fl_Button key_y {
+              label y
+              xywh {244 130 40 40}
+            }
+            Fl_Button key_u {
+              label u
+              xywh {292 130 40 40}
+            }
+            Fl_Button key_i {
+              label i
+              xywh {340 130 40 40}
+            }
+            Fl_Button key_o {
+              label o
+              xywh {388 130 40 40}
+            }
+            Fl_Button key_p {
+              label p
+              xywh {436 130 40 40}
+            }
+            Fl_Button key_a {
+              label a
+              xywh {25 178 40 40}
+            }
+            Fl_Button key_s {
+              label s
+              xywh {73 178 40 40}
+            }
+            Fl_Button key_d {
+              label d
+              xywh {121 178 40 40}
+            }
+            Fl_Button key_f {
+              label f
+              xywh {169 178 40 40}
+            }
+            Fl_Button key_g {
+              label g
+              xywh {217 178 40 40}
+            }
+            Fl_Button key_h {
+              label h
+              xywh {265 178 40 40}
+            }
+            Fl_Button key_j {
+              label j
+              xywh {313 178 40 40}
+            }
+            Fl_Button key_k {
+              label k
+              xywh {361 178 40 40}
+            }
+            Fl_Button key_l {
+              label l
+              xywh {409 178 40 40}
+            }
+            Fl_Button key_z {
+              label z
+              xywh {53 226 40 40}
+            }
+            Fl_Button key_x {
+              label x
+              xywh {100 226 40 40}
+            }
+            Fl_Button key_c {
+              label c
+              xywh {148 226 40 40}
+            }
+            Fl_Button key_v {
+              label v
+              xywh {196 226 40 40}
+            }
+            Fl_Button key_b {
+              label b
+              xywh {244 226 40 40}
+            }
+            Fl_Button key_n {
+              label n
+              xywh {292 226 40 40}
+            }
+            Fl_Button key_m {
+              label m
+              xywh {340 226 40 40}
+            }
+          }
+          Fl_Group keyboardgroup_alpha_upper {
+            xywh {0 130 480 189} hide
+          } {
+            Fl_Button key_Q {
+              label Q
+              xywh {4 131 40 40}
+            }
+            Fl_Button key_W {
+              label W
+              xywh {52 131 40 40}
+            }
+            Fl_Button key_E {
+              label E
+              xywh {100 131 40 40}
+            }
+            Fl_Button key_R {
+              label R
+              xywh {148 131 40 40}
+            }
+            Fl_Button key_T {
+              label T
+              xywh {196 131 40 40}
+            }
+            Fl_Button key_Y {
+              label Y
+              xywh {244 131 40 40}
+            }
+            Fl_Button key_U {
+              label U
+              xywh {292 131 40 40}
+            }
+            Fl_Button key_I {
+              label I
+              xywh {340 131 40 40}
+            }
+            Fl_Button key_O {
+              label O
+              xywh {388 131 40 40}
+            }
+            Fl_Button key_P {
+              label P
+              xywh {436 131 40 40}
+            }
+            Fl_Button key_A {
+              label A
+              xywh {25 179 40 40}
+            }
+            Fl_Button key_S {
+              label S
+              xywh {73 179 40 40}
+            }
+            Fl_Button key_D {
+              label D
+              xywh {121 179 40 40}
+            }
+            Fl_Button key_F {
+              label F
+              xywh {169 179 40 40}
+            }
+            Fl_Button key_G {
+              label G
+              xywh {217 179 40 40}
+            }
+            Fl_Button key_H {
+              label H
+              xywh {265 179 40 40}
+            }
+            Fl_Button key_J {
+              label J
+              xywh {313 179 40 40}
+            }
+            Fl_Button key_K {
+              label K
+              xywh {361 179 40 40}
+            }
+            Fl_Button key_L {
+              label L
+              xywh {409 179 40 40}
+            }
+            Fl_Button key_Z {
+              label Z
+              xywh {53 227 40 40}
+            }
+            Fl_Button key_X {
+              label X
+              xywh {100 227 40 40}
+            }
+            Fl_Button key_C {
+              label C
+              xywh {148 227 40 40}
+            }
+            Fl_Button key_V {
+              label V
+              xywh {196 227 40 40}
+            }
+            Fl_Button key_B {
+              label B
+              xywh {244 227 40 40}
+            }
+            Fl_Button key_N {
+              label N
+              xywh {292 227 40 40}
+            }
+            Fl_Button key_M {
+              label M
+              xywh {340 227 40 40}
+            }
+          }
+        }
+        Fl_Group keyboardgroup_num {
+          xywh {0 130 480 189} color 7 labelcolor 7 align 17 hide
+        } {
+          Fl_Button key_1 {
+            label 1
+            xywh {4 130 40 40}
+          }
+          Fl_Button key_2 {
+            label 2
+            xywh {52 130 40 40}
+          }
+          Fl_Button key_3 {
+            label 3
+            xywh {100 130 40 40}
+          }
+          Fl_Button key_4 {
+            label 4
+            xywh {148 130 40 40}
+          }
+          Fl_Button key_5 {
+            label 5
+            xywh {196 130 40 40}
+          }
+          Fl_Button key_6 {
+            label 6
+            xywh {244 130 40 40}
+          }
+          Fl_Button key_7 {
+            label 7
+            xywh {292 130 40 40}
+          }
+          Fl_Button key_8 {
+            label 8
+            xywh {340 130 40 40}
+          }
+          Fl_Button key_9 {
+            label 9
+            xywh {388 130 40 40}
+          }
+          Fl_Button key_0 {
+            label 0
+            xywh {436 130 40 40}
+          }
+          Fl_Button key_at {
+            label {@}
+            xywh {4 178 40 40}
+          }
+          Fl_Button key_colon {
+            label {:}
+            xywh {52 178 40 40}
+          }
+          Fl_Button key_semicolon {
+            label {;}
+            xywh {100 178 40 40}
+          }
+          Fl_Button key_underscore {
+            label _
+            xywh {148 178 40 40}
+          }
+          Fl_Button key_minus {
+            label {-}
+            xywh {196 178 40 40}
+          }
+          Fl_Button key_hash {
+            label {\#}
+            xywh {244 178 40 40}
+          }
+          Fl_Button key_lparenthesis {
+            label {(}
+            xywh {292 178 40 40}
+          }
+          Fl_Button key_rparenthesis {
+            label {)}
+            xywh {340 178 40 40}
+          }
+          Fl_Button key_slash {
+            label {/}
+            xywh {388 178 40 40}
+          }
+          Fl_Button key_plus {
+            label {+}
+            xywh {436 178 40 40}
+          }
+          Fl_Button key_dot_num {
+            label {.}
+            xywh {100 226 40 40}
+          }
+          Fl_Button key_comma_num {
+            label {,}
+            xywh {148 226 40 40}
+          }
+          Fl_Button key_question {
+            label {?}
+            xywh {196 226 40 40}
+          }
+          Fl_Button key_exclamation {
+            label {!}
+            xywh {244 226 40 40}
+          }
+          Fl_Button key_singlequote {
+            label {'}
+            xywh {292 226 40 40}
+          }
+          Fl_Button key_doublequote {
+            label {"}
+            xywh {340 226 40 40}
+          }
+        }
+      }
+    }
+  }
+} 

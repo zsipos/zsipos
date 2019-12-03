@@ -178,13 +178,11 @@ module zsipos_spi #(
 
 // hookup read/write buffer fifo
 
-    assign fifoclr = ~spe | ((wb_wr & (adr_i == 3'd5)));
-
     zsipos_spififo #(8)
     rfifo(
         .clk   ( clk_i   ),
         .rst   ( ~rst_i  ),
-        .clr   ( fifoclr ),
+        .clr   ( ~spe    ),
         .din   ( treg    ),
         .we    ( rfwe    ),
         .dout  ( rfdout  ),
@@ -195,7 +193,7 @@ module zsipos_spi #(
     wfifo(
         .clk   ( clk_i   ),
         .rst   ( ~rst_i  ),
-        .clr   ( fifoclr ),
+        .clr   ( ~spe    ),
         .din   ( dat_i   ),
         .we    ( wfwe    ),
         .dout  ( wfdout  ),

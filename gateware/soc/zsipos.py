@@ -178,6 +178,7 @@ class MySoC(EthernetSoC):
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
+        self.set_bios_ip("192.168.0.55", "192.168.0.45")
         # flash-rom
         self.add_constant("FLASH_BOOT_ADDRESS", self.mem_map["spiflash"] + FLASH_BOOT_OFFSET)
         self.submodules.spiflash = SpiFlash(
@@ -295,6 +296,22 @@ class MySoC(EthernetSoC):
     def write_dts(self, dts_file):
         with open(dts_file, "w") as f:
             f.write(self.get_dts())
+
+
+    def set_bios_ip(self, local_ip, remote_ip):
+        local_ip = local_ip.split(".")
+        remote_ip = remote_ip.split(".")
+
+        self.add_constant("LOCALIP1", int(local_ip[0]))
+        self.add_constant("LOCALIP2", int(local_ip[1]))
+        self.add_constant("LOCALIP3", int(local_ip[2]))
+        self.add_constant("LOCALIP4", int(local_ip[3]))
+
+        self.add_constant("REMOTEIP1", int(remote_ip[0]))
+        self.add_constant("REMOTEIP2", int(remote_ip[1]))
+        self.add_constant("REMOTEIP3", int(remote_ip[2]))
+        self.add_constant("REMOTEIP4", int(remote_ip[3]))
+
 
 # Build --------------------------------------------------------------------------------------------
 
