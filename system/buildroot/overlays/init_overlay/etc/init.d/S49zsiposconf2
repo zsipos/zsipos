@@ -1,0 +1,52 @@
+#!/bin/sh
+#
+# zsiposconf2   configure steps after ntp is up , before sshd starts
+#
+# reset root password if required (needs valid time)
+#
+
+FIFO=/tmp/zsiposfifo
+
+display() {
+    echo $@ >$FIFO
+}
+
+
+start() {
+    if [ -f /root/zsipos_rootreset ]; then
+        passwd -a md5 <<EOF
+zsipos2018
+zsipos2018
+EOF
+        rm /root/zsipos_rootreset
+    fi
+    MYIP=`ifconfig eth0 | grep 'inet addr' | cut -d: -f2 | cut -d ' ' -f 1`
+    display "network is up, my IP Address is $MYIP"
+}
+
+stop(){
+    display "going down"
+}
+
+restart() {
+        stop
+        start
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart|reload)
+        restart
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
+exit $?
+

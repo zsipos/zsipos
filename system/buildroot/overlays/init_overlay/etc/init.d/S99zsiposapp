@@ -1,0 +1,119 @@
+#!/bin/sh
+#
+# zsiposapp    Start zsipos
+#
+
+PIDFILEZIPPOS=/var/run/zsipos.pid
+PIDFILERUN=/var/run/runzsipos.pid
+FIFO=/tmp/zsiposfifo
+
+display() {
+    echo $@ >$FIFO
+}
+
+get_pidfile() {
+    if [ "$1" = "runzsipos" ]; then
+        PIDFILE=$PIDFILERUN
+        KILL=kill
+    elif [ "$1" = "zsipos" ]; then
+        PIDFILE=$PIDFILEZIPPOS
+        KILL="kill -9"
+    else
+        echo "running: $1 unknown"
+        exit 1
+    fi
+}
+
+get_pid() {
+    get_pidfile $1
+    if [ -f $PIDFILE ]; then
+        PID=$(sed 's/ //g' $PIDFILE)
+    else
+        if [ "$1" = "zsipos" ]; then
+            PIDLIST=`pidof python`
+            PID=`for i in $PIDLIST; do ps -p $i -o args | grep zsipos.py >/dev/null && echo $i; done`
+        fi
+    fi
+}
+
+running() {
+    get_pid $1
+
+    if [ -n "$PID" ]; then
+        kill -0 $PID 2>/dev/null && echo y || rm -f $PIDFILE
+    fi
+}
+
+do_stop() {
+    RUNNING=$(running $1)
+    if [ -n "$RUNNING" ]; then
+        get_pid $1
+        $KILL $PID
+        test -f "$PIDFILE" && rm $PIDFILE
+    fi
+}
+
+start() {
+    echo -n "Starting zsiposapp: "
+    RUNNING=$(running runzsipos)
+    if [ -n "$RUNNING" ]; then
+        echo OK
+        return
+    fi
+
+    if [ -f /root/etc/noapp ]; then
+        echo "/root/etc/noapp found, quit"
+        display "/root/etc/noapp found, quit"
+        exit 0
+    fi
+    # Make sure zsipos.cfg exists
+    if [ ! -f /root/zsipos.cfg ]; then
+        echo "no zsipos.cfg"
+        display "no zsipos.cfg"
+        exit 0
+    fi
+    rm -f $PIDFILERUN
+    ulimit -c unlimited
+    # keep 7 files rotated, not zipped
+    /root/savelog -n -l -d -r archive nohup.out
+    ZRUN=$(running zsipos)
+    if [ -n "$ZRUN" ]; then
+        do_stop zsipos
+        display "zsipos left running, killed"
+    fi
+    /usr/bin/nohup /root/runzsipos.sh >/root/nohup.out 2>&1 &
+    # runzsipos.sh writes PIDFILERUN
+    # zsipos.py writes PIDFILEZSIPPOS
+
+    echo OK
+}
+
+stop() {
+    display "init: stop zsipos"
+    do_stop runzsipos
+    do_stop zsipos
+    sleep 1
+    echo OK
+}
+
+restart() {
+        stop
+        start
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart|reload)
+        restart
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
+exit $?

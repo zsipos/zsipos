@@ -1,0 +1,155 @@
+#!/bin/sh
+#
+# zsiposconf    Configure network, ntp
+#               Load kernel modules
+#
+
+FIFO=/tmp/zsiposfifo
+
+display() {
+    echo $@ >$FIFO
+}
+
+start() {
+    if [ ! -p $FIFO ]; then
+        mkfifo $FIFO
+    fi
+    if [ ! -f /root/zsipos_factory.cfg ]; then
+        echo "/root/zsipos_factory.cfg missing"
+        exit 0
+    fi
+
+
+    display "init zsipos"
+
+    CFG=/root/zsipos.cfg
+    FACTORY=/root/zsipos_factory.cfg
+    ZID=/root/zsipos.zid
+    NDB=/root/zsipos.ndb
+    NTP=/etc/ntp.conf
+    NTPFACTORY=/etc/ntp_factory.conf
+
+    # Create ntp_factory.conf
+    if [ ! -f /etc/ntp_factory.conf ]; then
+        cp $NTP $NTPFACTORY
+    fi
+
+    # Initial startup or reset
+    if [ ! -f /root/zsipos.cfg ]; then
+         cp $FACTORY $CFG
+         # Factory reset
+         rm -f $ZID
+         rm -f $NDB
+         touch /root/zsipos_rootreset
+         cp $NTPFACTORY $NTP
+    fi
+
+    # the network
+    DHCP=$(grep -i '^externalUseDHCP\s*=\s*True' $CFG)
+    DNSSERVER=$(sed -n '/^dnsServer/ s/dnsServer\s*=\s*// p' $CFG)
+    LOCALPROXY=$(sed -n '/^localProxyAddress/ s/localProxyAddress\s*=\s*// p' $CFG)
+    LOCALNET=$(sed -n '/^localNetmask/ s/localNetmask\s*=\s*// p' $CFG)
+    GATEWAY=$(sed -n '/^externalGateway/ s/externalGateway\s*=\s*// p' $CFG)
+    ETH0=$(sed -n '/^externalPhoneAddress/ s/externalPhoneAddress\s*=\s*// p' $CFG)
+    NETMASK=$(sed -n '/^externalNetmask/ s/externalNetmask\s*=\s*// p' $CFG)
+    NTPSERVER=$(sed -n '/^ntpServer/ s/ntpServer\s*=\s*// p' $CFG)
+    if [ -z "$LOCALNET" ]; then
+        LOCALNET=255.255.255.0
+    fi
+    if [ -z "$NETMASK" ]; then
+        NETMASK=255.255.255.0
+    fi
+    if [ -z "$ETH0" ]; then
+        DHCP=on
+    fi
+
+    cat >/etc/network/interfaces <<EOF
+# Configure Loopback
+auto lo
+iface lo inet loopback
+
+EOF
+
+    if [ -n "$DHCP" ]; then
+        cat >>/etc/network/interfaces <<EOF
+#Configure eth0 with dhcp IP
+auto eth0
+iface eth0 inet dhcp
+EOF
+    else
+        cat >>/etc/network/interfaces <<EOF
+#Configure eth0 with static IP
+auto eth0
+iface eth0 inet static
+    address $ETH0
+    netmask $NETMASK
+EOF
+        if [ -n "$GATEWAY" ]; then
+            cat >>/etc/network/interfaces <<EOF
+    gateway $GATEWAY
+EOF
+        fi
+    fi
+
+    # key dns-nameservers is not handled anyway
+
+    cat >>/etc/network/interfaces <<EOF
+#Configure eth1 static local proxy
+auto eth1
+iface eth1 inet static
+    address $LOCALPROXY
+    netmask $LOCALNET
+EOF
+
+    # ntpd
+    if [ -n "$NTPSERVER" ]; then
+        cat >$NTP <<EOF
+server $NTPSERVER
+EOF
+        fgrep -v server $NTPFACTORY | cat >>$NTP
+    fi
+
+    # resolv.conf (mit und ohne) DHCP, wenn DNSSERVER gegeben
+    if [ -n "$DNSSERVER" ]; then
+      cat >/etc/resolv.conf <<EOF
+nameserver $DNSSERVER
+EOF
+    else
+      echo >/etc/resolv.conf # empty file
+    fi
+
+    # load kernel modules
+    #modprobe ocaes
+    #modprobe swsha1
+    # old platform
+    #modprobe spi-oc-big
+    #modprobe enc28j60
+    #sleep 1
+    #ethtool -s eth1 duplex full # msglvl 0xc8ff
+}
+
+stop(){
+:
+}
+restart() {
+        stop
+        start
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart|reload)
+        restart
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
+exit $?
+

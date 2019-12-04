@@ -1,0 +1,80 @@
+#!/bin/sh
+#
+# display    start nxdisplay
+#
+
+PIDFILE=/var/run/nxdisplay.pid
+FIFO=/tmp/zsiposfifo
+
+calibrate() {
+    if [ ! -f /etc/ts.conf ]; then
+        TSLIB_TSDEVICE=/dev/input/event0 /usr/bin/ts_calibrate
+    fi
+}
+
+get_pid() {
+    if [ -f $PIDFILE ]; then
+        PID=$(sed 's/ //g' $PIDFILE)
+    else
+        PID=`pidof nxdisplay`
+    fi
+}
+
+running() {
+    get_pid 
+
+    if [ -n "$PID" ]; then
+        kill -0 $PID 2>/dev/null && echo y || rm -f $PIDFILE
+    fi
+}
+
+display() {
+    echo $@ >$FIFO
+}
+
+start() {
+    RUNNING=$(running)
+    if [ -z "$RUNNING" ]; then
+        calibrate
+        rm -f $FIFO
+        # nxdisplay legt FIFO an
+        /bin/nxdisplay &
+        pidof nxdisplay >$PIDFILE
+        while test ! -p $FIFO
+        do sleep 1
+        done
+        display "starting display"
+    fi
+    echo OK
+}
+stop() {
+    get_pid
+    if [ -n "$PID" ]; then
+        if [ -n "$PID" ]; then
+            kill $PID
+        fi
+        test -f $PIDFILE && rm $PIDFILE
+    fi
+    echo OK
+}
+restart() {
+        stop
+        start
+}
+
+case "$1" in
+  start)
+        start
+        ;;
+  stop)
+        stop
+        ;;
+  restart|reload)
+        restart
+        ;;
+  *)
+        echo "Usage: $0 {start|stop|restart}"
+        exit 1
+esac
+
+exit $?
