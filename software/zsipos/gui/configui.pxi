@@ -314,8 +314,8 @@ cdef void on_btn_zid_reset(Fl_Widget* widget, void *data) with gil:
 
 cdef void on_btn_nxcal(Fl_Widget* widget, void *data) with gil:
     configui.window.hide()
-    os.unlink('/etc/nxcal.dat')
-    os.system('/bin/nxcal')
+    os.unlink('/etc/pointercal')
+    os.system('export TSLIB_TSDEVICE=/dev/input/event0;/usr/bin/ts_calibrate')
     configui.window.show()
 
 # SaveWindow
@@ -1007,7 +1007,7 @@ def is_valid_ipv4_mask(netmask):
         except socket.error:
             return False
         s4 = netmask.split('.')
-        c4 = map(int, s4)
+        c4 = list(map(int, s4))
         m = ((c4[0]*256+c4[1])*256+c4[2])*256+c4[3]
         #debug('subnet mask')
         #debug(bin(m))
