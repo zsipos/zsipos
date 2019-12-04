@@ -7,8 +7,9 @@ PIDFILE=/var/run/nxdisplay.pid
 FIFO=/tmp/zsiposfifo
 
 calibrate() {
-    if [ ! -f /etc/ts.conf ]; then
-        TSLIB_TSDEVICE=/dev/input/event0 /usr/bin/ts_calibrate
+    if [ ! -f /etc/pointercal ]; then
+        export TSLIB_TSDEVICE=/dev/input/event0 
+        /usr/bin/ts_calibrate
     fi
 }
 
@@ -47,6 +48,7 @@ start() {
     fi
     echo OK
 }
+
 stop() {
     get_pid
     if [ -n "$PID" ]; then
@@ -57,6 +59,7 @@ stop() {
     fi
     echo OK
 }
+
 restart() {
         stop
         start
@@ -64,6 +67,7 @@ restart() {
 
 case "$1" in
   start)
+	stop
         start
         ;;
   stop)
