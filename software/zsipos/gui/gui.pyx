@@ -74,11 +74,10 @@ cdef void app_main() nogil:
     Fl.run()
     
 def cfg_main(infstr):
-
     configui_init(infstr)
     loadfonts()
-    Fl.lock()
     on_config_enter(NULL, NULL)
+    Fl.lock()
     Fl.run()
 
 ##########

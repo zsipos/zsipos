@@ -121,7 +121,6 @@ cdef str str_gitversions = ''
 
 # from application main
 cdef void on_config_enter(Fl_Widget* widget, void *data) with gil:
-    #debug("on config enter")
     # working copy of config
     config_to_dict()
     # initial screen values
@@ -133,9 +132,6 @@ cdef void on_config_enter(Fl_Widget* widget, void *data) with gil:
     configui.btn_back.take_focus()
     configui.window.show()
 
-
-cdef void on_config_close(Fl_Widget* widget, void *data) with gil:
-    configui.window.hide()
 
 # Config main
 cdef void on_btn_shutdown(Fl_Widget* widget, void *data) with gil:
@@ -1573,7 +1569,7 @@ def update_overview():
 # update_overview
 
 def warn(warnmessage):
-    configui.btn_warn.copy_label(str(warnmessage))
+    configui.btn_warn.copy_label(warnmessage)
     configui.tab_config.hide()
     configui.btn_warn.show()
 
@@ -1761,8 +1757,6 @@ def configui_init(infstr):
     ui = configui = new CONFIGUI()
     ui.window.position(0,60)
     ui.window.labeltype(FL_NORMAL_LABEL)
-    ui.window.callback(on_config_enter, <void*>configui)
-    ui.window.callback(on_config_close, NULL)
     # shutdown button
     ui.btn_shutdown.callback(on_btn_shutdown, NULL)
     # back button
