@@ -111,11 +111,11 @@ EOF
 
     # resolv.conf (mit und ohne) DHCP, wenn DNSSERVER gegeben
     if [ -n "$DNSSERVER" ]; then
-      cat >/etc/resolv.conf <<EOF
+        cat >/etc/resolv.conf <<EOF
 nameserver $DNSSERVER
 EOF
     else
-      echo >/etc/resolv.conf # empty file
+        echo >/etc/resolv.conf # empty file
     fi
 
     # load kernel modules
