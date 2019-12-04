@@ -42,7 +42,7 @@ export ZTC_CXX="$ZTC_PREFIX-g++"
 export ZTC_LD="$ZTC_PREFIX-ld"
 export ZTC_AR="$ZTC_PREFIX-ar"
 export ZTC_OBJCOPY="$ZTC_PREFIX-objcopy"
-export ZTC_GDB="$ZTC_PREFIX-gdb"
+export ZTC_GDB="riscv64-unknown-linux-gnu-gdb"
 
 export ZTC_TOOLS_DIR="$ZTOP/toolchain/riscv64"
 export PATH="$PATH:$ZTC_TOOLS_DIR/bin"
