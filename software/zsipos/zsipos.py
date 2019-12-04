@@ -269,7 +269,7 @@ def main_func():
                 #print "exception string:", infstr
                 logerrorexception()
                 if withgui:
-                    cfg_main(exc_info()[1])
+                    cfg_main(str(exc_info()[1]))
                 exit()
 
 def logerrorcaused_by(e):
