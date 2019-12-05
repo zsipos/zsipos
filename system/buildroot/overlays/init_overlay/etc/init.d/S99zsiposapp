@@ -75,7 +75,7 @@ start() {
     rm -f $PIDFILERUN
     ulimit -c unlimited
     # keep 7 files rotated, not zipped
-    /root/savelog -n -l -d -r archive nohup.out
+    /root/savelog -n -l -d -r /root/archive /root/nohup.out
     ZRUN=$(running zsipos)
     if [ -n "$ZRUN" ]; then
         do_stop zsipos

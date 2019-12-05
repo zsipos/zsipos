@@ -22,7 +22,7 @@ from twisted.protocols.sip import parseURL, Request
 from twisted.python.compat import long
 
 from Branch import stringifyLogBranch
-from gitversions import gitversions
+from gitversions import gitversions,gitdates
 
 class TimeMeasure(object):
     """
@@ -176,8 +176,15 @@ def getGitMagic():
             res = res ^ v
     return res
     
+def tstr(timestamp):
+    '''timestamp = unix time (sec) '''
+    return datetime.fromtimestamp(timestamp).strftime('%Y-%b-%d %H:%M:%S')
+
+def gitFormat(par):
+    return '%s: 0x%x (%s)'%(par,gitversions[par],tstr(gitdates[par]) if par in gitdates else '---')
+
 def showversion():
     print('GIT-MAGIC:', hex(getGitMagic()))
     for i in ['FPGA-GIT', 'KERNEL-GIT']:
-        print("%s: 0x%x" % (i, gitversions[i]))
+        print(gitFormat(i))
 

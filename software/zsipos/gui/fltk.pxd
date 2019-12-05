@@ -129,6 +129,10 @@ cdef extern from "FL/Fl.H":
         @staticmethod
         const char* get_font_name(Fl_Font fnum, int* attributes) nogil
         @staticmethod
+        int         check() nogil
+        @staticmethod
+        void        flush() nogil
+        @staticmethod
         int         lock() nogil
         @staticmethod
         int         run() nogil
@@ -193,7 +197,8 @@ cdef extern from "FL/Fl_Window.H":
 cdef extern from "FL/Fl_Double_Window.H":
 
     cdef cppclass Fl_Double_Window(Fl_Window):
-        pass
+
+        void flush() nogil
 
 
 cdef extern from "FL/Fl_Button.H":
@@ -219,6 +224,30 @@ cdef extern from "FL/Fl_Round_Button.H":
     cdef cppclass Fl_Round_Button(Fl_Light_Button):
         pass
 
+cdef extern from "FL/Fl_Browser_.H":
+
+    cdef cppclass Fl_Browser_(Fl_Group):
+        pass
+
+cdef extern from "FL/Fl_Browser.H":
+
+    cdef cppclass Fl_Browser(Fl_Browser_):
+        void hide(int line) nogil
+        void remove(int n) nogil
+        int select(int line, int val)
+        int selected(int line) nogil
+        int size() nogil
+        const char* text(int line) nogil
+        int value() nogil # get value!
+
+
+cdef extern from "FL/Fl_File_Browser.H":
+
+    cdef cppclass Fl_File_Browser(Fl_Browser):
+
+        void filetype(int t) nogil
+        void filter(const char* pattern) nogil
+        int load(const char* directory) nogil
 
 cdef extern from "FL/Fl_Tabs.H":
 
@@ -320,7 +349,7 @@ cdef extern from "FL/Fl_Valuator.H":
 
     cdef cppclass Fl_Valuator(Fl_Widget):
 
-        int value(double)
+        int value(double) nogil
 
 cdef extern from "FL/Fl_Counter.H":
 
@@ -342,20 +371,24 @@ cdef extern from "FL/Fl_Text_Display.H":
     ctypedef void (*Unfinished_Style_Cb)(int, void *)
 
     cdef cppclass Fl_Text_Display(Fl_Group):
-        void buffer(Fl_Text_Buffer *buf)
+        void buffer(Fl_Text_Buffer *buf) nogil
         int count_lines(int startPos, int endPos, bool startPosisLineStart)
-        void highlight_data(Fl_Text_Buffer *styleBuffer, const Style_Table_Entry *styleTable, int nStyles,
-                            char unfinishedStyle, Unfinished_Style_Cb unfinishedHighlightCb, void *cbArg)
-        void scroll(int topLineNum, int horizOffset)
-        void scrollbar_width(int w)
-        void textsize(Fl_Fontsize s)
-        void wrap_mode(int wrap, int wrapMargin)
+        void highlight_data(Fl_Text_Buffer *styleBuffer, 
+                            const Style_Table_Entry *styleTable, 
+                            int nStyles,
+                            char unfinishedStyle,
+                            Unfinished_Style_Cb unfinishedHighlightCb,
+                            void *cbArg) nogil
+        void scroll(int topLineNum, int horizOffset) nogil
+        void scrollbar_width(int w) nogil
+        void textsize(Fl_Fontsize s) nogil
+        void wrap_mode(int wrap, int wrapMargin) nogil
 
 cdef extern from "FL/Fl_Text_Buffer.H":
 
     cdef cppclass Fl_Text_Buffer:
-        int length()
-        void text(const char* text)
+        int length() nogil
+        void text(const char* text) nogil
 
 
 #

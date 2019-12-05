@@ -327,10 +327,25 @@ class CONFIGUI {open
         } {
           Fl_Output btn_local_proxy {
             label {Local Proxy  }
-            xywh {10 85 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+            xywh {10 90 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
           }
           Fl_Box framee1 {
-            xywh {165 85 255 30} box DOWN_FRAME
+            xywh {165 90 255 30} box DOWN_FRAME
+          }
+          Fl_Button btn_ping_local_proxy {
+            label ping
+            xywh {425 90 50 30}
+          }
+          Fl_Output btn_upload_server {
+            label {Upload Server}
+            xywh {10 155 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+          }
+          Fl_Box framee2 {
+            xywh {165 155 255 30} box DOWN_FRAME
+          }
+          Fl_Button btn_ping_upload_server {
+            label ping
+            xywh {425 155 50 30}
           }
           Fl_Check_Button btn_sshd {
             label {  SSH Daemon }
@@ -338,18 +353,31 @@ class CONFIGUI {open
           }
           Fl_Check_Button btn_skipzrtp1 {
             label {  skip zrtp1}
-            xywh {40 135 150 30} down_box DOWN_BOX
+            xywh {15 120 100 30} down_box DOWN_BOX
           }
-          Fl_Button btn_ping_local_proxy {
-            label ping
-            xywh {425 85 50 30}
+          Fl_File_Browser browse_archive {
+            label archive
+            xywh {10 213 251 105} type Multi color 29 align 5 textsize 16
           }
-          Fl_Output out_git_magic {
-            xywh {190 195 255 80} type Multiline color 29 labelsize 18 textsize 18
+          Fl_Button btn_add_file {
+            label Select
+            xywh {270 215 87 25} labelsize 18
           }
-          Fl_Button btn_show_git {
-            label gitversions
-            xywh {35 195 100 30}
+          Fl_Button btn_remove_file {
+            label Deselect
+            xywh {372 215 87 25} labelsize 18
+          }
+          Fl_Button btn_show_selected {
+            label {Show selected files}
+            xywh {270 245 190 25} labelsize 18
+          }
+          Fl_Button btn_upload {
+            label {Send (takes minutes)}
+            xywh {270 275 189 25} labelsize 18
+          }
+          Fl_Progress upload {
+            label upload selected
+            xywh {281 299 106 21} align 277 hide
           }
         }
         Fl_Group group_passwd {
@@ -367,19 +395,19 @@ class CONFIGUI {open
         } {
           Fl_Button btn_restart {
             label {Restart Program}
-            xywh {30 110 200 35}
+            xywh {30 100 200 35}
           }
           Fl_Button btn_reconfig {
             label {Reconfigure Net}
-            xywh {30 170 200 35}
+            xywh {30 150 200 35}
           }
           Fl_Button btn_reboot {
             label Reboot
-            xywh {30 230 200 35}
+            xywh {30 200 200 35}
           }
           Fl_Button btn_shutdown {
-            label Shutdown
-            xywh {255 245 200 35} labelcolor 1 hide
+            label {Device Shutdown}
+            xywh {30 250 200 35}
           }
           Fl_Button btn_nxcal {
             label {Calibrate Display}
@@ -396,31 +424,43 @@ class CONFIGUI {open
         }
         Fl_Group group_sysinfo {
           label SysInfo open
-          xywh {0 75 480 245}
+          xywh {0 75 480 245} hide
         } {
           Fl_Button btn_zsipos_cfg {
             label {zsipos.cfg}
-            xywh {45 115 100 30}
+            xywh {15 100 100 30}
           }
           Fl_Button btn_zsipos_log {
             label {zsipos.log}
-            xywh {45 160 100 30}
+            xywh {15 145 100 30}
           }
           Fl_Button btn_nohup_out {
             label {nohup.out}
-            xywh {45 205 100 30}
+            xywh {15 190 100 30}
           }
           Fl_Button btn_ifconfig {
             label ifconfig
-            xywh {165 115 100 30}
+            xywh {15 235 100 30}
           }
           Fl_Button btn_resolv_conf {
             label {resolv.conf}
-            xywh {165 160 100 30}
+            xywh {15 280 100 30}
           }
           Fl_Button btn_messages {
             label messages
-            xywh {165 205 100 30}
+            xywh {130 101 100 30}
+          }
+          Fl_Group group_git {
+            label {Git Versions} open
+            xywh {230 155 244 150} box BORDER_FRAME color 0 labelsize 16
+          } {
+            Fl_Button btn_show_git {
+              label {List of Submodules}
+              xywh {250 260 190 30} labelsize 16
+            }
+            Fl_Output out_git_magic {
+              xywh {240 168 225 80} type Multiline color 29 labelsize 18 textsize 16
+            }
           }
         }
       }

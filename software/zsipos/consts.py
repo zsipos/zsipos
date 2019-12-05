@@ -69,6 +69,10 @@ TURNSERVER = "turnServer"
 TURNUSER = "turnUser"
 TURNPASSWORD = "turnPassword"
 NTPSERVER = "ntpServer"
+UPLOADSERVER="uploadServer"
+UPLOADPORT="uploadPort"
+UPLOADUSER="uploadUser"
+UPLOADID= "uploadId"
 #gui
 ICONDIR = "iconDirectory"
 #misc 

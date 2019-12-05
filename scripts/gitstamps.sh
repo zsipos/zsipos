@@ -11,5 +11,17 @@ do
 	echo "    '$label' : 0x$vers,"
 done
 echo "}"
-} >"$ZTOP/software/zsipos/gitversions.py"
+
+echo "gitdates = {"
+echo "    'zsipos' : "`git log -1 --format=%ct`","
+
+git submodule foreach git log -1 --format=%ct | while read label
+do
+	label=`echo $label | cut -d"'" -f 2`
+	read tstamp
+	echo "    '$label' : $tstamp,"
+done
+echo "}"
+
+} >"$ZTOP/software/zsipos/gitversions.py" 
 

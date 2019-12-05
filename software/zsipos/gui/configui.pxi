@@ -5,6 +5,7 @@
 #
 # Version 0.4
 
+import time
 import errno
 import logging
 import os
@@ -17,9 +18,10 @@ import sys
 from time import sleep
 
 import crypt
-from gitversions import gitversions
+from gitversions import gitversions,gitdates
 from iputils import split_host_port
-from utils import getGitMagic
+from utils import getGitMagic,gitFormat,tstr
+from __builtin__ import file
 
 cdef CONFIGUI* configui
 
@@ -100,9 +102,9 @@ Reboot:
 
 Reboot the machine.
 
-Shutdown:
+Device Shutdown:
 
-If you shutdown the program you need a terminal (ssh) to restart.
+If you want to remove the SSD card, first shut down the unit, then unplug the power cord. Now you can safely remove the card.
 
 Delete Trust Information:
 
@@ -116,13 +118,21 @@ cdef str oldpw = ''
 cdef str newpw = ''
 
 cdef str str_gitversions = ''
+cdef str str_save_and_reconfig = 'Save and Reconfigure'
+cdef str str_save_and_restart = 'Save and Restart'
+
+cdef sendfiles = []
 
 """ Callbacks """
 
 # from application main
 cdef void on_config_enter(Fl_Widget* widget, void *data) with gil:
+    global sendfiles
+
+    #debug("on config enter")
     # working copy of config
     config_to_dict()
+    clearsendfiles()
     # initial screen values
     init_addresspar_editvals()
     init_noneditvals()
@@ -168,10 +178,13 @@ cdef void on_btn_help_back(Fl_Widget* widget, void *data) with gil:
     configui.winHelp.hide()
 
 cdef void on_tab_group(Fl_Widget *widget, void *data) with gil:
+    global sendfiles
     ui = configui
 
     label = get_label(get_value(ui.tab_config))
-    #debug(label)
+    #debug("on_tab_group %s" %(label, ))
+    if str(label) == str_experts:
+        clearsendfiles()
     if str(label) in [str_ip_config, str_server, str_experts, str_reset]:
         show_help = True
     else:
@@ -275,6 +288,52 @@ cdef void on_btn_show_git(Fl_Widget* widget, void *data) with gil:
     helpTextBuffer.text(str_gitversions)
     configui.helpDisplay.copy_label("gitversion")
     configui.winHelp.show()
+
+cdef void on_btn_addfiles(Fl_Widget* widget, void *data) with gil:
+    size = configui.browse_archive.size()
+    for index in range(1, size+1):
+        if configui.browse_archive.selected(index):
+            file = configui.browse_archive.text(index)
+            #if len(file) > 2: # exclude . and ..
+            add_file(file)
+            #configui.browse_archive.select(index,0)
+
+cdef void on_btn_removefiles(Fl_Widget* widget, void *data) with gil:
+    size = configui.browse_archive.size()
+    for index in range(1, size+1):
+        if configui.browse_archive.selected(index):
+            file = configui.browse_archive.text(index)
+            if len(file) > 2: # exclude . and ..
+                remove_file(file)
+            configui.browse_archive.select(index,0)
+
+cdef void on_btn_show_selected(Fl_Widget* widget, void *data) with gil:
+    size = configui.browse_archive.size()
+    for index in range(1, size+1):
+        filename = configui.browse_archive.text(index)
+        relfile = os.path.join("archive", filename)
+        if relfile in sendfiles: # exclude . and ..
+            configui.browse_archive.select(index,1)
+        else:
+            configui.browse_archive.select(index,0)
+
+cdef void on_btn_upload(Fl_Widget* widget, void *data) with gil:
+    if len(sendfiles):
+        if not config_valid(consts.UPLOADID):
+            if (not config_valid(consts.UPLOADUSER) or
+                not config_valid(consts.UPLOADSERVER) or
+                not config_valid(consts.UPLOADPORT)): # () for line continuation
+                warn('Upload information missing')
+                return;
+            else:
+                on_btn_edit_address(NULL, <void*>consts.UPLOADID)
+                info('Please press send button again.')
+                return;
+        add_stdfiles()
+        make_Manifest()
+        do_send()
+    else:
+        warn('no files selected')
 
 # callback Config Groups
 # Passwd
@@ -404,6 +463,7 @@ cdef void on_btn_address_ok(Fl_Widget* widget, void *data) with gil:
         address_save(params)
         #debug("on_btn_address_ok editvals:")
         #debug(params['editvals'])
+        configui.tab_config.redraw()
         configui.tab_config.take_focus()
         configui.winEditAddress.hide()
     else:
@@ -468,7 +528,7 @@ cdef void on_back(Fl_Widget* widget, void *cfdata) with gil:
     pos = get_position(i)
     configui.input_text.position(pos-1, pos-1)
     configui.input_text.take_focus()
-       
+
 cdef void on_forward(Fl_Widget* widget, void *cfdata) with gil:
     i = <Fl_Input_*>cfdata
     pos = get_position(i)
@@ -500,6 +560,20 @@ cdef void on_change_keyboard(Fl_Widget* widget, void *cfdata) with gil:
 editcache = []
 
 # Python Functions (alphabetical)
+def add_file(char *filename):
+    global sendfiles;
+
+    relfile = os.path.join("archive", filename)
+    if os.path.isfile(relfile):
+        if relfile not in sendfiles:
+            sendfiles.append(relfile)
+
+def add_stdfiles():
+    global sendfiles;
+    stdfiles = ['nohup.out', 'Manifest']
+    for relfile in stdfiles:
+        if os.path.isfile(relfile):
+            sendfiles.append(relfile)
 
 def address_cache(params):
     """ save editvals to cache """
@@ -540,12 +614,14 @@ def address_save(params):
     global cfdict
     global addresspar
 
+    #debug("address_save %s" % (params['title']))
     estep = params['estep']
     options  = params['options']
     testfunctions = params['testfunctions']
     warnings = params['warnings']
     params['editvals']= list(editcache) # update editvals
     editvals = params['editvals']
+    update   = params['update'] if 'update' in params else None
     debug_editcache("address_save editcache, editvals")
     debug_editcache(editcache)
     debug_editcache(editvals)
@@ -566,6 +642,7 @@ def address_save(params):
             if options[estep] in ['oldpw', 'newpw', 'newpw2']:
                 continue
             if clen == 1:             # simple case, just store it
+                #debug("address_save: %s=%s" % (options[estep], editvals[estep]))
                 cfdict[options[estep]] = editvals[estep]
             else:
                 if clen == 2:
@@ -576,7 +653,9 @@ def address_save(params):
                 #debug(options[estep])
                 cfdict[options[estep]] = concatval
                 clen = 1 # do not concat additonal pars
-
+    if update:
+        for u in update:
+            read_all_vals(addresspar[u])
     update_overview() # refresh overview
     return True
 # address_save
@@ -640,6 +719,14 @@ def clearpw():
     oldpw = ""
     newpw = ""
     newpw2 = ""
+
+def clearsendfiles():
+    global sendfiles
+
+    sendfiles = []
+    size = configui.browse_archive.size()
+    for index in range(1, size+1):
+        configui.browse_archive.select(index,0)
 
 def comparepw(pw):
     """ compare and save password"""
@@ -731,13 +818,17 @@ def config_to_dict():
     #debug_dict("config_to_dict")
 # config_to_dict
 
+def config_valid(name):
+    """ True if cfdict[name] is defined """
+    return True if name in cfdict and cfdict[name] else False
+
 def debug(string):
-    #return
+    return
     log.info(string)
 
 
 def debug_dict(string, mydict=None):
-    #return
+    return
     debug(string)
     if mydict is None:
         mydict = cfdict
@@ -828,27 +919,20 @@ def do_ping(host):
 
     #debug("do_ping: host %s" % (host,))
     configui.helpDisplay.copy_label("ping")
+    out = "ping %s ...\n" % (host,)
+    helpTextBuffer.text(out)
     configui.winHelp.show()
 
     try:
-        out = subprocess.check_output(["ping", "-c", "2", host], stderr=subprocess.STDOUT)
+        out += subprocess.check_output(["ping", "-c", "2", host], stderr=subprocess.STDOUT)
     except CalledProcessError as e:
         if len(e.output):
-            warn(e.output)
+            out += e.output
         else:
-            warn(str(sys.exc_info()[1]))
-        return
+            out += str(sys.exc_info()[1])
+    finally:
+        helpTextBuffer.text(out)
 
-    helpTextBuffer.text(out)
-
-
-def do_reboot():
-    """ restart application """
-    if os.uname()[1] == 'esther-vm2':
-        debug('reboot requested')
-    else:
-        log.info("reboot system")
-        os.system('reboot')
 
 def do_restart(restart_type):
     """ restart application """
@@ -858,9 +942,12 @@ def do_restart(restart_type):
         if restart_type == 'reboot':
             log.info("reboot system")
             os.system('reboot')
-        elif restart_type == 'reconfig':
+        elif restart_type == str_save_and_reconfig:
             log.info("reconfig system")
             os.system('/etc/init.d/rcK && /etc/init.d/rcS')
+        elif restart_type == 'shutdown':
+            log.info("shutdown system")
+            os.system('poweroff')
         else:
             log.info("restart zsipos")
             sys.exit(0)
@@ -875,6 +962,32 @@ def do_save_cfg():
         config.write(cfgfile)
         log.info("cfgfile saved")
         os.system('sync')
+
+def do_send():
+    myfiles = ' '.join(sendfiles)
+    #debug('do_send')
+    #debug(myfiles)
+    cpcmd = "tar -cf - %s |  /usr/bin/ssh -T %s@%s -p %s" % (
+            myfiles, cfdict[consts.UPLOADUSER], cfdict[consts.UPLOADSERVER], str(cfdict[consts.UPLOADPORT]))
+    log.info(cpcmd)
+    configui.helpDisplay.copy_label("upload")
+    out = "uploading files\n  %s\n" % ('\n  '.join(sendfiles))
+    helpTextBuffer.text(out)
+    configui.winHelp.show() # visible only when finished
+
+    try:
+        retcode = subprocess.call(cpcmd, shell= True)
+    except CalledProcessError as e:
+        if len(e.output):
+            out += e.output
+        else:
+            out += str(sys.exc_info()[1])
+    finally:
+        if (retcode == 0):
+            out += 'successfully sent'
+            clearsendfiles()
+        helpTextBuffer.text(out)
+
 
 '''
 def get_choice(txt, restext):
@@ -898,7 +1011,7 @@ def gitversions_init():
     ''' read gitversions into str '''
     global str_gitversions
 
-    str_gitversions = '\n'.join("%s=0x%x" % (key,val) for (key,val) in gitversions.items())
+    str_gitversions = '\n'.join(gitFormat(i) for i in gitversions)
     #debug(str_gitversions)
 
 def gitout_init():
@@ -909,6 +1022,12 @@ def gitout_init():
     #gitoutTextBuffer = new Fl_Text_Buffer()
     #configui.gitoutDisplay.buffer(gitoutTextBuffer)
     configui.out_git_magic.value(str_gitout)
+
+def info(infomessage):
+    configui.btn_warn.copy_label(infomessage)
+    configui.btn_warn.labelcolor(39)
+    configui.tab_config.hide()
+    configui.btn_warn.show()
 
 def init_addresspar_editvals():
     ''' Initialise editvals in addresspar '''
@@ -1192,6 +1311,29 @@ def keyboard_show(key_state):
 
 #keyboard_show
 
+def make_Manifest():
+    mversion = '0.1'
+    file = open('Manifest', 'w')
+    file.write('Manifest Version %s\n' % (mversion))
+    file.write('    Customer:  %s\n' % (cfdict[consts.UPLOADID], ))
+    file.write('    Timestamp: %s\n' % (tstr(int(time.time()))))
+    file.write('\nVersions:\n')
+    file.write("    GIT-MAGIC: %s\n" % (hex(getGitMagic())))
+    for i in sorted(gitversions):
+        file.write("    %s\n" % (gitFormat(i), ))
+    file.write('\nFiles:\n')
+    for fn in sorted(sendfiles):
+        file.write('    %s\n' % (fn,))
+    file.write('\nConfig:\n')
+    for key, value in sorted(cfdict.items()):
+        if key == 'AutoDns':
+            continue
+        if key == 'turnPassword':
+            file.write("    %s=****" % (key,))
+        else:
+            file.write("    %s=%s" % (key, str(value)))
+        file.write('\n')
+
 def need_restart():
     """ scan options in addresspar, some extras"""
     # reconfig has priority
@@ -1199,10 +1341,10 @@ def need_restart():
     if consts.EXTUSEDHCP in olddict:
         if str(olddict[consts.EXTUSEDHCP]) != str(cfdict[consts.EXTUSEDHCP]):
             log.info(consts.EXTUSEDHCP + " changed")
-            return 'reconfig'
+            return str_save_and_reconfig
     elif consts.EXTUSEDHCP in cfdict and cfdict[consts.EXTUSEDHCP]:
         log.info(consts.EXTUSEDHCP + " activated")
-        return 'reconfig'
+        return str_save_and_reconfig
     # reconfig in addresspar
     for key in addresspar:
         param = addresspar[key]
@@ -1215,7 +1357,7 @@ def need_restart():
                         continue
                 if o in cfdict and (o not in olddict or olddict[o] != cfdict[o]):
                     log.info('option %s=%s needs reconfig' % (o, cfdict[o]))
-                    return 'reconfig'
+                    return str_save_and_reconfig
     # restart in addresspar
     for key in addresspar:
         param = addresspar[key]
@@ -1224,16 +1366,16 @@ def need_restart():
             for o in options:
                 if o in cfdict and (o not in olddict or olddict[o] != cfdict[o]):
                     log.info('option %s=%s needs restart' % (o, cfdict[o] or ''))
-                    return 'restart'
+                    return str_save_and_restart
     # Port changes
     if consts.EXTPHONEPORT in olddict:
         if olddict[consts.EXTPHONEPORT] != cfdict[consts.EXTPHONEPORT]:
             log.info(consts.EXTPHONEPORT + " changed")
-            return 'restart'
+            return str_save_and_restart
     elif consts.LOCPROXYPORT in olddict:
         if olddict[consts.LOCPROXYPORT] != cfdict[consts.LOCPROXYPORT]:
             log.info(consts.LOCPROXYPORT + " changed")
-            return 'restart'
+            return str_save_and_restart
     log.info("restart not needed")
     return None
 # need_restart
@@ -1300,6 +1442,14 @@ def read_val(params):
                     i += 1
             #debug(editvals)
 # read_val            
+
+def remove_file(char *filename):
+    global sendfiles;
+
+    relfile = os.path.join("archive", filename)
+    if os.path.isfile(relfile):
+        if relfile in sendfiles:
+            sendfiles.remove(relfile)
 
 def save_root_pw(newpw):
 
@@ -1385,12 +1535,28 @@ def show_ifconfig():
     configui.helpDisplay.copy_label("ifconfig")
     configui.winHelp.show()
 
+def show_upload(str1, str2, str3, str4):
+    #debug("show_upload %s %s %s %s" %(str1,str2, str3, str4))
+    if str1 is not None:
+        ret = "%s%s%s:%s;id=%s" % (str3, ":", str1, str2, str4) # '@' terminates output
+    else:
+        ret = "  "
+    #debug("show_upload ret=%s" %(ret))
+    return ret
+
+def show_turn(str1, str2, str3, str4):
+    debug('show_turn')
+    if str1 is not None:
+        ip_port = concat_host_port(str1, str2) if concat_host_port(str1, str2) else ""
+        return ("%s;u=%s;p=%s" % (ip_port, str3, str4))
+    else:
+        return "  "
+
 
 def show_value(params):
 
     editvals = params['editvals']
-    #debug("show_value title:")
-    #debug(params['title'])
+    #debug("show_value %s:" %(params['title'], ))
     #debug("show_value editvals:")
     #debug(editvals)
 
@@ -1400,19 +1566,12 @@ def show_value(params):
         showfunction = params['showfunction']
         clen = len(editvals)
         newval = showfunction(*editvals)
-
+    #debug('show_value newval <%s>' % (newval,))
     if newval is not None:
         return " " + newval
     else:
         return " "
 # show_value
-
-def show_turn(str1, str2, str3, str4):
-    if str1 is not None:
-        ip_port = concat_host_port(str1, str2) if concat_host_port(str1, str2) else ""
-        return ("%s;u=%s;p=%s" % (ip_port, str3, str4))
-    else:
-        return "  "
 
 def show_warning(params):
     warnings = params['warnings']
@@ -1565,11 +1724,19 @@ def update_overview():
     newval = show_value(params)
     ui.btn_subnet_mask.copy_label(newval)
     ui.btn_subnet_mask.value(" " + params['title'])
+    #
+    params = addresspar[consts.UPLOADSERVER]
+    newval = show_value(params)
+    #debug('update_overview uploadserver: <%s>' % (newval))
+    ui.btn_upload_server.copy_label(newval)
+    ui.btn_upload_server.value(" " + params['title'])
+    #
 
 # update_overview
 
 def warn(warnmessage):
     configui.btn_warn.copy_label(warnmessage)
+    configui.btn_warn.labelcolor(88)
     configui.tab_config.hide()
     configui.btn_warn.show()
 
@@ -1729,6 +1896,27 @@ addresspar = {
                 'warnings' : stdwarnings,
                 'mandatory' : True,
                 'steps': 2 },
+              consts.UPLOADSERVER: {
+                'title': "Upload Server",
+                'heads': stdheads + ["User", "UploadId"],
+                'options': [consts.UPLOADSERVER, consts.UPLOADPORT, consts.UPLOADUSER, consts.UPLOADID],
+                'keyboard': ['abc', '123', 'abc', 'abc'],
+                'restart_on_change': None,
+                'showfunction': show_upload,
+                'testfunctions': stdtests + [None, None],
+                'warnings' : stdwarnings + [None, None],
+                'steps': 4 },
+              consts.UPLOADID: {
+                'title': "Upload Id",
+                'heads': ["UploadId"],
+                'options': [consts.UPLOADID],
+                'keyboard': ['abc'],
+                'restart_on_change': None,
+                'showfunction': show_upload,
+                'testfunctions':  [None],
+                'warnings' : [None],
+                'update' : [consts.UPLOADSERVER],
+                'steps': 1 },
               'rootpw': {
                 'title': "Change root password",
                 'heads': ["old password", "new_password", "repeat new password"],
@@ -1754,11 +1942,12 @@ def configui_init(infstr):
 
     log = logging.getLogger("zsipos.config")
     log.info ("configui_init...")
+    log.info("gitdate: %x" %(gitdates["zsipos"], ))
     ui = configui = new CONFIGUI()
     ui.window.position(0,60)
     ui.window.labeltype(FL_NORMAL_LABEL)
-    # shutdown button
-    ui.btn_shutdown.callback(on_btn_shutdown, NULL)
+    #ui.window.callback(on_config_enter, <void*>configui)
+    #ui.window.callback(on_config_close, NULL)
     # back button
     ui.btn_back.callback(on_btn_back, NULL)
     ui.btn_warn.callback(on_btn_warn, NULL)
@@ -1808,16 +1997,23 @@ def configui_init(infstr):
     # Group Experts
     ui.btn_local_proxy.callback(on_btn_edit_address, <void*>consts.LOCPROXYADDR)
     ui.btn_ping_local_proxy.callback(on_btn_ping, <void*>consts.LOCPROXYADDR)
+    ui.btn_upload_server.callback(on_btn_edit_address, <void*>consts.UPLOADSERVER)
+    ui.btn_ping_upload_server.callback(on_btn_ping, <void*>consts.UPLOADSERVER)
     ui.btn_sshd.callback(on_btn_sshd, NULL)
-    gitout_init()
-    gitversions_init()
-    ui.btn_show_git.callback(on_btn_show_git, NULL)
+    #ui.browse_archive.filter("[a-zA-Z0-9]*")
+    ui.browse_archive.load("archive")
+    ui.browse_archive.remove(1) # hide ../
+    ui.btn_add_file.callback(on_btn_addfiles, NULL)
+    ui.btn_remove_file.callback(on_btn_removefiles, NULL)
+    ui.btn_show_selected.callback(on_btn_show_selected, NULL)
+    ui.btn_upload.callback(on_btn_upload, NULL)
     # Group Password
     ui.btn_root_pw.callback(on_btn_root_pw, NULL)
     # Group Reset
-    ui.btn_restart.callback(on_btn_restart, <void*>'restart')
-    ui.btn_reconfig.callback(on_btn_restart, <void*>'reconfig')
+    ui.btn_restart.callback(on_btn_restart, <void*>str_save_and_restart)
+    ui.btn_reconfig.callback(on_btn_restart, <void*>str_save_and_reconfig)
     ui.btn_reboot.callback(on_btn_restart, <void*>'reboot')
+    ui.btn_shutdown.callback(on_btn_restart, <void*>'shutdown')
     ui.btn_nxcal.callback(on_btn_nxcal, NULL)
     ui.btn_zid_reset.callback(on_btn_zid_reset, NULL)
     ui.btn_fac_reset.callback(on_btn_fac_reset, NULL)
@@ -1828,6 +2024,9 @@ def configui_init(infstr):
     ui.btn_ifconfig.callback(on_btn_ifconfig, NULL)
     ui.btn_resolv_conf.callback(on_btn_sysinfo, <void*>"/etc/resolv.conf")
     ui.btn_messages.callback(on_btn_sysinfo, <void*>"/var/log/messages")
+    gitout_init()
+    gitversions_init()
+    ui.btn_show_git.callback(on_btn_show_git, NULL)
     # EditButtons
     ui.btn_address_back.callback(on_btn_address_back, NULL)
     ui.btn_address_ok.callback(on_btn_address_ok, NULL)
@@ -1850,7 +2049,6 @@ cdef extern from "gui.cxx":
     cdef cppclass CONFIGUI:
 
         Fl_Double_Window*   window
-        Fl_Button*          btn_shutdown
         Fl_Button*          btn_back
         Fl_Button*          btn_help
         Fl_Button*          btn_warn
@@ -1903,10 +2101,16 @@ cdef extern from "gui.cxx":
         Fl_Group*           group_experts
         Fl_Output*          btn_local_proxy
         Fl_Button*          btn_ping_local_proxy
+        Fl_Output*          btn_upload_server
+        Fl_Button*          btn_ping_upload_server
         Fl_Check_Button*    btn_skipzrtp1
-        Fl_Button*          btn_show_git
-        Fl_Output*          out_git_magic
-        Fl_Check_Button*    btn_sshd
+        Fl_Check_Button*    btn_sshd 
+        Fl_File_Browser*    browse_archive
+        Fl_Button*          btn_add_file
+        Fl_Button*          btn_remove_file
+        Fl_Button*          btn_upload
+        Fl_Button*          btn_show_selected
+
         # Password
         Fl_Group*           group_passwd
         Fl_Button*          btn_root_pw
@@ -1915,6 +2119,7 @@ cdef extern from "gui.cxx":
         Fl_Button*          btn_restart
         Fl_Button*          btn_reconfig
         Fl_Button*          btn_reboot
+        Fl_Button*          btn_shutdown
         Fl_Button*          btn_nxcal
         Fl_Button*          btn_zid_reset
         Fl_Button*          btn_fac_reset
@@ -1925,6 +2130,8 @@ cdef extern from "gui.cxx":
         Fl_Button*          btn_ifconfig
         Fl_Button*          btn_resolv_conf
         Fl_Button*          btn_messages
+        Fl_Button*          btn_show_git
+        Fl_Output*          out_git_magic
 
         # Save
         Fl_Double_Window*   winSave

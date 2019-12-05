@@ -11,6 +11,9 @@
 # More modifications by Guy Maor <maor@debian.org>:
 #       * cleanup.
 #       * -p (preserve) option
+# Modified by Esther, 
+#       * option -d: generate timestamp from ctime
+#       * option -d: clean up files if more than cycle files
 # 
 # usage: savelog [-m mode] [-u user] [-g group] [-t] [-p] [-c cycle]
 #		 [-j] [-C] [-d] [-l] [-r rolldir] [-n] [-q] file...
@@ -85,7 +88,7 @@ COMPRESS="gzip"
 COMPRESS_OPTS="-f"
 COMPRESS_STRENGTH_DEF="-9";
 DOT_Z=".gz"
-DATUM=`date +%Y%m%d%H%M%S`
+DATARG=+%Y%m%d%H%M%S
 
 # parse args
 exitcode=0	# no problems to far
@@ -151,7 +154,7 @@ while getopts m:u:g:c:r:CdD:tlphjJ123456789x:nq opt ; do
 	r) rolldir="$OPTARG" ;;
 	C) forceclean=1 ;;
 	d) datum=1 ;;
-	D) DATUM=$(date +$OPTARG) ;;
+	D) DATARG=+$OPTARG ;;
 	t) touch=1 ;;
 	j) COMPRESS="bzip2"; COMPRESS_OPTS="-f"; COMPRESS_STRENGTH_DEF="-9"; DOT_Z=".bz2" ;;
 	J) COMPRESS="xz"; COMPRESS_OPTS="-f"; COMPRESS_STRENGTH_DEF=""; DOT_Z=".xz" ;;
@@ -311,6 +314,16 @@ while [ $# -gt 0 ]; do
 		fi
 	fi
 
+    # delete old files if -d is given
+    if [ -n "$datum" ]; then
+        tfiles="$newname.*"
+        files_left=`ls $tfiles | wc -l`
+        files_to_delete=`expr $files_left - $count`
+        if [ $files_to_delete -gt 0 ]; then
+            ls -t $tfiles | tail -n $files_to_delete | xargs rm
+        fi
+    fi
+
 	# create new file if needed
 	if [ -n "$preserve" ]; then
 		(umask 077
@@ -323,6 +336,12 @@ while [ $# -gt 0 ]; do
 		fixfile "$filename.new"
 		filenew=1
 	fi
+
+    # get DATUM prior to link/move (changes ctime)
+    if [ -n "$datum" ]; then
+        CTIME=`stat -c %Z $filename`
+        DATUM=`date -d @$CTIME $DATARG`
+    fi
 
 	newfilename="$newname.0"
 	# link the file into the file.0 holding place
