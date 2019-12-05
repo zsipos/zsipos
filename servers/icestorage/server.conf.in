@@ -1,0 +1,6 @@
+[stun]
+server = stun.domain.invalid
+
+[turn]
+server = turn.domain.invalid:443
+shared-secret = this-is-the-shared-secret
