@@ -18,12 +18,14 @@ build_for_processor()
 		export X_INCLUDES="--x-include=\"$ZTOP/software/microwindows/src/include\""
 		export X_LIBRARIES="--x-libraries=\"$ZTOP/software/microwindows/src/lib\""
 		export X_EXTRA_LIBS="-lnano-X -lfreetype -lts -lz"
+		export XFT="disable"
 	else
 		unset LIBS
 		unset HOST
 		unset X_INCLUDES
 		unset X_LIBRARIES
 		export X_EXTRA_LIBS="-lfreetype"
+		export XFT="enable"
 	fi
 	export CFLAGS="-fpic"
 	export CXXFLAGS="$CFLAGS"
@@ -36,7 +38,7 @@ build_for_processor()
 		$X_INCLUDES \
 		$X_LIBRARIES \
 		--enable-debug \
-		--disable-xft \
+		--$XFT-xft \
 		--disable-xfixes \
 		--disable-xrender \
 		--disable-xcursor \

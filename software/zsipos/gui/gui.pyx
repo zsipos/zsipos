@@ -284,7 +284,7 @@ class GUI_GMITMEventListener(GMITMEventListener):
 def loadfonts():
     count = Fl.set_fonts("-*")
     #for i in xrange(count):
-    #    print i, ":", Fl.get_font_name(i, NULL)
+    #    print(i, ":", Fl.get_font_name(i, NULL))
     #Fl.set_font(FL_TIMES, 17)
 
 ##########

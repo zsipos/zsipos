@@ -24,6 +24,7 @@ rm -rf "$ZSIPOSOVL_APP"
 mkdir -p "$ZSIPOSOVL_APP/root" "$ZSIPOSOVL_APP/bin"
 cp "$ZTOP/software/microwindows/src/bin/nxdisplay" "$ZSIPOSOVL_APP/bin"
 cp -r "$ZTOP/software/zsipos" "$ZSIPOSOVL_APP/root"
+cp -r "$ZTOP/software/fonts" "$ZSIPOSOVL_APP/root"
 rm -rf "$ZSIPOSOVL_APP/root/zsipos/"*"/host"
 
 # repack rootfs.tar
