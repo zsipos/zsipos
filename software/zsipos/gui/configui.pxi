@@ -21,7 +21,6 @@ import crypt
 from gitversions import gitversions,gitdates
 from iputils import split_host_port
 from utils import getGitMagic,gitFormat,tstr
-from __builtin__ import file
 
 cdef CONFIGUI* configui
 
@@ -927,7 +926,7 @@ def do_ping(host):
         out += subprocess.check_output(["ping", "-c", "2", host], stderr=subprocess.STDOUT)
     except CalledProcessError as e:
         if len(e.output):
-            out += e.output
+            out += e.output.decode("utf8")
         else:
             out += str(sys.exc_info()[1])
     finally:
