@@ -54,7 +54,7 @@ stop() {
     if [ -n "$PID" ]; then
         if [ -n "$PID" ]; then
             kill $PID
-            display "display stopped" # trigger stop
+            #display "display stopped" # trigger stop
         fi
         test -f $PIDFILE && rm $PIDFILE
     fi
