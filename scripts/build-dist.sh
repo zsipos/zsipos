@@ -32,5 +32,7 @@ rm -rf "$ZSIPOSOVL_APP/root/zsipos/"*"/host"
 
 cp "$ZTOP/system/buildroot/buildroot/output/images/rootfs.tar" "$DESTDIR"
 
+cp "$ZTOP/kernel/build_$BITS/bbl/bbl.bin" "$DESTDIR"/boot.bin
+
 umask $oldumask
 
