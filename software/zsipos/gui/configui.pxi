@@ -923,10 +923,10 @@ def do_ping(host):
     configui.winHelp.show()
 
     try:
-        out += subprocess.check_output(["ping", "-c", "2", host], stderr=subprocess.STDOUT)
+        out += subprocess.check_output(["ping", "-c", "2", host], stderr=subprocess.STDOUT, encoding="utf8")
     except CalledProcessError as e:
         if len(e.output):
-            out += e.output.decode("utf8")
+            out += e.output
         else:
             out += str(sys.exc_info()[1])
     finally:
@@ -938,18 +938,24 @@ def do_restart(restart_type):
     if os.uname()[1] == 'esther-vm2':
         debug("%s requested" % (restart_type,))
     else:
+        console.clear()
         if restart_type == 'reboot':
+            console.info("reboot...")
             log.info("reboot system")
             os.system('reboot')
         elif restart_type == str_save_and_reconfig:
+            console.info("reconfigure...")
             log.info("reconfig system")
-            os.system('/etc/init.d/rcK && /etc/init.d/rcS')
+            #os.system('/etc/init.d/rcK && /etc/init.d/rcS')
+            os.system('reboot')
         elif restart_type == 'shutdown':
+            console.info("shutdown...")
             log.info("shutdown system")
             os.system('poweroff')
         else:
+            console.info("restart...")
             log.info("restart zsipos")
-            sys.exit(0)
+        os._exit(0)
 
 def do_save_cfg():
     dict_to_config()
@@ -975,7 +981,7 @@ def do_send():
     configui.winHelp.show() # visible only when finished
 
     try:
-        retcode = subprocess.call(cpcmd, shell= True)
+        retcode = subprocess.call(cpcmd, shell=True, encoding="utf8")
     except CalledProcessError as e:
         if len(e.output):
             out += e.output
@@ -1454,7 +1460,7 @@ def save_root_pw(newpw):
 
     cmd = ['/usr/bin/passwd', 'root']
     PIPE=subprocess.PIPE
-    p = subprocess.Popen(cmd, stdin=PIPE, stderr=PIPE, stdout=PIPE)
+    p = subprocess.Popen(cmd, stdin=PIPE, stderr=PIPE, stdout=PIPE, encoding="utf8")
     input = u'%(p)s\n%(p)s\n' % { 'p': newpw }
     (out,err) = p.communicate(input)
     if p.returncode == 0:
@@ -1509,7 +1515,7 @@ def show_sysinfo(filename):
     global helpTextBuffer
 
     try:
-        out = subprocess.check_output(["tail", "-200", filename], stderr = subprocess.STDOUT)
+        out = subprocess.check_output(["tail", "-200", filename], stderr=subprocess.STDOUT, encoding="utf8")
     except CalledProcessError as e:
         if len(e.output):
             warn(e.output)
@@ -1527,7 +1533,7 @@ def show_ifconfig():
     global helpTextBuffer
 
     try:
-        out = subprocess.check_output(["ifconfig", ])
+        out = subprocess.check_output(["ifconfig", ], encoding="utf8")
     except CalledProcessError:
         pass
     helpTextBuffer.text(out)

@@ -18,7 +18,6 @@ Copyright (C) 2019 Stefan Adams
 
 print("starting...") # nohup.out
 
-import os
 # process pid ASAP
 try:
     with open('/var/run/zsipos.pid', 'w') as f:
@@ -26,41 +25,17 @@ try:
 except:
     pass
 
-class ConsoleOutput(object):
-
-    def __init__(self):
-        try:
-            self.f = open('/tmp/zsiposfifo', 'w')
-        except:
-            self.f = None
-
-    def info(self, msg):
-        self.write(msg + "\n")
-
-    def write(self, msg):
-        if not self.f:
-            print(msg)
-            return
-        self.f.write(msg)
-        self.f.flush()
-
-
-console = ConsoleOutput()
-console.info("starting...") # display early
+from console import console
+console.info("starting...") 
 
 # import is very slow in box
 console.info("importing...")
-import os.path
+import os
 from sys import argv, exit, exc_info
 from getopt import getopt, GetoptError
 import logging
-
-#import resource #@UnresolvedImport
 import socket
-#import traceback
-
 console.info("still importing...")
-
 from utils import loadmodule, showversion
 from iputils import get_ip_address, get_default_gateway_linux, split_host_port
 from config import config
@@ -69,9 +44,7 @@ from Exceptions import ZsiposException, ZsiposCfgException
 console.info("import completed")
 
 log = logging.getLogger("zsipos")
-
 cfggui = False
-
 
 def infomsg(msg):
     log.info(msg)
@@ -130,8 +103,9 @@ def app_main(withgui):
 
         infomsg('loading TWISTED subsystem')
         from twisted.internet import reactor
-        infomsg('TWISTED subsystem loaded')
 
+        infomsg('starting application.')
+        
         # DHCP, DNS: find missing addresses
         setExternalPhoneAddress()
         setExternalGateway()
@@ -260,17 +234,13 @@ def main_func():
     if cfggui:
         cfg_main(infstr)
     else:
-        while True:
-            try:
-                app_main(withgui)
-            except ZsiposException:
-                #print "exception type:", exc_info()[0]
-                #infstr = exc_info()[1]
-                #print "exception string:", infstr
-                logerrorexception()
-                if withgui:
-                    cfg_main(str(exc_info()[1]))
-                exit()
+        try:
+            app_main(withgui)
+        except ZsiposException as e:
+            if withgui:
+                cfg_main(str(exc_info()[1]))
+            else:
+                raise e
 
 def logerrorcaused_by(e):
     if hasattr(e, "caused_by"):
@@ -282,13 +252,18 @@ def logerrorexception():
     log.error("EXCEPTION: %s", info[1], exc_info=info)
     logerrorcaused_by(info[1])
 
+########
+# MAIN #
+########
+
 if __name__ == '__main__':
     try:
         main_func()
     #catch your exceptions here...
+    except KeyboardInterrupt:
+        exit(0)
     except:
         logerrorexception()
-        #print exc_info()
         print(exc_info()[1]) # show in nohup.out
         if cfggui:
             console.info(str(exc_info()[1]))

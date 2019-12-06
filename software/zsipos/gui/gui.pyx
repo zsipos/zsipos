@@ -29,6 +29,7 @@ import consts
 from fltk cimport *
 from GMITM import GMITMEventListener
 from utils import parseAddress, PYCALL
+from console import console
 
 log = logging.getLogger("gui")
 
