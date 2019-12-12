@@ -11,3 +11,4 @@ fi
 
 ./build.sh $*
 
+rm -f vivado*.log vivado*.jou

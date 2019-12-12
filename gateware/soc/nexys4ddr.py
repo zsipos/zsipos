@@ -42,7 +42,7 @@ class MySoC(EthernetSoC):
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
         # flash-rom
-        self.add_constant("FLASH_BOOT_ADDRESS", self.mem_map["spiflash"]+FLASH_BOOT_OFFSET)
+        self.add_constant("FLASH_BOOT_ADDRESS", self.mem_map["spiflash"]+FLASH_BOOTROM_OFFSET)
         self.submodules.spiflash = SpiFlash(
             self.platform.request("spiflash4x"),
             dummy=11,
@@ -140,9 +140,9 @@ def main():
     if args.dts_file:
         soc.write_dts(args.dts_file)
     if args.load:
-        load_bistream(soc)
+        load_bistream(builder, FLASH_BITSTREAM_IMAGE)
     if args.flash:
-        load_flash(soc, FLASH_MAP)
+        load_flash(builder, FLASH_MAP)
 
 
 if __name__ == "__main__":
