@@ -845,6 +845,7 @@ def dict_to_config():
     """ copy dict items back to config. """
 
     #debug_dict("dict_to_config")
+    config[consts.SECTION] = {}
     for key, value in cfdict.items():
         if key == 'AutoDns':
             continue
@@ -963,7 +964,7 @@ def do_save_cfg():
         os.unlink(consts.CFGFILEBAK)
     if os.path.isfile(consts.CFGFILE):
         os.rename(consts.CFGFILE, consts.CFGFILEBAK)
-    with open(consts.CFGFILE, 'wb') as cfgfile:
+    with open(consts.CFGFILE, 'w') as cfgfile:
         config.write(cfgfile)
         log.info("cfgfile saved")
         os.system('sync')
