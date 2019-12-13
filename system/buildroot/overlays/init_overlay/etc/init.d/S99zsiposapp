@@ -30,8 +30,7 @@ get_pid() {
         PID=$(sed 's/ //g' $PIDFILE)
     else
         if [ "$1" = "zsipos" ]; then
-            PIDLIST=`pidof python`
-            PID=`for i in $PIDLIST; do ps -p $i -o args | grep zsipos.py >/dev/null && echo $i; done`
+            PID=`ps -ef|grep "python zsipos/zsipos.py"|grep -v grep|sed 's/^[ ]*//g'|cut -d' ' -f1`
         fi
     fi
 }
@@ -75,7 +74,7 @@ start() {
     rm -f $PIDFILERUN
     ulimit -c unlimited
     # keep 7 files rotated, not zipped
-    /root/savelog -n -l -d -r /root/archive /root/nohup.out
+    /root/savelog -n -l -d -r /root/archive /root/nohup.out >/var/log/savelog 2>&1
     ZRUN=$(running zsipos)
     if [ -n "$ZRUN" ]; then
         do_stop zsipos
@@ -89,16 +88,17 @@ start() {
 }
 
 stop() {
+    echo -n "Stopping zsiposapp: "
+    display "#clear"
     display "init: stop zsipos"
     do_stop runzsipos
     do_stop zsipos
-    sleep 1
     echo OK
 }
 
 restart() {
-        stop
-        start
+    stop
+    start
 }
 
 case "$1" in

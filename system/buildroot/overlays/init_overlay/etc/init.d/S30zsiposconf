@@ -11,6 +11,7 @@ display() {
 }
 
 start() {
+    echo -n "Starting zsiposconf: "
     if [ ! -p $FIFO ]; then
         mkfifo $FIFO
     fi
@@ -26,16 +27,25 @@ start() {
     FACTORY=/root/zsipos_factory.cfg
     ZID=/root/zsipos.zid
     NDB=/root/zsipos.ndb
-    NTP=/etc/ntp.conf
-    NTPFACTORY=/etc/ntp_factory.conf
+    if [ -x /usr/sbin/chronyd ]; then
+        NTP=/etc/chrony.conf
+        NTPFACTORY=/etc/chrony_factory.conf
+	rm -f /etc/ntp.conf
+	rm -f /etc/ntp_factory.conf
+    else
+        NTP=/etc/ntp.conf
+        NTPFACTORY=/etc/ntp_factory.conf
+	rm -f /etc/chrony.conf
+	rm -f /etc/chrony_factory.conf
+    fi
 
     # Create ntp_factory.conf
-    if [ ! -f /etc/ntp_factory.conf ]; then
+    if [ ! -f $NTPFACTORY ]; then
         cp $NTP $NTPFACTORY
     fi
 
     # Initial startup or reset
-    if [ ! -f /root/zsipos.cfg ]; then
+    if [ ! -f $CFG ]; then
          cp $FACTORY $CFG
          # Factory reset
          rm -f $ZID
@@ -126,14 +136,15 @@ EOF
     #modprobe enc28j60
     #sleep 1
     #ethtool -s eth1 duplex full # msglvl 0xc8ff
+    echo OK
 }
 
 stop(){
-:
+    echo "Stopping zsiposconf: OK"
 }
 restart() {
-        stop
-        start
+    stop
+    start
 }
 
 case "$1" in

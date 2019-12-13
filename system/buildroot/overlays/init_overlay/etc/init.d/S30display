@@ -34,15 +34,16 @@ display() {
 }
 
 start() {
+    echo -n "Starting display: "
     RUNNING=$(running)
     if [ -z "$RUNNING" ]; then
         calibrate
         rm -f $FIFO
         # nxdisplay legt FIFO an
-        /bin/nxdisplay &
+        /bin/nxdisplay >/var/log/nxdisplay 2>&1 &
         pidof nxdisplay >$PIDFILE
         while test ! -p $FIFO
-        do sleep 1
+            do sleep 1
         done
         display "starting display"
     fi
@@ -50,6 +51,7 @@ start() {
 }
 
 stop() {
+    echo -n "Stopping display: "
     get_pid
     if [ -n "$PID" ]; then
         if [ -n "$PID" ]; then
@@ -58,17 +60,16 @@ stop() {
         fi
         test -f $PIDFILE && rm $PIDFILE
     fi
-    echo OK
+    echo "OK"
 }
 
 restart() {
-        stop
-        start
+    stop
+    start
 }
 
 case "$1" in
   start)
-	stop
         start
         ;;
   stop)
