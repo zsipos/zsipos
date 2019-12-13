@@ -186,7 +186,8 @@ class MySoC(EthernetSoC):
             dummy=6, # see datasheet for dummy cycles
             div=2,   # multiple of 2
             with_bitbang=True,
-            endianness=self.cpu.endianness)
+            endianness=self.cpu.endianness,
+            addr32bit=True)
         self.spiflash.add_clk_primitive(self.platform.device)
         self.add_wb_slave(self.mem_map["spiflash"], self.spiflash.bus, size=self.flash_size)
         self.add_memory_region("spiflash", self.mem_map["spiflash"], self.flash_size, type="io")
