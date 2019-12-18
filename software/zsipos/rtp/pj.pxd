@@ -41,7 +41,6 @@ cdef extern from "pjlib.h":
     ctypedef int     pj_bool_t
     ctypedef struct  pj_grp_lock_t:
         pass
-    ctypedef size_t  pj_size_t
     ctypedef void    pj_sockaddr_t
     ctypedef ssize_t pj_ssize_t
     ctypedef int     pj_status_t
@@ -199,6 +198,27 @@ cdef extern from "pjlib.h":
     cdef pj_status_t     pj_timer_heap_schedule(pj_timer_heap_t* ht, pj_timer_entry* entry, const pj_time_val* delay) nogil
     cdef void            pj_timer_heap_set_lock(pj_timer_heap_t* ht, pj_lock_t* lock, pj_bool_t auto_del) nogil
              
+    # QoS
+    ctypedef enum pj_qos_type:
+        PJ_QOS_TYPE_BEST_EFFORT,     
+        PJ_QOS_TYPE_BACKGROUND,     
+        PJ_QOS_TYPE_VIDEO,     
+        PJ_QOS_TYPE_VOICE,     
+        PJ_QOS_TYPE_CONTROL,     
+        PJ_QOS_TYPE_SIGNALLING     
+
+    ctypedef enum pj_qos_wmm_prio:
+        PJ_QOS_WMM_PRIO_BULK_EFFORT,     
+        PJ_QOS_WMM_PRIO_BULK,     
+        PJ_QOS_WMM_PRIO_VIDEO,     
+        PJ_QOS_WMM_PRIO_VOICE     
+
+    ctypedef struct pj_qos_params:
+        pj_uint8_t      flags
+        pj_uint8_t      dscp_val 
+        pj_uint8_t      so_prio 
+        pj_qos_wmm_prio wmm_prio
+ 
     # IOQueue    
     cdef int PJ_IOQUEUE_ALWAYS_ASYNC
     cdef int PJ_IOQUEUE_NO_ASYNC
@@ -247,7 +267,19 @@ cdef extern from "pjlib.h":
         pj_addr_hdr     addr 
         pj_sockaddr_in  ipv4
         pj_sockaddr_in6 ipv6
+        
+    DEF _PJ_MAX_SOCKOPT_PARAMS = 4
     
+    ctypedef struct sockopt_options:
+        int   level
+        int   optname
+        void* optval
+        int   optlen
+    
+    ctypedef struct pj_sockopt_params:
+        unsigned        cnt
+        sockopt_options options[_PJ_MAX_SOCKOPT_PARAMS]
+
     ctypedef long pj_sock_t
     
     cdef int pj_AF_UNSPEC() nogil
@@ -256,14 +288,6 @@ cdef extern from "pjlib.h":
     
     cdef int pj_SOCK_DGRAM() nogil
     
-    ctypedef enum pj_qos_type_t:
-        PJ_QOS_TYPE_BEST_EFFORT, 
-        PJ_QOS_TYPE_BACKGROUND, 
-        PJ_QOS_TYPE_VIDEO, 
-        PJ_QOS_TYPE_VOICE,
-        PJ_QOS_TYPE_CONTROL, 
-        PJ_QOS_TYPE_SIGNALLING
-        
     cdef pj_uint16_t pj_ntohs (pj_uint16_t netshort) nogil
     cdef pj_uint16_t pj_htons (pj_uint16_t hostshort) nogil
     cdef pj_uint32_t pj_ntohl (pj_uint32_t netlong) nogil
@@ -313,27 +337,162 @@ cdef extern from "pjlib.h":
     cdef pj_status_t pj_activesock_start_accept(pj_activesock_t* asock, pj_pool_t* pool) nogil
     cdef pj_status_t pj_activesock_start_connect(pj_activesock_t* asock, pj_pool_t* pool, const pj_sockaddr_t* remaddr, int addr_len) nogil
     
-    # QoS
-    ctypedef enum pj_qos_type:
-        PJ_QOS_TYPE_BEST_EFFORT,     
-        PJ_QOS_TYPE_BACKGROUND,     
-        PJ_QOS_TYPE_VIDEO,     
-        PJ_QOS_TYPE_VOICE,     
-        PJ_QOS_TYPE_CONTROL,     
-        PJ_QOS_TYPE_SIGNALLING     
+    # ssl
+    ctypedef struct pj_ssl_sock_t:
+        pass
+    
+    ctypedef pj_str_t pj_ssl_cert_buffer
+    
+    ctypedef enum pj_ssl_cipher:
+        PJ_TLS_UNKNOWN_CIPHER,
+        PJ_TLS_NULL_WITH_NULL_NULL,
+        PJ_TLS_RSA_WITH_NULL_MD5,
+        PJ_TLS_RSA_WITH_NULL_SHA,
+        PJ_TLS_RSA_WITH_NULL_SHA256,
+        PJ_TLS_RSA_WITH_RC4_128_MD5,
+        PJ_TLS_RSA_WITH_RC4_128_SHA,
+        PJ_TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+        PJ_TLS_RSA_WITH_AES_128_CBC_SHA,
+        PJ_TLS_RSA_WITH_AES_256_CBC_SHA,
+        PJ_TLS_RSA_WITH_AES_128_CBC_SHA256,
+        PJ_TLS_RSA_WITH_AES_256_CBC_SHA256,
+        PJ_TLS_DH_DSS_WITH_3DES_EDE_CBC_SHA,
+        PJ_TLS_DH_RSA_WITH_3DES_EDE_CBC_SHA,
+        PJ_TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA,
+        PJ_TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA,
+        PJ_TLS_DH_DSS_WITH_AES_128_CBC_SHA,
+        PJ_TLS_DH_RSA_WITH_AES_128_CBC_SHA,
+        PJ_TLS_DHE_DSS_WITH_AES_128_CBC_SHA,
+        PJ_TLS_DHE_RSA_WITH_AES_128_CBC_SHA,
+        PJ_TLS_DH_DSS_WITH_AES_256_CBC_SHA,
+        PJ_TLS_DH_RSA_WITH_AES_256_CBC_SHA,
+        PJ_TLS_DHE_DSS_WITH_AES_256_CBC_SHA,
+        PJ_TLS_DHE_RSA_WITH_AES_256_CBC_SHA,
+        PJ_TLS_DH_DSS_WITH_AES_128_CBC_SHA256,
+        PJ_TLS_DH_RSA_WITH_AES_128_CBC_SHA256,
+        PJ_TLS_DHE_DSS_WITH_AES_128_CBC_SHA256,
+        PJ_TLS_DHE_RSA_WITH_AES_128_CBC_SHA256,
+        PJ_TLS_DH_DSS_WITH_AES_256_CBC_SHA256,
+        PJ_TLS_DH_RSA_WITH_AES_256_CBC_SHA256,
+        PJ_TLS_DHE_DSS_WITH_AES_256_CBC_SHA256,
+        PJ_TLS_DHE_RSA_WITH_AES_256_CBC_SHA256,
+        PJ_TLS_DH_anon_WITH_RC4_128_MD5,
+        PJ_TLS_DH_anon_WITH_3DES_EDE_CBC_SHA,
+        PJ_TLS_DH_anon_WITH_AES_128_CBC_SHA,
+        PJ_TLS_DH_anon_WITH_AES_256_CBC_SHA,
+        PJ_TLS_DH_anon_WITH_AES_128_CBC_SHA256,
+        PJ_TLS_DH_anon_WITH_AES_256_CBC_SHA256,
+        # TLS (deprecated) 
+        PJ_TLS_RSA_EXPORT_WITH_RC4_40_MD5,
+        PJ_TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5,
+        PJ_TLS_RSA_WITH_IDEA_CBC_SHA,
+        PJ_TLS_RSA_EXPORT_WITH_DES40_CBC_SHA,
+        PJ_TLS_RSA_WITH_DES_CBC_SHA,
+        PJ_TLS_DH_DSS_EXPORT_WITH_DES40_CBC_SHA,
+        PJ_TLS_DH_DSS_WITH_DES_CBC_SHA,
+        PJ_TLS_DH_RSA_EXPORT_WITH_DES40_CBC_SHA,
+        PJ_TLS_DH_RSA_WITH_DES_CBC_SHA,
+        PJ_TLS_DHE_DSS_EXPORT_WITH_DES40_CBC_SHA,
+        PJ_TLS_DHE_DSS_WITH_DES_CBC_SHA,
+        PJ_TLS_DHE_RSA_EXPORT_WITH_DES40_CBC_SHA,
+        PJ_TLS_DHE_RSA_WITH_DES_CBC_SHA,
+        PJ_TLS_DH_anon_EXPORT_WITH_RC4_40_MD5,
+        PJ_TLS_DH_anon_EXPORT_WITH_DES40_CBC_SHA,
+        PJ_TLS_DH_anon_WITH_DES_CBC_SHA,
+        # SSLv3 
+        PJ_SSL_FORTEZZA_KEA_WITH_NULL_SHA,
+        PJ_SSL_FORTEZZA_KEA_WITH_FORTEZZA_CBC_SHA,
+        PJ_SSL_FORTEZZA_KEA_WITH_RC4_128_SHA,
+        # SSLv2 
+        PJ_SSL_CK_RC4_128_WITH_MD5,
+        PJ_SSL_CK_RC4_128_EXPORT40_WITH_MD5,
+        PJ_SSL_CK_RC2_128_CBC_WITH_MD5,
+        PJ_SSL_CK_RC2_128_CBC_EXPORT40_WITH_MD5,
+        PJ_SSL_CK_IDEA_128_CBC_WITH_MD5,
+        PJ_SSL_CK_DES_64_CBC_WITH_MD5,
+        PJ_SSL_CK_DES_192_EDE3_CBC_WITH_MD5
 
-    ctypedef enum pj_qos_wmm_prio:
-        PJ_QOS_WMM_PRIO_BULK_EFFORT,     
-        PJ_QOS_WMM_PRIO_BULK,     
-        PJ_QOS_WMM_PRIO_VIDEO,     
-        PJ_QOS_WMM_PRIO_VOICE     
+    ctypedef enum pj_ssl_curve:
+        PJ_TLS_UNKNOWN_CURVE,
+        PJ_TLS_CURVE_SECT163K1,
+        PJ_TLS_CURVE_SECT163R1,
+        PJ_TLS_CURVE_SECT163R2,
+        PJ_TLS_CURVE_SECT193R1,
+        PJ_TLS_CURVE_SECT193R2,
+        PJ_TLS_CURVE_SECT233K1,
+        PJ_TLS_CURVE_SECT233R1,
+        PJ_TLS_CURVE_SECT239K1,
+        PJ_TLS_CURVE_SECT283K1,
+        PJ_TLS_CURVE_SECT283R1,
+        PJ_TLS_CURVE_SECT409K1,
+        PJ_TLS_CURVE_SECT409R1,
+        PJ_TLS_CURVE_SECT571K1,
+        PJ_TLS_CURVE_SECT571R1,
+        PJ_TLS_CURVE_SECP160K1,
+        PJ_TLS_CURVE_SECP160R1,
+        PJ_TLS_CURVE_SECP160R2,
+        PJ_TLS_CURVE_SECP192K1,
+        PJ_TLS_CURVE_SECP192R1,
+        PJ_TLS_CURVE_SECP224K1,
+        PJ_TLS_CURVE_SECP224R1,
+        PJ_TLS_CURVE_SECP256K1,
+        PJ_TLS_CURVE_SECP256R1,
+        PJ_TLS_CURVE_SECP384R1,
+        PJ_TLS_CURVE_SECP521R1,
+        PJ_TLS_CURVE_BRAINPOOLP256R1,
+        PJ_TLS_CURVE_BRAINPOOLP384R1,
+        PJ_TLS_CURVE_BRAINPOOLP512R1,
+        PJ_TLS_CURVE_ARBITRARY_EXPLICIT_PRIME_CURVES,
+        PJ_TLS_CURVE_ARBITRARY_EXPLICIT_CHAR2_CURVES
+    
+    ctypedef enum pj_ssl_entropy_t:
+        PJ_SSL_ENTROPY_NONE,
+        PJ_SSL_ENTROPY_EGD,
+        PJ_SSL_ENTROPY_RANDOM,
+        PJ_SSL_ENTROPY_URANDOM,
+        PJ_SSL_ENTROPY_FILE,
+        PJ_SSL_ENTROPY_UNKNOWN
 
-    ctypedef struct pj_qos_params:
-        pj_uint8_t      flags
-        pj_uint8_t      dscp_val 
-        pj_uint8_t      so_prio 
-        pj_qos_wmm_prio wmm_prio
- 
+    ctypedef struct pj_ssl_sock_cb:
+        pj_bool_t (*on_data_read)(pj_ssl_sock_t *ssock, void *data, pj_size_t size, pj_status_t status, pj_size_t *remainder)
+        pj_bool_t (*on_data_recvfrom)(pj_ssl_sock_t *ssock, void *data, pj_size_t size, const pj_sockaddr_t *src_addr, int addr_len, pj_status_t status)
+        pj_bool_t (*on_data_sent)(pj_ssl_sock_t *ssock, pj_ioqueue_op_key_t *send_key, pj_ssize_t sent)
+        pj_bool_t (*on_accept_complete)(pj_ssl_sock_t *ssock, pj_ssl_sock_t *newsock, const pj_sockaddr_t *src_addr, int src_addr_len)
+        pj_bool_t (*on_accept_complete2)(pj_ssl_sock_t *ssock, pj_ssl_sock_t *newsock, const pj_sockaddr_t *src_addr, int src_addr_len, pj_status_t status)
+        pj_bool_t (*on_connect_complete)(pj_ssl_sock_t *ssock, pj_status_t status)
+    
+    ctypedef struct pj_ssl_sock_param:
+        pj_grp_lock_t*    grp_lock
+        int               sock_af
+        int               sock_type
+        pj_ioqueue_t*     ioqueue
+        pj_timer_heap_t*  timer_heap
+        pj_ssl_sock_cb    cb
+        void*             user_data
+        pj_uint32_t       proto
+        unsigned          async_cnt
+        int               concurrency
+        pj_bool_t         whole_data
+        pj_size_t         send_buffer_size
+        pj_size_t         read_buffer_size
+        unsigned          ciphers_num
+        pj_ssl_cipher*    ciphers
+        unsigned          curves_num
+        pj_ssl_curve*     curves
+        pj_str_t          sigalgs
+        pj_ssl_entropy_t  entropy_type
+        pj_str_t          entropy_path
+        pj_time_val       timeout
+        pj_bool_t         verify_peer
+        pj_bool_t         require_client_cert
+        pj_str_t          server_name
+        pj_bool_t         reuse_addr
+        pj_qos_type       qos_type
+        pj_qos_params     qos_params
+        pj_bool_t         qos_ignore_error
+        pj_sockopt_params sockopt_params
+        pj_bool_t         sockopt_ignore_error
+        
 #
 # PJLIB-UTIL
 #
@@ -432,21 +591,34 @@ cdef extern from "pjnath.h":
         PJ_TURN_TP_TLS     
 
     ctypedef struct pj_turn_alloc_param:
-        int bandwidth
-        int lifetime
-        int ka_interval 
-        int af
+        int             bandwidth
+        int             lifetime
+        int             ka_interval 
+        int             af
+        pj_turn_tp_type peer_conn_type
  
+    ctypedef struct pj_turn_sock_tls_cfg:
+        pj_str_t           ca_list_file
+        pj_str_t           ca_list_path
+        pj_str_t           cert_file
+        pj_str_t           privkey_file
+        pj_ssl_cert_buffer ca_buf
+        pj_ssl_cert_buffer cert_buf
+        pj_ssl_cert_buffer privkey_buf
+        pj_str_t           password
+        pj_ssl_sock_param  ssock_param
+
     ctypedef struct pj_turn_sock_cfg:
-        pj_grp_lock_t* grp_lock
-        unsigned       max_pkt_size
-        pj_qos_type    qos_type 
-        pj_qos_params  qos_params 
-        pj_bool_t      qos_ignore_error 
-        pj_sockaddr    bound_addr 
-        pj_uint16_t    port_range 
-        unsigned       so_rcvbuf_size 
-        unsigned       so_sndbuf_size
+        pj_grp_lock_t*       grp_lock
+        unsigned             max_pkt_size
+        pj_qos_type          qos_type 
+        pj_qos_params        qos_params 
+        pj_bool_t            qos_ignore_error 
+        pj_sockaddr          bound_addr 
+        pj_uint16_t          port_range 
+        unsigned             so_rcvbuf_size 
+        unsigned             so_sndbuf_size
+        pj_turn_sock_tls_cfg tls_cfg
 
     #ICE
     ctypedef enum pj_ice_cand_type:
@@ -554,4 +726,6 @@ cdef extern from "pjnath.h":
     cdef pj_status_t    pj_ice_strans_init_ice(pj_ice_strans* ice_st, pj_ice_sess_role role, const pj_str_t* local_ufrag, const pj_str_t* local_passwd) nogil    
     cdef pj_status_t    pj_ice_strans_sendto(pj_ice_strans* ice_st, unsigned comp_id, const void* data, pj_size_t data_len, const pj_sockaddr_t* dst_addr, int dst_addr_len) nogil
     cdef pj_status_t    pj_ice_strans_start_ice(pj_ice_strans* ice_st, const pj_str_t* rem_ufrag, const pj_str_t* rem_passwd, unsigned rcand_cnt, const pj_ice_sess_cand rcand[]) nogil
+    cdef void           pj_ice_strans_stun_cfg_default(pj_ice_strans_stun_cfg* cfg) nogil
+    cdef void           pj_ice_strans_turn_cfg_default(pj_ice_strans_turn_cfg* cfg) nogil
  
