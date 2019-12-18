@@ -53,7 +53,7 @@ testexit() {
     if [ $RET -eq 0 ]; then
         out zsipos finished
     else
-        out "#clear"
+        echo "#clear" >$FIFO
         out "zipos exited with error $RET"
         if [ -f $LASTERR ]; then
             echo "lasterror:" >$FIFO
