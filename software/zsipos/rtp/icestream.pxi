@@ -18,6 +18,8 @@ Copyright (C) 2017 Stefan Adams
 
 DEF _PJ_ICE_MAX_CAND = 16
 
+timeout = 10
+
 ctypedef enum compid_t:
     COMPID_RTP = 1,
     COMPID_RTCP
@@ -79,8 +81,8 @@ cdef class PJICEStream:
         self.cfg.resolver = self.resolver
         pj_stun_config_init(&self.cfg.stun_cfg, &g.caching_pool.factory, 0, g.rtp_ioq, g.rtp_timer_heap)
         # STUN
-        self.cfg.stun_tp_cnt = 2
         # STUN config RTP
+        pj_ice_strans_stun_cfg_default(&self.cfg.stun_tp[<int>COMPID_RTP-1])
         self.cfg.stun_tp[<int>COMPID_RTP-1].cfg.so_rcvbuf_size = MAXRTPLEN
         self.cfg.stun_tp[<int>COMPID_RTP-1].cfg.so_sndbuf_size = MAXRTPLEN
         self.cfg.stun_tp[<int>COMPID_RTP-1].cfg.max_pkt_size   = MAXRTPLEN
@@ -91,6 +93,7 @@ cdef class PJICEStream:
         pj_check_status(status)
         self.cfg.stun_tp[<int>COMPID_RTP-1].af = self.cfg.stun_tp[<int>COMPID_RTP-1].cfg.bound_addr.addr.sa_family
         # STUN config RTCP
+        pj_ice_strans_stun_cfg_default(&self.cfg.stun_tp[<int>COMPID_RTCP-1])
         self.cfg.stun_tp[<int>COMPID_RTCP-1].cfg.so_rcvbuf_size = MAXRTPLEN
         self.cfg.stun_tp[<int>COMPID_RTCP-1].cfg.so_sndbuf_size = MAXRTPLEN
         self.cfg.stun_tp[<int>COMPID_RTCP-1].cfg.max_pkt_size   = MAXRTPLEN
@@ -102,6 +105,7 @@ cdef class PJICEStream:
         self.cfg.stun_tp[<int>COMPID_RTCP-1].af = self.cfg.stun_tp[<int>COMPID_RTCP-1].cfg.bound_addr.addr.sa_family
         # set STUN server config
         if stun_server:
+            self.cfg.stun_tp_cnt = 2
             self.stun_server = self.splitServer(stun_server, PJ_STUN_PORT)
             # RTP
             pj_cstr(&self.cfg.stun_tp[<int>COMPID_RTP-1].server, self.stun_server[0])
@@ -111,6 +115,7 @@ cdef class PJICEStream:
             self.cfg.stun_tp[<int>COMPID_RTCP-1].port = self.stun_server[1]
         # TURN
         # TURN config RTP
+        pj_ice_strans_turn_cfg_default(&self.cfg.turn_tp[<int>COMPID_RTP-1])
         self.cfg.turn_tp[<int>COMPID_RTP-1].cfg.so_rcvbuf_size = MAXRTPLEN
         self.cfg.turn_tp[<int>COMPID_RTP-1].cfg.so_sndbuf_size = MAXRTPLEN
         self.cfg.turn_tp[<int>COMPID_RTP-1].cfg.max_pkt_size   = MAXRTPLEN
@@ -119,6 +124,7 @@ cdef class PJICEStream:
         pj_check_status(status)
         self.cfg.turn_tp[<int>COMPID_RTP-1].af = self.cfg.turn_tp[<int>COMPID_RTP-1].cfg.bound_addr.addr.sa_family
         # TURN config RTCP
+        pj_ice_strans_turn_cfg_default(&self.cfg.turn_tp[<int>COMPID_RTCP-1])
         self.cfg.turn_tp[<int>COMPID_RTCP-1].cfg.so_rcvbuf_size = MAXRTPLEN
         self.cfg.turn_tp[<int>COMPID_RTCP-1].cfg.so_sndbuf_size = MAXRTPLEN
         self.cfg.turn_tp[<int>COMPID_RTCP-1].cfg.max_pkt_size   = MAXRTPLEN
@@ -290,7 +296,7 @@ cdef class PJICEStream:
         retrycount = 0
         while True:
             try:
-                return urllib.request.urlopen(request)
+                return urllib.request.urlopen(request, None, timeout)
             except Exception as e:
                 retrycount += 1
                 if retrycount == 2:
