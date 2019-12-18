@@ -7,6 +7,7 @@ DESTDIR="$ZTOP/output"
 OVERLAYDIR="$ZTOP/system/buildroot/overlays"
 
 #./build-all.sh
+build-zsipos.sh
 
 rm -rf "$DESTDIR"
 mkdir -p "$DESTDIR"

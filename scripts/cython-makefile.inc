@@ -12,7 +12,7 @@ CYTHON_INCLUDES += $(wildcard *.pxd) $(wildcard *.pxi)
 
 CFLAGS_COMMON  += -fpic -pthread -std=c++11 $(TC_DBGFLAGS) 
 LDFLAGS_COMMON += -fpic -pthread -Wl,--as-needed -Wl,--no-undefined
-LIBS_COMMON    += -lssl -lcrypto -luuid -lz 
+LIBS_COMMON    += -luuid -lz -lssl -lcrypto 
 
 clean::
 	rm -rf zsipos host
