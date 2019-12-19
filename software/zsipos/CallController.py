@@ -134,6 +134,8 @@ def isSDP(msg):
         return False
     return ct[0].lower() == 'application/sdp'
 
+
+_NOADDRESSES = { False : None, True : None }
         
 class CallController(object):
     '''
@@ -158,7 +160,7 @@ class CallController(object):
         self.tsseconds = config.getfloat(consts.SECTION, consts.TIMERS)
         self.zsession = CyZRTPSession(self, consts.ZIDFILE)
         self.logtimer = config.getboolean(consts.SECTION, consts.LOGTIMERS)
-        self.addrFromSDP = [None, None]
+        self.addrFromSDP = _NOADDRESSES
         self.terminated = False
         self.on_created(msg)
         
@@ -230,7 +232,7 @@ class CallController(object):
     def handle_dlg_request(self, msg, external):
         method = msg.method
         if method == 'INVITE': 
-            self.addrFromSDP = [ None, None ]
+            self.addrFromSDP = _NOADDRESSES
             if isSDP(msg):
                 self.fixSDP(msg, external)
         elif method == 'BYE':
@@ -251,7 +253,7 @@ class CallController(object):
         method = msg.method
         if method == 'INVITE':
             self.resetT3()
-            self.addrFromSDP = [ None, None ]
+            self.addrFromSDP = _NOADDRESSES
             if isSDP(msg):
                 self.fixSDP(msg, external)
         elif method == 'ACK':
