@@ -29,8 +29,7 @@ get_pid() {
         PID=$(sed 's/ //g' $PIDFILE)
     else
         if [ "$1" = "zsipos" ]; then
-            PIDLIST=`pidof python`
-            PID=`for i in $PIDLIST; do ps -p $i -o args | grep zsipos.py && echo $i; done`
+            PID=`ps -ef|grep "python zsipos/zsipos.py"|grep -v grep|sed 's/^[ ]*//g'|cut -d' ' -f1`
         fi
     fi
 }
