@@ -215,7 +215,7 @@ def main_func():
         cfggui = True
         infstr = "invalid configfile"
         os.unlink(configfile)
-        if os.path.isfile(consts.CFGFILEBAK):
+        if os.path.isfile(consts.CFGFILEBAK) and os.path.getsize(consts.CFGFILEBAK):
             os.system("cp %s %s" % (consts.CFGFILEBAK, consts.CFGFILE))
             infstr +=  ", restored from %s" % (consts.CFGFILEBAK)
         else:
