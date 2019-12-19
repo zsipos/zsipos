@@ -348,6 +348,7 @@ cdef int set_realtime() nogil:
 #
 # external interface
 #
+
 def init():
     pjinit()
     
@@ -359,6 +360,12 @@ def close():
     
 cdef void wake_rtp_thread() nogil:
     mq_call(g.rtp_mq, NULL, NULL, NULL)
+    
+cdef pj_thread_desc gui_thread_desc
+cdef pj_thread_t*   gui_thread_handle
+
+def register_gui_thread():
+    pj_thread_register("gui_thread", gui_thread_desc, &gui_thread_handle)
 
 include "enums.pxi"    
 include "exceptions.pxi"

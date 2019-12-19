@@ -96,6 +96,7 @@ def setExternalGateway():
 
     log.info("gateway " + gateway)
     config.set(consts.SECTION, consts.EXTGATEWAY, gateway)
+    
 
 def app_main(withgui):
 
@@ -124,8 +125,10 @@ def app_main(withgui):
         rtp.init() # @UndefinedVariable
 
         if withgui:
+            def thread_init_cb():
+                rtp.register_gui_thread() # @UndefinedVariable                
             import gui
-            gui.init() # @UndefinedVariable
+            gui.init(thread_init_cb) # @UndefinedVariable
 
         log.info("loading SIP subsystem")
         import GMITM

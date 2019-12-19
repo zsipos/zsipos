@@ -349,17 +349,22 @@ def callGUI(func, *args, **kwargs):
     
 
 class GUIThread(Thread):
+    
+    def __init__(self, thread_init_cb):
+        self.thread_init_cb = thread_init_cb
+        Thread.__init__(self)
 
     def run(self):
+        self.thread_init_cb()
         with nogil: app_main()
 
 cdef object thread
 cdef object ready_event
 
-def init():
+def init(thread_init_cb):
     global ready_event, thread
     ready_event = Event()
-    thread = GUIThread()
+    thread = GUIThread(thread_init_cb)
     thread.start()
     ready_event.wait()
 
