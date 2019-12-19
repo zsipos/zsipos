@@ -18,6 +18,8 @@ Copyright (C) 2019 Stefan Adams
 
 print("starting...") # nohup.out
 
+import os
+
 # process pid ASAP
 try:
     with open('/var/run/zsipos.pid', 'w') as f:
@@ -30,7 +32,6 @@ console.info("starting...")
 
 # import is very slow in box
 console.info("importing...")
-import os
 from sys import argv, exit, exc_info
 from getopt import getopt, GetoptError
 import logging
