@@ -370,8 +370,10 @@ cdef class CyRTPStream:
     #
     
     def addressesReady(self):
-        self.addrsready = True
-        self.zsession.cryptoStateInfo(self, CRYPTO_STATEINFO_NONE)
+        def ___():
+            self.addrsready = True
+            self.zsession.cryptoStateInfo(self, CRYPTO_STATEINFO_NONE)
+        callRTP(___)
     
     def goSecure(self):
         cdef bool skipzrtp1
