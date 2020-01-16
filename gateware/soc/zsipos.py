@@ -64,8 +64,6 @@ class BaseSoC(SoCSDRAM):
     def __init__(self, sys_clk_freq=int(75e6), **kwargs):
         platform = zsipos.Platform()
         SoCSDRAM.__init__(self, platform, clk_freq=sys_clk_freq,
-                          integrated_rom_size=0x8000,
-                          integrated_sram_size=0x8000,
                           l2_size=0, **kwargs)
 
         # clock_reset is top level reset
@@ -330,7 +328,9 @@ def main():
         soc.write_dts(args.dts_file)
     if args.load:
         load_bistream(builder, FLASH_BITSTREAM_IMAGE)
-    if args.flash:
+    if args.flash or args.flashrom:
+        if not args.flashrom:
+            del FLASH_MAP[FLASH_BOOTROM_OFFSET]
         load_flash(builder, FLASH_MAP)
 
 if __name__ == "__main__":

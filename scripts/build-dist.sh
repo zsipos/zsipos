@@ -17,6 +17,7 @@ umask 0022
 
 # copy fpga image
 cp "$ZTOP/gateware/soc/build_$BOARD/gateware/top.bit" "$DESTDIR"
+cp "$ZTOP/gateware/soc/build_$BOARD/gateware/top.bin" "$DESTDIR"
 
 # copy app
 export ZSIPOSOVL_INIT="$OVERLAYDIR/init_overlay"

@@ -97,3 +97,4 @@ def add_len_crc32(src, dst, endianess="little"):
 def flashhelper_args(parser):
     parser.add_argument("--load", action="store_true", help="load bistream")
     parser.add_argument("--flash", action="store_true", help="load flash")
+    parser.add_argument("--flashrom", action="store_true", help="load flash and bootrom")
