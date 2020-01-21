@@ -31,6 +31,12 @@ then
 	export ZTC_ROOT="$ZTC_BUILDROOT/output/host"
 	export ZTC_PREFIX="riscv64-linux"
 	export ZTC_SYSROOT="$ZTC_ROOT/usr/riscv64-buildroot-linux-gnu/sysroot"
+	for i in addr2line ar as c++ c++.br_real cc cc.br_real c++filt cpp cpp.br_real\
+                           elfedit g++ g++.br_real gcc gcc.br_real gcov gprof ld ld.bfd\
+                           nm objcopy objdump ranlib readelf size strings strip
+	do
+		ln -sf $ZTC_ROOT/bin/$ZTC_PREFIX-$i $ZTC_ROOT/bin/riscv64-unknown-linux-gnu-$i
+	done
 else
 	export ZTC_ROOT="$ZTOP/toolchain/riscv64"
 	export ZTC_PREFIX="riscv64-unknown-linux-gnu"
