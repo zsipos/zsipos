@@ -65,13 +65,15 @@ class DTSHelper():
     def get_devices(self):
         return self.dts
 
-    def get_spi_mmc(self, index, mmc = "mmc"):
+    def get_spi_mmc(self, index, mmc = "mmc", cd_gpio=None):
         s = ""
         s += self.tabs(1) + mmc + "@" + str(index) + " {\n"
         s += self.tabs(2) + 'compatible = "mmc-spi-slot";\n'
         s += self.tabs(2) + "reg = <" + str(index) + ">;\n"
         s += self.tabs(2) + "voltage-ranges = <3300 3300>;\n"
         s += self.tabs(2) + "spi-max-frequency = <25000000>;\n"
+        if cd_gpio:
+            s += self.tabs(2) + "gpios = <&" + self._gpio_pin(cd_gpio) + ">;\n"
         if self.json["constants"].get(mmc+"_interrupt"):
             s += self.tabs(2) + self._irqparent() + ";\n"
             s += self.tabs(2) + "interrupts = <" + self._irq(mmc) + ">;\n"
@@ -122,6 +124,7 @@ class DTSHelper():
         s += self.tabs(2) + "ti,x-max = /bits/ 16 <3900>;\n"
         s += self.tabs(2) + "ti,y-min = /bits/ 16 <200>;\n"
         s += self.tabs(2) + "ti,y-max = /bits/ 16 <3900>;\n"
+        s += self.tabs(2) + "wakeup-source;\n"
         s += self.tabs(1) + "};\n"
         return s
 
@@ -179,11 +182,11 @@ class DTSHelper():
         s += self.tabs(0) + "};\n"
         self.dts += s
 
-    def add_gpio_restart(self, gpio, pin):
+    def add_gpio_restart(self, reset_gpio):
         s = ""
         s += self.tabs(0) + "gpio_restart" + " {\n"
         s += self.tabs(1) + 'compatible = "gpio-restart";\n'
-        s += self.tabs(2) + "gpios = <&" + self._gpio_pin((gpio, pin, 0)) + ">;\n"
+        s += self.tabs(2) + "gpios = <&" + self._gpio_pin(reset_gpio) + ">;\n"
         s += self.tabs(2) + "priority = <255>;\n"
         s += self.tabs(0) + "};\n"
         self.dts += s

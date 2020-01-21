@@ -63,8 +63,7 @@ class _CRG(Module):
 class BaseSoC(SoCSDRAM):
     def __init__(self, sys_clk_freq=int(75e6), **kwargs):
         platform = zsipos.Platform()
-        SoCSDRAM.__init__(self, platform, clk_freq=sys_clk_freq,
-                          l2_size=0, **kwargs)
+        SoCSDRAM.__init__(self, platform, clk_freq=sys_clk_freq, **kwargs)
 
         # clock_reset is top level reset
         clock_reset = Signal()
@@ -150,11 +149,10 @@ class TouchscreenInterrupt(Interrupt):
         Interrupt.__init__(self)
         pin_last = Signal(reset=1)
         self.sync += [
+            self.ev.irq.eq(0),
             If(pin != pin_last,
                 pin_last.eq(pin),
-                self.ev.irq.eq(~pin)
-            ).Else(
-                self.ev.irq.eq(0)
+                If(~pin, self.ev.irq.eq(1))
             )
         ]
 
@@ -209,6 +207,9 @@ class MySoC(EthernetSoC):
                 self.add_memory_region("spi0", self.mem_map["spi0"], self.spi0.get_size(), type="io")
                 self.add_csr("spi0")
                 self.add_interrupt("spi0")
+            sd_reset = self.platform.request("sd_reset")
+            sd_cd    = self.platform.request("sd_cd")
+            self.comb += sd_reset.eq(0)
             # SPI1: waveshare35a
             self.submodules.spi1 = SPIMaster(self.platform, name="ws35a_spi", cs_width=2, busmaster=False)
             if hasattr(self.spi1, "master_bus"):
@@ -238,8 +239,8 @@ class MySoC(EthernetSoC):
             )
             self.submodules.gpio0 = GPIOOut(gpio0_signals)
             self.add_csr("gpio0")
-            # gpio1: touchscreen pendown
-            gpio1_signals = Cat(ws35a_pendown)
+            # gpio1: touchscreen pendown, sd-card-detect
+            gpio1_signals = Cat(ws35a_pendown, sd_cd)
             self.submodules.gpio1 = GPIOIn(gpio1_signals)
             self.add_csr("gpio1")
             # AES
@@ -270,12 +271,12 @@ class MySoC(EthernetSoC):
                 4: "heartbeat"
             }
             d.add_gpio_leds("gpio0", nleds=5, triggers=led_triggers)
-            d.add_gpio_restart("gpio0", 5)
-            d.add_litex_gpio("gpio1", direction="in", ngpio=1)
+            d.add_gpio_restart(reset_gpio=("gpio0", 5, 0))
+            d.add_litex_gpio("gpio1", direction="in", ngpio=2)
             if self.fast_sd:
                 d.add_opencores_sdc("sdmmc")
             else:
-                spidevs = d.get_spi_mmc(0, "mmc")
+                spidevs = d.get_spi_mmc(0, "mmc", cd_gpio=("gpio1", 1, 1))
                 d.add_zsipos_spi("spi0", devices=spidevs)
             spi1devs = d.get_spi_waveshare35a(
                 0,

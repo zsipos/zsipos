@@ -25,6 +25,9 @@ _io = [
         IOStandard("LVCMOS33"), Misc("PULLUP TRUE"), Misc("SLEW=FAST")
     ),
 
+    ("sd_reset", 0, Pins("C16"), IOStandard("LVCMOS33")),
+    ("sd_cd"   , 0, Pins("C17"), IOStandard("LVCMOS33")),
+
     ("sdspi", 0,
         Subsignal("sclk", Pins("D12")),
         Subsignal("mosi", Pins("D13")),
