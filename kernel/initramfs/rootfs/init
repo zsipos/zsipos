@@ -1,17 +1,19 @@
 #!/bin/busybox sh
 
-timeout=2
+TIMEOUT=2
+ROOTDEV=/dev/mmcblk0p1
 
-bb() { 
-	/bin/busybox $* 
-}
+alias bb=/bin/busybox
 
 special_mounts() {
 	for i in mnt proc sys dev tmp run
 	do
 		bb mkdir -p /$i
 	done
+	if bb [ "$2"x != "noproc"x ]
+	then
 	bb mount -t proc     none   $1/proc
+	fi
 	bb mount -t sysfs    none   $1/sys
 	bb mount -t devtmpfs udev   $1/dev
 	bb mkdir -p $1/dev/pts
@@ -23,30 +25,51 @@ special_mounts() {
 enter_shell() {
 	echo entering shell..
 	export PATH=/bin:/usr/bin:/sbin:/usr/sbin
-	special_mounts
+	special_mounts 
 	bb --install
 	stty erase ^H
 	/bin/sh
-	/sbin/halt
+	/sbin/reboot -f
 }
 
 start_from() {
-	special_mounts $1
+	special_mounts $1 noproc
 	exec /bin/busybox switch_root $1 /sbin/init
 	echo "can not execute /sbin/init. entering shell..."
 	enter_shell
 }
 
 echo 
-read -p "Hit enter within $timeout seconds to enter shell" -t $timeout dummy && enter_shell
+read -p "Hit enter within $TIMEOUT seconds to enter shell" -t $TIMEOUT dummy && enter_shell
 
 echo
 echo Normal startup ...
 
-bb ifconfig eth0 192.168.0.55 netmask 255.255.255.0 up
-bb route add default gw 192.168.0.2
+bb mkdir -p /proc /dev /etc /mnt
+bb mount -t proc none /proc
+bb mount -t devtmpfs udev /dev
+bb ln -sf /proc/mounts /etc/fstab
+#NOTE: fsck.ext4 with shared libs makes initramfs huge, rely on ext4 recovery
+#/sbin/fsck.ext4 -y $ROOTDEV
+bb mount $ROOTDEV /mnt
+bb umount /proc /dev
+if bb [ -f /mnt/nfs_boot ]
+then
+	echo "nfs boot ..."
+	BOOTDIR=/nfs
 
-bb mkdir /nfs
-bb mount -t nfs -o nolock 192.168.0.45:/opt/riscv-root /nfs 
+	. /mnt/nfs_boot
+	bb umount /mnt
 
-start_from /nfs
+	bb ifconfig eth0 $ADDRESS netmask $NETMASK up
+	bb route add default gw $GATEWAY
+
+	bb mkdir /nfs
+	bb mount -t nfs -o nolock $MOUNTPOINT /nfs 
+else
+	echo "sd-card boot ..."
+	BOOTDIR=/mnt
+fi
+
+start_from $BOOTDIR
+

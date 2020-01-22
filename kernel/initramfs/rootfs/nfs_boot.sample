@@ -1,0 +1,15 @@
+#
+# configure and install this file to sd-card as "/nfs_boot" for nfs boot.
+# sd-card must have ext4 filesystem.
+#
+# steps:
+#
+# mount /dev/mmcblk0p1 /mnt
+# cp nfs_boot.sample /mnt/nfs_boot
+# umount /mnt
+
+ADDRESS=192.168.0.55
+NETMASK=255.255.255.0
+GATEWAY=192.168.0.2
+MOUNTPOINT="192.168.0.45:/opt/riscv-root"
+
