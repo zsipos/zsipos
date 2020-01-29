@@ -103,8 +103,8 @@ class EthernetSoC(BaseSoC):
         self.add_csr("ethphy")
         self.submodules.ethmac = LiteEthMAC(phy=self.ethphy, dw=32,
             interface="wishbone", endianness=self.cpu.endianness)
-        self.add_wb_slave(self.mem_map["ethmac"], self.ethmac.bus, 0x2000)
         self.add_memory_region("ethmac", self.mem_map["ethmac"], 0x2000, type="io")
+        self.add_wb_slave(self.mem_map["ethmac"], self.ethmac.bus, 0x2000)
         self.add_csr("ethmac")
         self.add_interrupt("ethmac")
 
@@ -126,8 +126,8 @@ class EthernetSoC(BaseSoC):
         self.add_csr("ethphy1")
         self.submodules.ethmac1 = LiteEthMAC(phy=self.ethphy1, dw=32,
                                              interface="wishbone", endianness=self.cpu.endianness)
-        self.add_wb_slave(self.mem_map["ethmac1"], self.ethmac1.bus, 0x2000)
         self.add_memory_region("ethmac1", self.mem_map["ethmac1"], 0x2000, type="io")
+        self.add_wb_slave(self.mem_map["ethmac1"], self.ethmac1.bus, 0x2000)
         self.add_csr("ethmac1")
         self.add_interrupt("ethmac1")
 
@@ -185,15 +185,15 @@ class MySoC(EthernetSoC):
             endianness=self.cpu.endianness,
             addr32bit=True)
         self.spiflash.add_clk_primitive(self.platform.device)
-        self.add_wb_slave(self.mem_map["spiflash"], self.spiflash.bus, size=self.flash_size)
         self.add_memory_region("spiflash", self.mem_map["spiflash"], self.flash_size, type="io")
+        self.add_wb_slave(self.mem_map["spiflash"], self.spiflash.bus, size=self.flash_size)
         self.add_csr("spiflash")
         if self.full_board:
             if self.fast_sd:
                 self.submodules.sdmmc = SDCard(self.platform, "sdmmc")
                 self.add_wb_master(self.sdmmc.master_bus)
-                self.add_wb_slave(self.mem_map["sdmmc"], self.sdmmc.slave_bus, size=self.sdmmc.get_size())
                 self.add_memory_region("sdmmc", self.mem_map["sdmmc"], self.sdmmc.get_size(), type="io")
+                self.add_wb_slave(self.mem_map["sdmmc"], self.sdmmc.slave_bus, size=self.sdmmc.get_size())
                 self.sdmmc_cmd_irq = self.sdmmc.cmd_irq
                 self.sdmmc_dat_irq = self.sdmmc.dat_irq
                 self.add_interrupt("sdmmc_cmd_irq")
@@ -203,8 +203,8 @@ class MySoC(EthernetSoC):
                 self.submodules.spi0 = SPIMaster(self.platform, name="sdspi", busmaster=False)
                 if hasattr(self.spi0, "master_bus"):
                     self.add_wb_master(self.spi0.master_bus)
-                self.add_wb_slave(self.mem_map["spi0"], self.spi0.slave_bus, size=self.spi0.get_size())
                 self.add_memory_region("spi0", self.mem_map["spi0"], self.spi0.get_size(), type="io")
+                self.add_wb_slave(self.mem_map["spi0"], self.spi0.slave_bus, size=self.spi0.get_size())
                 self.add_csr("spi0")
                 self.add_interrupt("spi0")
             sd_reset = self.platform.request("sd_reset")
@@ -214,8 +214,8 @@ class MySoC(EthernetSoC):
             self.submodules.spi1 = SPIMaster(self.platform, name="ws35a_spi", cs_width=2, busmaster=False)
             if hasattr(self.spi1, "master_bus"):
                 self.add_wb_master((self.spi1.master_bus))
-            self.add_wb_slave(self.mem_map["spi1"], self.spi1.slave_bus, size=self.spi1.get_size())
             self.add_memory_region("spi1", self.mem_map["spi1"], self.spi1.get_size(), type="io")
+            self.add_wb_slave(self.mem_map["spi1"], self.spi1.slave_bus, size=self.spi1.get_size())
             self.add_csr("spi1")
             self.add_interrupt("spi1")
             # waveshare35a
@@ -245,12 +245,12 @@ class MySoC(EthernetSoC):
             self.add_csr("gpio1")
             # AES
             self.submodules.aes = AES(self.platform)
-            self.add_wb_slave(self.mem_map["aes"], self.aes.bus, size=self.aes.get_size())
             self.add_memory_region("aes", self.mem_map["aes"], self.aes.get_size(), type="io")
+            self.add_wb_slave(self.mem_map["aes"], self.aes.bus, size=self.aes.get_size())
             # SHA1
             self.submodules.sha1 = SHA1(self.platform)
-            self.add_wb_slave(self.mem_map["sha1"], self.sha1.bus, size=self.sha1.get_size())
             self.add_memory_region("sha1", self.mem_map["sha1"], self.sha1.get_size(), type="io")
+            self.add_wb_slave(self.mem_map["sha1"], self.sha1.bus, size=self.sha1.get_size())
             # dma test
             self.submodules.dmatest = DMATest()
             self.add_wb_master(self.dmatest.master_bus)
