@@ -6,8 +6,13 @@ cd "$ZTOP/scripts"
 DESTDIR="$ZTOP/output"
 OVERLAYDIR="$ZTOP/system/buildroot/overlays"
 
-#./build-all.sh
-build-zsipos.sh
+if [ x"$1" == x"rebuild" ]
+then
+	build-all.sh clean
+	build-all.sh
+else
+	build-zsipos.sh
+fi
 
 rm -rf "$DESTDIR"
 mkdir -p "$DESTDIR"
