@@ -24,6 +24,7 @@ CFGCOMMON="\
 
 make_site_config()
 {
+	echo "#include <unistd.h>"
 	echo "#define PJ_ICE_MAX_CAND 16"
 	echo "#define PJ_ICE_MAX_CHECKS 256"
 	echo "#define PJ_IOQUEUE_HAS_SAFE_UNREG	1"
