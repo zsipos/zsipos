@@ -18,22 +18,21 @@ Copyright (C) 2017 Stefan Adams
 import gc
 import logging
 
-from twisted.protocols.sip import Request, parseURL
 from twisted.internet import reactor
 
 from Branch import Branch
 from CallController import CallController
 from config import config
 import consts
-from SipProtocol import SipProtocol
-from utils import parseAddress, stringifyAddress, stringifyLogAddr, stringifyLogMsg
+from SipProtocol import parseAddress, Request, parseURL, SipProtocol
+from utils import stringifyAddress, stringifyLogAddr, stringifyLogMsg
 import os
 
 UNKNOWNADDR = '"unknown"<sip:unknown@unknown.unknown:5060>'
 
 #direction for outgoing message
-EXT = 0
-LOC = 1
+LOC = 0
+EXT = 1
 
 ALLOWMETHODS = [ 'INVITE', 'ACK', 'OPTIONS', 'BYE', 'CANCEL' ] 
 ALLOWEVENTS = [ 'telephone-event', 'refer']

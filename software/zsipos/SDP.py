@@ -15,7 +15,7 @@ Copyright (C) 2017 Stefan Adams
    along with this program; if not, write to the Free Software Foundation,
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  
 """
-from twisted.protocols.sip import URL
+from SipProtocol import URL
 from collections import OrderedDict
 from twisted.internet.address import IPv4Address, IPv6Address
 

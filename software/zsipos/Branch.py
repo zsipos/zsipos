@@ -19,7 +19,7 @@ from os import uname
 from time import sleep
 from twisted.internet import reactor
 from twisted.internet.error import AlreadyCalled, AlreadyCancelled
-from twisted.protocols.sip import Request
+from SipProtocol import Request
 import logging
 
 from config import config

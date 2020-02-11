@@ -18,54 +18,11 @@ Copyright (C) 2017 Stefan Adams
 from datetime import datetime, timedelta
 from os import uname
 from sys import modules
-from twisted.protocols.sip import parseURL, Request
+from SipProtocol import Request
 from twisted.python.compat import long
 
 from Branch import stringifyLogBranch
 from gitversions import gitversions,gitdates
-
-class TimeMeasure(object):
-    """
-    A class to measure processing time.
-    """
-    
-    samplecount = 0
-    delta = max = accumulated = timedelta()
-    min = timedelta(9999,0)
-    name = "<anon>"
-    
-    def __init__(self, name):
-        self.name = name
-        
-    def getDelta(self):
-        return self.delta
-    
-    def getMin(self):
-        return self.min
-    
-    def getMax(self):
-        return self.max
-    
-    def getAvg(self):
-        return self.accumulated / self.samplecount
-    
-    def start(self):
-        self.starttime = datetime.now()
-        
-    def stop(self):
-        self.delta = datetime.now() - self.starttime
-        self.accumulated += self.delta
-        self.samplecount += 1
-        if self.delta < self.min:
-            self.min = self.delta
-        if self.delta > self.max:
-            self.max = self.delta
-            
-    def toString(self):
-        return "%s %f (avg=%f,min=%f,max=%f)" % (self.name, self.getDelta().total_seconds(), 
-                                    self.getAvg().total_seconds(), 
-                                    self.getMin().total_seconds(), 
-                                    self.getMax().total_seconds())
 
 
 class PYCALL:
@@ -77,45 +34,6 @@ class PYCALL:
         
     def call(self):
         self.func(*self.args, **self.kwargs)
-
-
-def parseAddress(address, host=None, port=None, clean=0):
-    """Return (name, uri, params) for From/To/Contact header.
-
-    @param clean: remove unnecessary info, usually for From and To headers.
-    
-    This is a fixed version of twisted ones.
-    """
-    address = address.strip()
-    # simple 'sip:foo' case
-    if address.startswith("sip:"):
-        return "", parseURL(address, host=host, port=port), {}
-    params = {}
-    name, url = address.split("<", 1)
-    name = name.strip()
-    if name.startswith('"'):
-        name = name[1:]
-    if name.endswith('"'):
-        name = name[:-1]
-    url, paramstring = url.split(">", 1)
-    url = parseURL(url, host=host, port=port)
-    paramstring = paramstring.strip()
-    if paramstring:
-        for l in paramstring.split(";"):
-            if not l:
-                continue
-            try:
-                k, v = l.split("=")
-                params[k] = v
-            except:
-                params[l] = None
-    if clean:
-        # rfc 2543 6.21
-        url.ttl = None
-        url.headers = {}
-        url.transport = None
-        url.maddr = None
-    return name, url, params
 
 
 def stringifyAddress(name, uri, params):

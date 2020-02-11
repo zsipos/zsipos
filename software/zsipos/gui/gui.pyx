@@ -28,7 +28,8 @@ import rtp
 import consts
 from fltk cimport *
 from GMITM import GMITMEventListener
-from utils import parseAddress, PYCALL
+from utils import PYCALL
+from SipProtocol import parseAddress
 from console import console
 
 log = logging.getLogger("gui")

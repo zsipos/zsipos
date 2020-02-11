@@ -25,7 +25,7 @@ Copyright (C) 2017 Stefan Adams
 from copy import deepcopy
 from twisted.internet import reactor
 from twisted.internet.error import AlreadyCalled, AlreadyCancelled
-from twisted.protocols.sip import Request, URL
+from SipProtocol import Request, URL
 from sys import exc_info
 import logging
 
