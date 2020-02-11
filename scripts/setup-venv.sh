@@ -7,7 +7,7 @@ else
 	. "$VDIR/bin/activate"
 	pip install --upgrade pip
 	pip install twisted==19.7
-	pip install cython==0.26
+	pip install cython==0.29.14
 	pushd "$ZTOP/gateware"
 	for i in migen litex litedram liteeth
 	do
