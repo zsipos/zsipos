@@ -105,7 +105,11 @@ def app_main(withgui):
 
         infomsg('loading TWISTED subsystem')
         from twisted.internet import reactor
-
+        from twisted.logger import STDLibLogObserver, globalLogBeginner  
+        
+        # redirect twisted logging to python logging
+        globalLogBeginner.beginLoggingTo([STDLibLogObserver()])
+        
         infomsg('starting application.')
         
         # DHCP, DNS: find missing addresses
