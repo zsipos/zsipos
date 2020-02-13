@@ -2,7 +2,10 @@ from migen import *
 
 from litex.soc.interconnect import wishbone, stream
 from litex.soc.interconnect.csr import *
-from litex.soc.integration.common import mem_decoder
+try:
+    from litex.soc.integration.common import mem_decoder
+except:
+    from litex.soc.integration.soc_core import mem_decoder
 
 class WishboneByteStreamTX(Module):
     def __init__(self, bus):

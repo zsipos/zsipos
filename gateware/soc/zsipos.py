@@ -168,9 +168,9 @@ class MySoC(EthernetSoC):
     }
     mem_map.update(EthernetSoC.mem_map)
     flash_size = 0x2000000
-    with_busmasters = True
+    with_busmasters = False
     full_board = True
-    fast_sd = False
+    fast_sd = with_busmasters and False
 
     def __init__(self, **kwargs):
         EthernetSoC.__init__(self, **kwargs)
