@@ -268,7 +268,7 @@ class MySoC(EthernetSoC):
                 0: "activity",
                 1: "cpu0",
                 2: "cpu1",
-                4: "heartbeat"
+                #4: "heartbeat",
             }
             d.add_gpio_leds("gpio0", nleds=5, triggers=led_triggers)
             d.add_gpio_restart(reset_gpio=("gpio0", 5, 0))
