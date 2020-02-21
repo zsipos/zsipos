@@ -51,7 +51,8 @@ bb mount -t devtmpfs udev /dev
 bb ln -sf /proc/mounts /etc/fstab
 #NOTE: fsck.ext4 with shared libs makes initramfs huge, rely on ext4 recovery
 #/sbin/fsck.ext4 -y $ROOTDEV
-bb mount $ROOTDEV /mnt
+
+bb mount $ROOTDEV /mnt || (echo "WARNING: no sdcard!";bb umount /proc /dev;enter_shell)
 bb umount /proc /dev
 if bb [ -f /mnt/nfs_boot ]
 then
