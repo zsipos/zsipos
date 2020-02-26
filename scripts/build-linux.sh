@@ -21,7 +21,7 @@ linuxmake()
 	make -C "$SRCDIR" ARCH=riscv O="$WRKDIR" \
 		CROSS_COMPILE="$CROSS_COMPILE" \
 		CONFIG_INITRAMFS_SOURCE="$INITRAMFS" \
-		$1 $2
+		$*
 }
 
 if [ ! -f "$WRKDIR/.config" ]
@@ -44,6 +44,6 @@ then
 		grep -v "CONFIG_ARCH_RV32I" <"$CONFIGDIR/$DEFCONFIG" >"$CONFIGDIR/zsipos_64_defconfig"
 	fi
 else
-	linuxmake -j8 vmlinux
+	linuxmake -j8 vmlinux $1
 fi
 
