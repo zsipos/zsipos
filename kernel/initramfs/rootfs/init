@@ -52,9 +52,16 @@ bb ln -sf /proc/mounts /etc/fstab
 #NOTE: fsck.ext4 with shared libs makes initramfs huge, rely on ext4 recovery
 #/sbin/fsck.ext4 -y $ROOTDEV
 
-bb mount $ROOTDEV /mnt || (echo "WARNING: no sdcard!";bb umount /proc /dev;enter_shell)
+# check for virtio disk
+bb [ -b $ROOTDEV ] || ROOTDEV=/dev/vda
+
+# check for nfs boot
+bb mount $ROOTDEV /mnt || (echo "WARNING: can not mount $ROOTDEV !";bb umount /proc /dev;enter_shell)
+bb [ -f /mnt/nfs_boot ] && bb [ -d /proc/sys/fs/nfs ]
+START_NFS=$?
 bb umount /proc /dev
-if bb [ -f /mnt/nfs_boot ]
+
+if bb [ $START_NFS == 0 ]
 then
 	echo "nfs boot ..."
 	BOOTDIR=/nfs
