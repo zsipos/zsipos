@@ -1,6 +1,10 @@
 # add script directory to PATH
 export PATH="$ZTOP/scripts:$PATH"
 
+# vivado
+. /opt/Xilinx/Vivado/2018.3/settings64.sh
+unset LD_LIBRARY_PATH
+
 #
 # config choices
 #

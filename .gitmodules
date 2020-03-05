@@ -49,3 +49,6 @@
 [submodule "system/buildroot/buildroot"]
 	path = system/buildroot/buildroot
 	url = https://github.com/buildroot/buildroot
+[submodule "gateware/liteiclink"]
+	path = gateware/liteiclink
+	url = https://github.com/zsipos/liteiclink
