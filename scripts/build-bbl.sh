@@ -2,6 +2,7 @@ set -e
 echo "buildling bbl ..."
 
 cd "$ZTOP/kernel"
+D=`pwd`
 
 SRCDIR="`pwd`/riscv-pk"
 WRKDIR="`pwd`/build_$BITS/bbl"
@@ -22,6 +23,8 @@ then
 		--host="$ZTC_PREFIX" \
 		--with-arch=rv${BITS}imac \
 		--with-payload=../linux/vmlinux \
+		--with-devicetree="$D/qemu.dts" \
+		--enable-print-device-tree \
 		--with-mem-start=0x80000000 
 fi
 
