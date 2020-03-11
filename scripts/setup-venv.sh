@@ -6,8 +6,10 @@ else
 	python3 -m venv "$VDIR"
 	. "$VDIR/bin/activate"
 	pip install --upgrade pip
+	#zsipos
 	pip install twisted==19.7
 	pip install cython==0.29.14
+	#litex
 	pushd "$ZTOP/gateware"
 	for i in migen litex litedram liteeth liteiclink
 	do
@@ -16,6 +18,10 @@ else
 		popd
 	done
 	popd
+	#sel4
+	pip install setuptools
+	pip install sel4-deps
+	pip install protobuf
 fi
 
 
