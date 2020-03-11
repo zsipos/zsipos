@@ -1,11 +1,11 @@
 BBL=../build_64/bbl/bbl
-QEMU=qemu-system-riscv64
+QEMU=/opt/riscv/bin/qemu-system-riscv64
 
 $QEMU \
 	-kernel $BBL \
 	-nographic \
 	-machine virt \
-	-m 512 \
+	-m 4095 \
 	-append "console=hvc0" \
 	-only-migratable \
 	-smp cpus=2 \
