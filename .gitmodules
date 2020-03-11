@@ -52,3 +52,6 @@
 [submodule "gateware/liteiclink"]
 	path = gateware/liteiclink
 	url = https://github.com/zsipos/liteiclink
+[submodule "toolchain/CMake"]
+	path = toolchain/CMake
+	url = https://github.com/Kitware/CMake
