@@ -17,7 +17,7 @@ export BOARD="zsipos"
 
 # cpu-type
 export CPU_TYPE=rocket$BITS
-export CPU_VARIANT=linux
+export CPU_VARIANT=linux+dualcore
 
 export ZTC_TYPE="buildroot" # "native"
 
