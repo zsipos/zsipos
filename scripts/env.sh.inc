@@ -49,7 +49,7 @@ export ZTC_OBJCOPY="$ZTC_PREFIX-objcopy"
 export ZTC_GDB="riscv64-unknown-linux-gnu-gdb"
 
 export ZTC_TOOLS_DIR="$ZTOP/toolchain/riscv64"
-export PATH="$PATH:$ZTC_TOOLS_DIR/bin"
+export PATH="$ZTC_TOOLS_DIR/bin:$PATH"
 
 export RISCV="$ZTC_ROOT"
 export PATH="$PATH:$RISCV/bin"
