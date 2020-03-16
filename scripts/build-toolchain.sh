@@ -9,15 +9,13 @@ then
 	exit 0
 fi
 
-mkdir -p build/riscv-gdb
+mkdir -p build
 cd build
-../riscv-gnu-toolchain/configure --prefix="$ZTC_TOOLS_DIR" --enable-multilib --enable-linux
-if [ "ZTC_TYPE" != "native" ]
+if [ ! -f .configured ]
 then
-	echo "toolchain type is $ZTC_TYPE, only build gdb"
-	make $J build-gdb
-else
-	make $J 
+	../riscv-gnu-toolchain/configure --prefix="$ZTC_TOOLS_DIR" --enable-multilib --enable-linux
+	touch .configured
 fi
+make $J
 
 
