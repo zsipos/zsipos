@@ -53,7 +53,7 @@ build_for_processor()
 	CFLAGS="-fpic $TC_DBGFLAGS" CXXFLAGS="-fpic $TC_DBGFLAGS" ./configure $CFG
 	mv config.sub_bak config.sub
 	make_site_config
-	make
+	make $J
 }
 
 if [ "$1" == "clean" ]
