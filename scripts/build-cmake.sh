@@ -18,11 +18,16 @@ mkdir -p "$WRKDIR"
 
 cd "$D/$WRKDIR"
 
-if [ ! -f .configure ]
+if [ ! -f .configured ]
 then
 	../../CMake/configure --prefix=$ZTC_TOOLS_DIR
-	touch .configure
+	touch .configured
 fi
 
-make
-make install
+if [ ! -f .installed ]
+then
+	make $J
+	make install
+	touch .installed
+fi
+
