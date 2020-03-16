@@ -23,10 +23,11 @@ then
 		--host="$ZTC_PREFIX" \
 		--with-arch=rv${BITS}imac \
 		--with-mem-start=0x80000000 \
-		--with-payload=../linux/vmlinux \
+		--with-payload=../../test/build/elfloader/elfloader \
 		--with-devicetree="$D/qemu.dts" \
-		--with-payload-sel4=../../test/build/elfloader/elfloader \
-		--with-memsize-sel4=0x8000000
+		--with-payload2=../linux/vmlinux \
+		--with-memsize-sel4=0x8000000 \
+                --enable-print-device-tree
 fi
 
 make
