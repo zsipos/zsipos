@@ -21,6 +21,14 @@ build-qemu.sh
 build-initramfs.sh
 build-linux.sh
 
+# get repo
+REPO="$ZTC_TOOLS_DIR/bin/repo"
+if [ ! -f "$REPO" ]
+then
+	curl https://storage.googleapis.com/git-repo-downloads/repo >"$REPO"
+	chmod +x "$REPO"
+fi
+
 # build sel4-test
 mkdir -p "$WRKDIR"
 cd "$WRKDIR"
