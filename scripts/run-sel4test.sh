@@ -1,5 +1,5 @@
-BBL=../build_64/bbl/bbl
-QEMU=/opt/riscv/bin/qemu-system-riscv64
+BBL="$ZTOP/kernel/build_$BITS/sel4test/bbl/bbl"
+QEMU=qemu-system-riscv$BITS
 
 $QEMU \
 	-kernel $BBL \

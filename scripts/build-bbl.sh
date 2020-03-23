@@ -1,5 +1,5 @@
 set -e
-echo "buildling bbl ..."
+echo "building bbl ..."
 
 cd "$ZTOP/kernel"
 D=`pwd`
@@ -23,11 +23,10 @@ then
 		--host="$ZTC_PREFIX" \
 		--with-arch=rv${BITS}imac \
 		--with-mem-start=0x80000000 \
-		--with-payload=../../test/build/elfloader/elfloader \
-		--with-devicetree="$D/qemu.dts" \
-		--with-payload2=../linux/vmlinux \
-		--with-memsize-sel4=0x8000000 \
-                --enable-print-device-tree
+		--with-sel4-payload=../sel4test/build/elfloader/elfloader \
+		--with-sel4-memsize=0x8000000 \
+		--with-linux-payload=../linux/vmlinux \
+		--with-devicetree="$D/sel4test/zsipos.dts" 
 fi
 
 make

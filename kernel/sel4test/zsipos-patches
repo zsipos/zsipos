@@ -1,0 +1,33 @@
+#
+# Minimal change: reduce memory size to 128M
+#
+
+diff -ru sel4test/kernel/tools/dts/spike.dts sel4test-zsipos/kernel/tools/dts/spike.dts
+--- sel4test/kernel/tools/dts/spike.dts	2020-03-16 15:55:31.276047301 +0100
++++ sel4test-zsipos/kernel/tools/dts/spike.dts	2020-03-11 16:41:45.000000000 +0100
+@@ -41,7 +41,7 @@
+   };
+   memory@80000000 {
+     device_type = "memory";
+-    reg = <0x00000000 0x80000000 0x00000000 0xfff00000>;
++    reg = <0x00000000 0x80000000 0x00000000 0x8000000>;
+   };
+   soc {
+     #address-cells = <0x00000002>;
+
+#
+# Minimal change: do not run Giga_Page test, we only have 128M
+#
+
+diff -ru sel4test/projects/sel4test/apps/sel4test-tests/arch/riscv/arch_frame_type.h sel4test-zsipos/projects/sel4test/apps/sel4test-tests/arch/riscv/arch_frame_type.h
+--- sel4test/projects/sel4test/apps/sel4test-tests/arch/riscv/arch_frame_type.h	2020-03-16 15:55:31.400046505 +0100
++++ sel4test-zsipos/projects/sel4test/apps/sel4test-tests/arch/riscv/arch_frame_type.h	2020-03-12 11:29:56.000000000 +0100
+@@ -19,7 +19,7 @@
+ static const frame_type_t frame_types[] = {
+     /* Rocket-Chip for zedboard only has 256MiB of RAM, so we can't allocate a 1GiB page */
+ #if __riscv_xlen == 64 && !defined(CONFIG_BUILD_ROCKET_CHIP_ZEDBOARD) && !defined(CONFIG_PLAT_ARIANE)
+-    { seL4_RISCV_Giga_Page, 0, seL4_HugePageBits, },
++    //{ seL4_RISCV_Giga_Page, 0, seL4_HugePageBits, },
+ #endif
+     { seL4_RISCV_Mega_Page, 0, seL4_LargePageBits, },
+     { seL4_RISCV_4K_Page, BIT(seL4_LargePageBits), seL4_PageBits, },
