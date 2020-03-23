@@ -13,7 +13,7 @@ mkdir -p build
 cd build
 if [ ! -f .configured ]
 then
-	../riscv-gnu-toolchain/configure --prefix="$ZTC_TOOLS_DIR" --enable-multilib --enable-linux
+	../riscv-gnu-toolchain/configure --prefix="$ZTC_TOOLS_DIR" --enable-linux --with-arch=rv64imac --with-abi=lp64 # --enable-multilib 
 	touch .configured
 fi
 make $J
