@@ -5,7 +5,8 @@ sudo apt-get install \
 	python3-venv python3-dev libyaml-dev libssl-dev pkg-config \
 	libglib2.0-dev libpixman-1-dev ninja-build device-tree-compiler \
 	libxml2-utils ccache ncurses-dev doxygen u-boot-tools \
-	protobuf-compiler python-protobuf
+	protobuf-compiler python-protobuf libx11-dev libxinerama-dev \
+	libfreetype6-dev libxft-dev
 
 
 
