@@ -29,7 +29,7 @@ $(ROOTFS)/bin/busybox: $(WRKDIR)/busybox
 
 $(WRKDIR)/busybox: $(WRKDIR)/.config
 	make -C busybox \
-		CROSS_COMPILE=$(CROSS_COMPILE) \
+		CROSS_COMPILE=riscv64-unknown-linux-gnu- \
 		CFLAGS="$(CFLAGS)" \
 		LDFLAGS="$(LDFLAGS)" \
 		O=$(WRKDIR)
