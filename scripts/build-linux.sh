@@ -19,7 +19,7 @@ fi
 linuxmake()
 {
 	make -C "$SRCDIR" ARCH=riscv O="$WRKDIR" \
-		CROSS_COMPILE="$CROSS_COMPILE" \
+		CROSS_COMPILE="riscv64-unknown-linux-gnu-" \
 		CONFIG_INITRAMFS_SOURCE="$INITRAMFS" \
 		$*
 }
