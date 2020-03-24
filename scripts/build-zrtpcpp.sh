@@ -40,15 +40,15 @@ build_for_processor()
 		CMAKEOPTS+=" -DCMAKE_TOOLCHAIN_FILE=cmake.toolchain -DCRYPTO_STANDALONE=true"
 	fi
 	cmake $CMAKEOPTS -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CXXFLAGS" ../../zrtpcpp
-	if [ "$1" == "zsipos" ]
-	then
-		echo fix cmake bug ..
-		f=clients/no_client/CMakeFiles/zrtpcppcore.dir/link.txt
-		mv $f $f.bak
-		echo -n "$ZTC_AR" >$f
-		sed 's/\"\"//g' <$f.bak >>$f
-		rm $f.bak
-	fi
+#	if [ "$1" == "zsipos" ]
+#	then
+#		echo fix cmake bug ..
+#		f=clients/no_client/CMakeFiles/zrtpcppcore.dir/link.txt
+#		mv $f $f.bak
+#		echo -n "$ZTC_AR" >$f
+#		sed 's/\"\"//g' <$f.bak >>$f
+#		rm $f.bak
+#	fi
 	make VERBOSE=1
 }
 
