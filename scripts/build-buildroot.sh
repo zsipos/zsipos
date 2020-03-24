@@ -3,7 +3,7 @@ echo "building buildroot ..."
 
 cd "$ZTOP/system/buildroot/buildroot"
 
-if [ "$1" == "clean" ]
+if [ "$1"x == "clean"x ]
 then
 	rm -rf output
 	exit
@@ -14,7 +14,7 @@ then
 	cp ../config .config
 fi
 
-if [ "$1" == "config" ]
+if [ "$1"x == "config"x ]
 then
 	make menuconfig
 	cp .config ../config
