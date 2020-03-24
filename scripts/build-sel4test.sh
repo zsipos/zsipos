@@ -52,7 +52,7 @@ cd "$WRKDIR/bbl"
 if [ ! -f config.status ]
 then
 	"$D/riscv-pk/configure" \
-		--host="$ZTC_PREFIX" \
+		--host="riscv64-unknown-linux-gnu" \
 		--with-arch=rv${BITS}imac \
 		--with-mem-start=0x80000000 \
 		--with-sel4-payload=../build/elfloader/elfloader \
