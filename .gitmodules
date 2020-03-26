@@ -60,3 +60,33 @@
 	url = https://github.com/Kitware/CMake
 
 
+[submodule "kernel/sel4/projects/musllibc"]
+	path = kernel/sel4/projects/musllibc
+	url = https://github.com/zsipos/musllibc
+[submodule "kernel/sel4/tools/nanopb"]
+	path = kernel/sel4/tools/nanopb
+	url = https://github.com/nanopb/nanopb
+[submodule "kernel/sel4/tools/riscv-pk"]
+	path = kernel/sel4/tools/riscv-pk
+	url = https://github.com/sel4proj/riscv-pk
+[submodule "kernel/sel4/kernel"]
+	path = kernel/sel4/kernel
+	url = https://github.com/zsipos/seL4
+[submodule "kernel/sel4/projects/seL4_libs"]
+	path = kernel/sel4/projects/seL4_libs
+	url = https://github.com/zsipos/seL4_libs
+[submodule "kernel/sel4/tools/seL4"]
+	path = kernel/sel4/tools/seL4
+	url = https://github.com/zsipos/seL4_tools
+[submodule "kernel/sel4/projects/seL4_projects_libs"]
+	path = kernel/sel4/projects/seL4_projects_libs
+	url = https://github.com/zsipos/seL4_projects_libs
+[submodule "kernel/sel4/projects/sel4runtime"]
+	path = kernel/sel4/projects/sel4runtime
+	url = https://github.com/zsipos/sel4runtime
+[submodule "kernel/sel4/projects/util_libs"]
+	path = kernel/sel4/projects/util_libs
+	url = https://github.com/zsipos/util_libs
+[submodule "kernel/sel4/toplevels/sel4test"]
+	path = kernel/sel4/toplevels/sel4test
+	url = https://github.com/zsipos/sel4test
