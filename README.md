@@ -63,10 +63,11 @@ Both the linux system and the sel4test program write their output to the same co
 To verify that the linux system is functional you can give a shell command, e.g. `ls -l` during the sel4test.
 At the end of the sel4test you should see the following message:
 
-	Test suite passed. 113 tests passed. 48 tests disabled.
+	Test suite passed. 115 tests passed. 46 tests disabled.
 	All is well in the universe
 
-The linux shell keeps accepting commands. To exit qemu please type **`Ctrl+AX`**.
+
+The linux shell keeps accepting commands. To exit qemu please type **`Ctrl+A X`**.
 
 
 
