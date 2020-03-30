@@ -1,4 +1,4 @@
-BBL="$ZTOP/kernel/build_$BITS/sel4test/bbl/bbl"
+BBL="$ZTOP/kernel/sel4/build_$BITS_bbl/bbl"
 QEMU=qemu-system-riscv$BITS
 
 $QEMU \
