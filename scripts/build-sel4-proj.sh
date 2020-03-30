@@ -10,7 +10,7 @@ then
 	exit 1
 fi
 
-DSTDIR="$D/build_$BITS_$1"
+DSTDIR="$D/build_${BITS}_$1"
 SRCDIR="$D/toplevels/$1"
 CACHE_DIR="$DSTDIR/.sel4_cache"
 

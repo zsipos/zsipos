@@ -10,7 +10,7 @@ DTS="$SRCDIR/qemu.dts"
 
 if [ "$1" == "clean" ]
 then
-	rm -rf "$WRKDIR/build_bbl" "$WRKDIR/build_sel4test"
+	rm -rf "$WRKDIR/build_${BITS}_bbl" "$WRKDIR/build_${BITS}_sel4test"
 	exit
 fi
 
@@ -25,8 +25,8 @@ build-linux.sh
 build-sel4-proj.sh sel4test qemu
 
 # build bbl
-mkdir -p "$WRKDIR/build_$BITS_bbl"
-cd "$WRKDIR/build_$BITS_bbl"
+mkdir -p "$WRKDIR/build_${BITS}_bbl"
+cd "$WRKDIR/build_${BITS}_bbl"
 
 if [ ! -f config.status ]
 then
@@ -34,9 +34,9 @@ then
 		--host="riscv64-unknown-linux-gnu" \
 		--with-arch=rv${BITS}imac \
 		--with-mem-start=0x80000000 \
-		--with-sel4-payload=../build_sel4test/elfloader/elfloader \
+		--with-sel4-payload=../build_${BITS}_sel4test/elfloader/elfloader \
 		--with-sel4-memsize=0x8000000 \
-		--with-linux-payload=../../build_$BITS/linux/vmlinux \
+		--with-linux-payload=../../build_${BITS}/linux/vmlinux \
 		--with-devicetree="$DTS" 
 fi
 make
