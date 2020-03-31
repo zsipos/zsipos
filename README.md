@@ -1,6 +1,6 @@
 # zsipos
 
-zsipos is a fully transparent system to encrypt your sip phone calls with ZRTP. It gets plugged between you sip phone and your sip proxy.
+zsipos is a fully transparent system to encrypt your sip phone calls with ZRTP. It gets plugged between your sip phone and your sip proxy.
 
 
 ### Getting the sources
