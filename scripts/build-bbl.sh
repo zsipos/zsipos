@@ -23,7 +23,7 @@ then
 		--host="$ZTC_PREFIX" \
 		--with-arch=rv${BITS}imac \
 		--with-mem-start=0x80000000 \
-		--with-sel4-payload=../sel4test/build/elfloader/elfloader \
+		--with-sel4-payload=../../sel4/build_${BITS}_sel4zsipos/elfloader/elfloader \
 		--with-sel4-memsize=0x8000000 \
 		--with-linux-payload=../linux/vmlinux \
 		--with-devicetree="$D/sel4test/zsipos.dts" 

@@ -22,6 +22,9 @@ case "$2" in
 	qemu)
 		SEL4OPTS="-DPLATFORM=qemu-zsipos -DRISCV64=TRUE -DSIMULATION=TRUE"
 	;;
+	zsipos)
+		SEL4OPTS="-DPLATFORM=hw-zsipos -DRISCV64=TRUE -DSIMULATION=TRUE"
+	;;
 esac
 
 if [ ! -f "$DSTDIR/.initdone" ]
