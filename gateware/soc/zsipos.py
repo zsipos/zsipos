@@ -333,6 +333,8 @@ def main():
         if not args.flashrom:
             del FLASH_MAP[FLASH_BOOTROM_OFFSET]
         load_flash(builder, FLASH_MAP)
+    if args.buildrom:
+        build_flash(builder, FLASH_MAP)
 
 if __name__ == "__main__":
     main()

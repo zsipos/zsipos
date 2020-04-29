@@ -20,9 +20,14 @@ mkdir -p "$DESTDIR"
 oldumask=`umask`
 umask 0022
 
+# build fpga flash image with bootrom
+build-board.sh --nobuild --buildrom
+
 # copy fpga image
 cp "$ZTOP/gateware/soc/build_$BOARD/gateware/top.bit" "$DESTDIR"
-cp "$ZTOP/gateware/soc/build_$BOARD/gateware/top.bin" "$DESTDIR"
+cp "$ZTOP/gateware/soc/build_$BOARD/gateware/top.bin" "$DESTDIR"/fpga-netboot.bin
+cp "$ZTOP/gateware/soc/build_$BOARD/gateware/rom.mcs" "$DESTDIR"/fpga-romboot.mcs
+
 
 # copy app
 export ZSIPOSOVL_INIT="$OVERLAYDIR/init_overlay"
