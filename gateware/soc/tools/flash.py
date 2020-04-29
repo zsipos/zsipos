@@ -76,6 +76,21 @@ def load_flash(builder, regions, device=0):
             bin_file = tmp_file
         _flash_file(programmer, flash_size, offset, item[1], bin_file, mcs_file, device)
 
+def build_flash(builder, regions, device=0):
+    mcs_file = os.path.join(builder.output_dir, "gateware", "rom.mcs")
+    flash_size = builder.soc.flash_size // 1024 // 1024
+    programmer = builder.soc.platform.create_programmer()
+    cmds = 'write_cfgmem -format mcs -interface {iface} -size {flash_size} -file "{mcs_file}" -force'
+    cmds = cmds.format(iface="spix4", flash_size=flash_size, mcs_file=mcs_file)
+    for offset, item in regions.items():
+        bin_file = item[0]
+        if item[2]:
+            tmp_file = bin_file+".crc32"
+            add_len_crc32(bin_file, tmp_file, endianess=builder.soc.cpu.endianness)
+            bin_file = tmp_file
+        cmds += ' -load{type} "up {offset} {file}"'.format(file=bin_file, type=item[1], offset=hex(offset))
+    _run_vivado(programmer.vivado_path, programmer.vivado_ver, cmds)
+
 def add_len_crc32(src, dst, endianess="little"):
     len = os.path.getsize(src)
     crc = int(0)
@@ -98,3 +113,4 @@ def flashhelper_args(parser):
     parser.add_argument("--load", action="store_true", help="load bistream")
     parser.add_argument("--flash", action="store_true", help="load flash")
     parser.add_argument("--flashrom", action="store_true", help="load flash and bootrom")
+    parser.add_argument("--buildrom", action="store_true", help="build bootrom file")
