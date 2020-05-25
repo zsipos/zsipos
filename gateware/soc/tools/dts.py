@@ -290,6 +290,65 @@ class DTSHelper():
         s += self.tabs(0) + "};\n"
         self.dts += s
 
+    def add_zsipos_sel4_channel(self, nr):
+
+        s = ""
+
+        # linux --> sel4
+        master = "to_sel4_master" + str(nr)
+        slave  = "to_sel4_slave"  + str(nr)
+        size = 4096
+        base = self.json["memories"]["sram"]["base"] + size * nr * 2
+
+        # linux -> sel4 master
+        s += self.tabs(0) + master + ": to_sel4_master@" + str(nr) + " {\n"
+        s += self.tabs(1) + 'compatible = "zsipos,to_sel4_master";\n'
+        s += self.tabs(1) + 'channel = <' + str(nr) + ">;\n"
+        s += self.tabs(1) + self._irqparent() + ";\n"
+        s += self.tabs(1) + "interrupts = <" + self._irq(slave) + ">;\n"
+        s += self.tabs(1) + "reg =  <" + self._base(master) + " " + self._size(master) + "\n"
+        s += self.tabs(2) + self._base(slave) + " " + self._size(slave) + "\n"
+        s += self.tabs(2) + hex(base) + " " + hex(size) + ">;\n"
+        s += self.tabs(0) + "};\n"
+        # linux -> sel4 slave
+        s += self.tabs(0) + slave + ": to_sel4_slave@" + str(nr) + " {\n"
+        s += self.tabs(1) + 'compatible = "zsipos,to_sel4_slave";\n'
+        s += self.tabs(1) + 'channel = <' + str(nr) + ">;\n"
+        s += self.tabs(1) + self._irqparent() + ";\n"
+        s += self.tabs(1) + "interrupts = <" + self._irq(master) + ">;\n"
+        s += self.tabs(1) + "reg =  <" + self._base(master) + " " + self._size(master) + "\n"
+        s += self.tabs(2) + self._base(slave) + " " + self._size(slave) + "\n"
+        s += self.tabs(2) + hex(base) + " " + hex(size) + ">;\n"
+        s += self.tabs(0) + "};\n"
+
+        # sel4 --> linux
+        master = "to_linux_master" + str(nr)
+        slave  = "to_linux_slave"  + str(nr)
+        base += size
+
+        # sel4 -> linux master
+        s += self.tabs(0) + master + ": to_linux_master@" + str(nr) + " {\n"
+        s += self.tabs(1) + 'compatible = "zsipos,to_linux_master";\n'
+        s += self.tabs(1) + 'channel = <' + str(nr) + ">;\n"
+        s += self.tabs(1) + self._irqparent() + ";\n"
+        s += self.tabs(1) + "interrupts = <" + self._irq(slave) + ">;\n"
+        s += self.tabs(1) + "reg =  <" + self._base(master) + " " + self._size(master) + "\n"
+        s += self.tabs(2) + self._base(slave) + " " + self._size(slave) + "\n"
+        s += self.tabs(2) + hex(base) + " " + hex(size) + ">;\n"
+        s += self.tabs(0) + "};\n"
+        # sel4 -> linux slave
+        s += self.tabs(0) + slave + ": to_linux_slave@" + str(nr) + " {\n"
+        s += self.tabs(1) + 'compatible = "zsipos,to_linux_slave";\n'
+        s += self.tabs(1) + 'channel = <' + str(nr) + ">;\n"
+        s += self.tabs(1) + self._irqparent() + ";\n"
+        s += self.tabs(1) + "interrupts = <" + self._irq(master) + ">;\n"
+        s += self.tabs(1) + "reg =  <" + self._base(master) + " " + self._size(master) + "\n"
+        s += self.tabs(2) + self._base(slave) + " " + self._size(slave) + "\n"
+        s += self.tabs(2) + hex(base) + " " + hex(size) + ">;\n"
+        s += self.tabs(0) + "};\n"
+
+        self.dts += s
+
     def add_zsipos_dmatest(self, dma):
         s = ""
         s += self.tabs(0) + dma + ": dmatest@" + self._base(dma)[2:] + " {\n"
