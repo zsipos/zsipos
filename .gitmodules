@@ -90,3 +90,12 @@
 [submodule "kernel/sel4/toplevels/sel4test"]
 	path = kernel/sel4/toplevels/sel4test
 	url = https://github.com/zsipos/sel4test
+[submodule "kernel/sel4/tools/camkes-tool"]
+	path = kernel/sel4/tools/camkes-tool
+	url = https://github.com/seL4/camkes-tool
+[submodule "kernel/sel4/projects/projects_libs"]
+	path = kernel/sel4/projects/projects_libs
+	url = https://github.com/SEL4PROJ/projects_libs
+[submodule "kernel/sel4/tools/capdl"]
+	path = kernel/sel4/tools/capdl
+	url = https://github.com/seL4/capdl

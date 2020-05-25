@@ -6,6 +6,8 @@ D=`pwd`
 
 WRKDIR="$D/sel4"
 
+build-dts.sh $1
+
 if [ "$1" == "clean" ]
 then
 	rm -rf "$WRKDIR/build_${BITS}_sel4zsipos"

@@ -25,6 +25,9 @@ case "$2" in
 	zsipos)
 		SEL4OPTS="-DPLATFORM=hw-zsipos -DRISCV64=TRUE -DSIMULATION=TRUE"
 	;;
+	pc99)
+		SEL4OPTS="-DPLATFORM=pc99 -DSIMULATION=TRUE"
+	;;
 esac
 
 if [ ! -f "$DSTDIR/.initdone" ]

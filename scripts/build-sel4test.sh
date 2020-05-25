@@ -8,9 +8,11 @@ SRCDIR="$D/sel4test"
 WRKDIR="$D/sel4"
 DTS="$SRCDIR/qemu.dts"
 
+BBLDIR="$WRKDIR/build_${BITS}_bbl"
+
 if [ "$1" == "clean" ]
 then
-	rm -rf "$WRKDIR/build_${BITS}_bbl" "$WRKDIR/build_${BITS}_sel4test"
+	rm -rf "$BBLDIR" "$WRKDIR/build_${BITS}_sel4test"
 	exit
 fi
 
@@ -25,8 +27,8 @@ build-linux.sh
 build-sel4-proj.sh sel4test qemu
 
 # build bbl
-mkdir -p "$WRKDIR/build_${BITS}_bbl"
-cd "$WRKDIR/build_${BITS}_bbl"
+mkdir -p "$BBLDIR"
+cd "$BBLDIR"
 
 if [ ! -f config.status ]
 then
