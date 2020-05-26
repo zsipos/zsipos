@@ -206,7 +206,7 @@ def main_func():
             assert False, "unhandled option"
 
     logging.basicConfig(format="%(asctime)s.%(msecs).3d:%(thread)d:%(levelname)s:%(name)s:%(message)s", 
-                        datefmt="%H:%M:%S", level=logging.DEBUG, filename=logfile) # maxBytes=1024*1024, backupCount=7)
+                        datefmt="%d.%m.%Y %H:%M:%S", level=logging.DEBUG, filename=logfile) # maxBytes=1024*1024, backupCount=7)
 
     #config defaults
     infstr = ""

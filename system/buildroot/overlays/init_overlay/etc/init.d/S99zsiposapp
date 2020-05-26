@@ -53,6 +53,13 @@ do_stop() {
 }
 
 start() {
+    NAMESERVER=`grep nameserver /etc/resolv.conf | cut -d ' ' -f 2`
+    if [ -n "$NAMESERVER" ] ; then
+        display "nameserver $NAMESERVER"
+    else
+        display "ERROR: nameserver not found"
+        return
+    fi
     echo -n "Starting zsiposapp: "
     RUNNING=$(running runzsipos)
     if [ -n "$RUNNING" ]; then

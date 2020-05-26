@@ -8,7 +8,7 @@
 import time
 import errno
 import logging
-import os
+import os, os.path
 import re
 import socket
 import spwd
@@ -26,7 +26,7 @@ cdef CONFIGUI* configui
 
 cdef Fl_Text_Buffer* helpTextBuffer
 
-cdef constopt   # consts-Option, die gerade bearbeitet wird
+cdef str constopt   # consts-Option, die gerade bearbeitet wird
 
 cdef str section = 'gmitm'
 cdef str str_ip_config = 'Ip Config'
@@ -120,7 +120,14 @@ cdef str str_gitversions = ''
 cdef str str_save_and_reconfig = 'Save and Reconfigure'
 cdef str str_save_and_restart = 'Save and Restart'
 
-cdef sendfiles = []
+cdef sendfiles = set()
+
+# keep consistent with consts.py Logging
+logconsts = [ consts.LOGEXT, consts.LOGLOC, consts.LOGFULLMESSAGE, 
+  consts.LOGCCEVENTS, consts.LOGCCMESSAGES, consts.LOGBMEVENTS,
+  consts.LOGSIPTIMING, consts.LOGTIMERS, consts.SIPDELAY, consts.LOGZRTPCB,
+  consts.LOGZSESSIONCB, consts.LOGICE, consts.LOGDTMF, consts.PJLOGLEVEL ]
+
 
 """ Callbacks """
 
@@ -141,6 +148,9 @@ cdef void on_config_enter(Fl_Widget* widget, void *data) with gil:
     configui.btn_back.take_focus()
     configui.window.show()
 
+
+cdef void on_config_close(Fl_Widget* widget, void *data) with gil:
+    configui.window.hide()
 
 # Config main
 cdef void on_btn_shutdown(Fl_Widget* widget, void *data) with gil:
@@ -266,27 +276,22 @@ cdef void on_btn_ifconfig(Fl_Widget *widget, void *data) with gil:
 
 
 # callback Config Groups
-# Experts
-cdef void on_btn_sshd(Fl_Widget* widget, void *data) with gil:
-    #debug(os.uname())
-    if get_value(configui.btn_sshd) == 0:
-        if os.uname()[1] == 'esther-vm2':
-            debug('sshd requested stop')
-        else:
-            os.system('/etc/init.d/sshd stop')
+# Logs
+cdef void on_btn_logsettings(Fl_Widget* widget, void *data) with gil:
+    configui.winLogSettings.show()
+
+cdef void on_btn_logsettings_back(Fl_Widget* widget, void *data) with gil:
+    configui.winLogSettings.hide()
+
+cdef void on_btn_addfile(Fl_Widget* widget, void *cfdata) with gil:
+    myitem = <Fl_Button*>cfdata
+    myfile = get_label(myitem)
+    if get_value(myitem):
+        log.info("on_btn_addfile: add %s" %(myfile,))
+        add_file(myfile)
     else:
-        if os.uname()[1] == 'esther-vm2':
-            debug('sshd requested start')
-        else:
-            os.system('/etc/init.d/sshd start')
-
-cdef void on_btn_show_git(Fl_Widget* widget, void *data) with gil:
-    global configui
-    global helpTextBuffer
-
-    helpTextBuffer.text(str_gitversions)
-    configui.helpDisplay.copy_label("gitversion")
-    configui.winHelp.show()
+        log.info("on_btn_addfile: remove %s" %(myfile,))
+        remove_file(myfile)
 
 cdef void on_btn_addfiles(Fl_Widget* widget, void *data) with gil:
     size = configui.browse_archive.size()
@@ -294,7 +299,7 @@ cdef void on_btn_addfiles(Fl_Widget* widget, void *data) with gil:
         if configui.browse_archive.selected(index):
             file = configui.browse_archive.text(index)
             #if len(file) > 2: # exclude . and ..
-            add_file(file)
+            add_file_browser(file)
             #configui.browse_archive.select(index,0)
 
 cdef void on_btn_removefiles(Fl_Widget* widget, void *data) with gil:
@@ -303,7 +308,7 @@ cdef void on_btn_removefiles(Fl_Widget* widget, void *data) with gil:
         if configui.browse_archive.selected(index):
             file = configui.browse_archive.text(index)
             if len(file) > 2: # exclude . and ..
-                remove_file(file)
+                remove_file_browser(file)
             configui.browse_archive.select(index,0)
 
 cdef void on_btn_show_selected(Fl_Widget* widget, void *data) with gil:
@@ -317,7 +322,8 @@ cdef void on_btn_show_selected(Fl_Widget* widget, void *data) with gil:
             configui.browse_archive.select(index,0)
 
 cdef void on_btn_upload(Fl_Widget* widget, void *data) with gil:
-    if len(sendfiles):
+    add_stdfiles()
+    if len(sendfiles) > 1: # more files than Manifest.txt
         if not config_valid(consts.UPLOADID):
             if (not config_valid(consts.UPLOADUSER) or
                 not config_valid(consts.UPLOADSERVER) or
@@ -328,11 +334,39 @@ cdef void on_btn_upload(Fl_Widget* widget, void *data) with gil:
                 on_btn_edit_address(NULL, <void*>consts.UPLOADID)
                 info('Please press send button again.')
                 return;
-        add_stdfiles()
         make_Manifest()
         do_send()
     else:
         warn('no files selected')
+
+# callback Config Groups
+# Experts
+cdef void on_btn_autosshd(Fl_Widget* widget, void *data) with gil:
+    #debug(os.uname())
+    if get_value(configui.btn_autosshd) == 1:
+        if os.uname()[1].startswith('esther-vm'):
+            log.info('autosshd requested on')
+        else:
+            os.system('link /etc/init.d/sshd /etc/init.d/S50sshd')
+    else:
+        if os.uname()[1].startswith('esther-vm'):
+            log.info('autosshd requested off')
+        else:
+            os.system('rm /etc/init.d/S50sshd')
+
+cdef void on_btn_sshd(Fl_Widget* widget, void *data) with gil:
+    #debug(os.uname())
+    if get_value(configui.btn_sshd) == 0:
+        if os.uname()[1].startswith('esther-vm'):
+            log.info('sshd requested stop')
+        else:
+            os.system('/etc/init.d/sshd stop')
+    else:
+        if os.uname()[1].startswith('esther-vm'):
+            log.info('sshd requested start')
+        else:
+            os.system('/etc/init.d/sshd start')
+
 
 # callback Config Groups
 # Passwd
@@ -353,8 +387,8 @@ cdef void on_btn_restart(Fl_Widget* widget, void *data) with gil:
 
 cdef void on_btn_fac_reset(Fl_Widget* widget, void *data) with gil:
     #debug("btn_fac_reset")
-    if os.uname()[1] == 'esther-vm2':
-        debug('factory reset requested')
+    if os.uname()[1].startswith('esther-vm'):
+        log.info('factory reset requested')
     else:
         #debug('factory reset')
         for file in (consts.CFGFILE, consts.ZIDFILE, consts.NDBFILE):
@@ -375,6 +409,17 @@ cdef void on_btn_nxcal(Fl_Widget* widget, void *data) with gil:
     os.unlink('/etc/pointercal')
     os.system('export TSLIB_TSDEVICE=/dev/input/event0;/usr/bin/ts_calibrate')
     configui.window.show()
+
+# callback Config Groups
+# Sysinfo
+cdef void on_btn_show_git(Fl_Widget* widget, void *data) with gil:
+    global configui
+    global helpTextBuffer
+
+    helpTextBuffer.text(str_gitversions)
+    configui.helpDisplay.copy_label("gitversion")
+    configui.winHelp.show()
+
 
 # SaveWindow
 cdef void on_btn_save_and_restart(Fl_Widget* widget, void *data) with gil:
@@ -562,17 +607,22 @@ editcache = []
 def add_file(char *filename):
     global sendfiles;
 
+    if os.path.isfile(filename):
+        if filename not in sendfiles:
+            sendfiles.add(filename)
+    log.info("add_file: sendfiles %s" %(sendfiles))
+
+def add_file_browser(char *filename):
     relfile = os.path.join("archive", filename)
-    if os.path.isfile(relfile):
-        if relfile not in sendfiles:
-            sendfiles.append(relfile)
+    add_file(relfile)
 
 def add_stdfiles():
     global sendfiles;
-    stdfiles = ['nohup.out', 'Manifest']
-    for relfile in stdfiles:
-        if os.path.isfile(relfile):
-            sendfiles.append(relfile)
+    sendfiles.add('Manifest.txt')
+    if get_value(configui.btn_nohup):
+        sendfiles.add('nohup.out')
+    if get_value(configui.btn_zsiposlog):
+        sendfiles.add('zsipos.log')
 
 def address_cache(params):
     """ save editvals to cache """
@@ -660,7 +710,7 @@ def address_save(params):
 # address_save
 
 def check_mandatories():
-    if cfdict[consts.EXTUSEDHCP]:
+    if consts.EXTUSEDHCP in cfdict and cfdict[consts.EXTUSEDHCP]:
         if 'AutoDns' in cfdict and cfdict['AutoDns']:
             ret = ""
         else:
@@ -701,7 +751,7 @@ def check_mandatory_value(myopt):
 
 def cfg_cleanup():
     if cfdict[consts.EXTUSEDHCP]:
-        cfdict[consts.EXTPHONEADDR] = ""
+        #cfdict[consts.EXTPHONEADDR] = "" # NEIN! brauche ich
         cfdict[consts.EXTNETMASK] = ""
         cfdict[consts.EXTGATEWAY] = ""
         if 'AutoDns' in cfdict and cfdict['AutoDns']:
@@ -714,6 +764,16 @@ def cfg_cleanup():
         del cfdict[consts.EXTPROXYPORT]
         config.remove_option(consts.SECTION, consts.EXTPROXYPORT)
 
+def cfg_hide_externalPhoneAddress():
+    ''' remove form config just before writing cfg '''
+    if cfdict[consts.EXTUSEDHCP]:
+        config.remove_option(consts.SECTION, consts.EXTPHONEADDR)
+
+def cfg_restore_externalPhoneAddress():
+    ''' restore extPhoneAddress after cfg is written'''
+    if cfdict[consts.EXTUSEDHCP]:
+        config.set(consts.SECTION, consts.EXTPHONEADDR, cfdict[consts.EXTPHONEADDR])
+
 def clearpw():
     oldpw = ""
     newpw = ""
@@ -722,7 +782,7 @@ def clearpw():
 def clearsendfiles():
     global sendfiles
 
-    sendfiles = []
+    sendfiles = set()
     size = configui.browse_archive.size()
     for index in range(1, size+1):
         configui.browse_archive.select(index,0)
@@ -936,8 +996,8 @@ def do_ping(host):
 
 def do_restart(restart_type):
     """ restart application """
-    if os.uname()[1] == 'esther-vm2':
-        debug("%s requested" % (restart_type,))
+    if os.uname()[1].startswith('esther-vm'):
+        log.info("%s requested" % (restart_type,))
     else:
         console.clear()
         if restart_type == 'reboot':
@@ -956,10 +1016,11 @@ def do_restart(restart_type):
         else:
             console.info("restart...")
             log.info("restart zsipos")
-        os._exit(0)
+            os._exit(0)
 
 def do_save_cfg():
     dict_to_config()
+    cfg_hide_externalPhoneAddress()
     if os.path.isfile(consts.CFGFILEBAK):
         os.unlink(consts.CFGFILEBAK)
     if os.path.isfile(consts.CFGFILE):
@@ -968,12 +1029,14 @@ def do_save_cfg():
         config.write(cfgfile)
         log.info("cfgfile saved")
         os.system('sync')
+    cfg_restore_externalPhoneAddress()
 
 def do_send():
     myfiles = ' '.join(sendfiles)
     #debug('do_send')
     #debug(myfiles)
-    cpcmd = "tar -cf - %s |  /usr/bin/ssh -T %s@%s -p %s" % (
+    # StrictHostKeyChecking=yes: dont ask but fail if not in knwown_hostst
+    cpcmd = "tar -cf - %s |  /usr/bin/ssh -T %s@%s -p %s -o StrictHostKeyChecking=yes" % (
             myfiles, cfdict[consts.UPLOADUSER], cfdict[consts.UPLOADSERVER], str(cfdict[consts.UPLOADPORT]))
     log.info(cpcmd)
     configui.helpDisplay.copy_label("upload")
@@ -982,16 +1045,21 @@ def do_send():
     configui.winHelp.show() # visible only when finished
 
     try:
-        retcode = subprocess.call(cpcmd, shell=True, encoding="utf8")
+        exception_occurred = 0
+        output = subprocess.check_output(cpcmd, stderr=subprocess.STDOUT, shell= True, encoding="utf8")
     except CalledProcessError as e:
-        if len(e.output):
-            out += e.output
-        else:
-            out += str(sys.exc_info()[1])
+        exception_occurred = 1
+        output = e.output
     finally:
-        if (retcode == 0):
-            out += 'successfully sent'
+        log.info("send subprocess returned, exc_o= %d, output %s" %(exception_occurred, output ))
+        if not exception_occurred:
+            if output and len(output):
+                out += output
+            else:
+                out += "send completed"
             clearsendfiles()
+        else:
+            out += output
         helpTextBuffer.text(out)
 
 
@@ -1056,7 +1124,7 @@ def init_noneditvals():
     #debug("init_noneditvals")
     # experts
     ui.btn_skipzrtp1.value(cfdict[consts.SKIPZRTP1])
-    # log
+    # logsettings
     ui.log_external.value(cfdict[consts.LOGEXT])
     ui.log_local.value(cfdict[consts.LOGLOC])
     ui.log_full.value(cfdict[consts.LOGFULLMESSAGE])
@@ -1071,7 +1139,26 @@ def init_noneditvals():
     ui.log_ice.value(cfdict[consts.LOGICE])
     ui.log_dtmf.value(cfdict[consts.LOGDTMF])
     ui.log_level.value(float(cfdict[consts.PJLOGLEVEL]))
-
+    #sshd
+    found = 0
+    if os.uname()[1].startswith('esther-vm'):
+        out = subprocess.Popen(["ps", "ax",], stdout=subprocess.PIPE, encoding="utf8")
+    else:
+        out = subprocess.Popen(["ps", "a",], stdout=subprocess.PIPE, encoding="utf8")
+    for line in out.stdout:
+        if line.find("/usr/sbin/sshd") >= 0:
+            found = 1
+            break
+    if found:
+        ui.btn_sshd.value(1)
+        log.info("init: sshd is running")
+    else:
+        ui.btn_sshd.value(0)
+        log.info("init: sshd not running")
+    if os.path.isfile("/etc/init.d/S50sshd"):
+        ui.btn_autosshd.value(1)
+    else:
+        ui.btn_autosshd.value(0)
 
 def is_last_step(params):
     estep = params['estep']
@@ -1132,7 +1219,7 @@ def is_valid_ipv4_mask(netmask):
         except socket.error:
             return False
         s4 = netmask.split('.')
-        c4 = list(map(int, s4))
+        c4 = map(int, s4)
         m = ((c4[0]*256+c4[1])*256+c4[2])*256+c4[3]
         #debug('subnet mask')
         #debug(bin(m))
@@ -1319,7 +1406,7 @@ def keyboard_show(key_state):
 
 def make_Manifest():
     mversion = '0.1'
-    file = open('Manifest', 'w')
+    file = open('Manifest.txt', 'w')
     file.write('Manifest Version %s\n' % (mversion))
     file.write('    Customer:  %s\n' % (cfdict[consts.UPLOADID], ))
     file.write('    Timestamp: %s\n' % (tstr(int(time.time()))))
@@ -1382,6 +1469,21 @@ def need_restart():
         if olddict[consts.LOCPROXYPORT] != cfdict[consts.LOCPROXYPORT]:
             log.info(consts.LOCPROXYPORT + " changed")
             return str_save_and_restart
+    # Logsettings
+    for key in logconsts:
+        if key in cfdict:
+            if key in olddict:
+                if olddict[key] != cfdict[key]:
+                    log.info(key + " changed")
+                    return str_save_and_restart
+            else:
+                log.info(key * " added")
+                return str_save_and_restart
+        else:
+            if key in olddict:
+                log.info(key + " deleted")
+                return str_save_and_restart
+                
     log.info("restart not needed")
     return None
 # need_restart
@@ -1452,10 +1554,12 @@ def read_val(params):
 def remove_file(char *filename):
     global sendfiles;
 
+    if filename in sendfiles:
+        sendfiles.remove(filename)
+
+def remove_file_browser(char *filename):
     relfile = os.path.join("archive", filename)
-    if os.path.isfile(relfile):
-        if relfile in sendfiles:
-            sendfiles.remove(relfile)
+    remove_file(relfile)
 
 def save_root_pw(newpw):
 
@@ -1952,15 +2056,15 @@ def configui_init(infstr):
     ui = configui = new CONFIGUI()
     ui.window.position(0,60)
     ui.window.labeltype(FL_NORMAL_LABEL)
-    #ui.window.callback(on_config_enter, <void*>configui)
-    #ui.window.callback(on_config_close, NULL)
+    ui.window.callback(on_config_enter, <void*>configui)
+    ui.window.callback(on_config_close, NULL)
     # back button
     ui.btn_back.callback(on_btn_back, NULL)
     ui.btn_warn.callback(on_btn_warn, NULL)
     # tab_config - braucht genormte label
-    ui.group_ip.copy_label(str_ip_config)
-    ui.group_server.copy_label(str_server)
-    ui.group_experts.copy_label(str_experts)
+    ui.group_ip.label(str_ip_config)
+    ui.group_server.label(str_server)
+    ui.group_experts.label(str_experts)
     ui.tab_config.callback(on_tab_group, NULL)
     # help
     helpTextBuffer = new Fl_Text_Buffer()
@@ -2000,12 +2104,13 @@ def configui_init(infstr):
     ui.btn_ping_turn.callback(on_btn_ping, <void*>consts.TURNSERVER)
     ui.btn_ntp_server.callback(on_btn_edit_address, <void*>consts.NTPSERVER)
     ui.btn_ping_ntp.callback(on_btn_ping, <void*>consts.NTPSERVER)
-    # Group Experts
-    ui.btn_local_proxy.callback(on_btn_edit_address, <void*>consts.LOCPROXYADDR)
-    ui.btn_ping_local_proxy.callback(on_btn_ping, <void*>consts.LOCPROXYADDR)
+    #Group Logs
+    ui.btn_logsettings.callback(on_btn_logsettings, NULL)
+    ui.btn_logsettings_back.callback(on_btn_logsettings_back, NULL)
     ui.btn_upload_server.callback(on_btn_edit_address, <void*>consts.UPLOADSERVER)
     ui.btn_ping_upload_server.callback(on_btn_ping, <void*>consts.UPLOADSERVER)
-    ui.btn_sshd.callback(on_btn_sshd, NULL)
+    ui.btn_nohup.callback(on_btn_addfile, <void*>ui.btn_nohup)
+    ui.btn_zsiposlog.callback(on_btn_addfile, <void*>ui.btn_zsiposlog)
     #ui.browse_archive.filter("[a-zA-Z0-9]*")
     ui.browse_archive.load("archive")
     ui.browse_archive.remove(1) # hide ../
@@ -2013,6 +2118,12 @@ def configui_init(infstr):
     ui.btn_remove_file.callback(on_btn_removefiles, NULL)
     ui.btn_show_selected.callback(on_btn_show_selected, NULL)
     ui.btn_upload.callback(on_btn_upload, NULL)
+
+    # Group Experts
+    ui.btn_local_proxy.callback(on_btn_edit_address, <void*>consts.LOCPROXYADDR)
+    ui.btn_ping_local_proxy.callback(on_btn_ping, <void*>consts.LOCPROXYADDR)
+    ui.btn_sshd.callback(on_btn_sshd, NULL)
+    ui.btn_autosshd.callback(on_btn_autosshd, NULL)
     # Group Password
     ui.btn_root_pw.callback(on_btn_root_pw, NULL)
     # Group Reset
@@ -2089,6 +2200,19 @@ cdef extern from "gui.cxx":
         Fl_Button*          btn_ping_ntp
         # Logging
         Fl_Group*           group_log
+        Fl_Button*          btn_logsettings
+        Fl_Output*          btn_upload_server
+        Fl_Button*          btn_ping_upload_server
+        Fl_Check_Button*    btn_nohup
+        Fl_Check_Button*    btn_zsiposlog
+        Fl_File_Browser*    browse_archive
+        Fl_Button*          btn_add_file
+        Fl_Button*          btn_remove_file
+        Fl_Button*          btn_upload
+        Fl_Button*          btn_show_selected
+        # LogSettings
+        Fl_Double_Window*   winLogSettings
+        Fl_Button*          btn_logsettings_back
         Fl_Check_Button*    log_external
         Fl_Check_Button*    log_local
         Fl_Check_Button*    log_full
@@ -2110,7 +2234,8 @@ cdef extern from "gui.cxx":
         Fl_Output*          btn_upload_server
         Fl_Button*          btn_ping_upload_server
         Fl_Check_Button*    btn_skipzrtp1
-        Fl_Check_Button*    btn_sshd 
+        Fl_Check_Button*    btn_sshd
+        Fl_Check_Button*    btn_autosshd
         Fl_File_Browser*    browse_archive
         Fl_Button*          btn_add_file
         Fl_Button*          btn_remove_file
