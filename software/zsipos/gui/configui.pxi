@@ -5,6 +5,8 @@
 #
 # Version 0.4
 
+debuginfo = False
+
 import time
 import errno
 import logging
@@ -882,12 +884,12 @@ def config_valid(name):
     return True if name in cfdict and cfdict[name] else False
 
 def debug(string):
-    return
+    if not debuginfo: return
     log.info(string)
 
 
 def debug_dict(string, mydict=None):
-    return
+    if not debuginfo: return
     debug(string)
     if mydict is None:
         mydict = cfdict
@@ -897,7 +899,7 @@ def debug_dict(string, mydict=None):
     debug("end of cfdict..............................")
 
 def debug_editcache(string):
-    return
+    if not debuginfo: return
     debug(string)
 
 
