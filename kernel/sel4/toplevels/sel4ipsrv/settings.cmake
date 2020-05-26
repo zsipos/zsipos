@@ -25,9 +25,6 @@ include(${project_dir}/kernel/configs/seL4Config.cmake)
 set(CapDLLoaderMaxObjects 20000 CACHE STRING "" FORCE)
 set(KernelRootCNodeSizeBits 16 CACHE STRING "")
 
-find_package(seL4 REQUIRED)
-sel4_configure_platform_settings()
-
 # misc
 set(BBL_PATH ${project_dir}/tools/riscv-pk CACHE STRING "BBL Folder location")
 
