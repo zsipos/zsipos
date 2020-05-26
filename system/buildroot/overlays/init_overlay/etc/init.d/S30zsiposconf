@@ -24,6 +24,7 @@ start() {
     display "init zsipos"
 
     CFG=/root/zsipos.cfg
+    CFGBAK=/root/zsipos.cfg.bak
     FACTORY=/root/zsipos_factory.cfg
     ZID=/root/zsipos.zid
     NDB=/root/zsipos.ndb
@@ -52,6 +53,17 @@ start() {
          rm -f $NDB
          touch /root/zsipos_rootreset
          cp $NTPFACTORY $NTP
+         # make sure passwd has a date > 0
+         date | grep 1970 && date +%d%m%Y -s "11112011"
+    fi
+
+    # some error deleted zsipos.cfg
+    if [ -s /root/zsipos.cfg ]; then
+        if [ ! -s /root/zsipos.cfg.bak ] ; then
+            cp $CFGBAK $CFG
+        else
+            cp $FACTORY $CFG
+        fi
     fi
 
     # the network

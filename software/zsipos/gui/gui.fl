@@ -1,13 +1,13 @@
 # data file for the Fltk User Interface Designer (fluid)
-version 1.0302 
-header_name {.h} 
+version 1.0304
+header_name {.h}
 code_name {.cxx}
 class MAINUI {open
 } {
   Function {MAINUI()} {open
   } {
     Fl_Window window {open
-      xywh {1032 675 480 320} type Double labelsize 32 visible
+      xywh {319 279 480 320} type Double labelsize 32 visible
     } {
       Fl_Button btn_onhook {
         image {icons/phone.png} xywh {140 75 200 200} box NO_BOX deactivate
@@ -29,17 +29,16 @@ class MAINUI {open
       }
     }
   }
-} 
+}
 
-class CALLUI {open
-} {
+class CALLUI {} {
   decl {void *pyobj;} {private local
   }
   Function {CALLUI(void *pyobj)} {open
   } {
     code {this->pyobj = pyobj;} {}
     Fl_Window window {open
-      xywh {1039 347 480 260} type Double labelfont 14
+      xywh {319 339 480 260} type Double labelfont 14
       class Fl_Group visible
     } {
       Fl_Button btn_callinfo {
@@ -57,7 +56,7 @@ class CALLUI {open
         xywh {160 98 160 160} align 0
       } {}
       Fl_Button btn_secstate {
-        label 80 selected
+        label 80
         image {icons/unlocked_inactive.png} xywh {338 133 82 80} box NO_BOX labeltype NO_LABEL align 512 deactivate
       }
       Fl_Button btn_encrypt {
@@ -93,7 +92,7 @@ class CALLUI {open
       }
     }
   }
-} 
+}
 
 class CONFIGUI {open
 } {
@@ -101,7 +100,7 @@ class CONFIGUI {open
   } {
     Fl_Window window {
       label Configuration open
-      xywh {794 224 480 320} type Double visible
+      xywh {304 219 480 320} type Double visible
     } {
       Fl_Button btn_back {
         label Back
@@ -120,7 +119,7 @@ class CONFIGUI {open
         xywh {35 93 407 59} labelcolor 1 align 128 hide
       }
       Fl_Tabs tab_config {open
-        xywh {0 45 535 310} box UP_BOX
+        xywh {0 45 535 281} box UP_BOX
       } {
         Fl_Group group_ip {
           label {IP Config} open
@@ -256,73 +255,59 @@ class CONFIGUI {open
           }
         }
         Fl_Group group_log {
-          label Logs
-          xywh {0 75 480 245} hide
+          label Logs open
+          xywh {0 75 480 250} hide
         } {
-          Fl_Check_Button log_external {
-            label {  External Log}
-            xywh {15 86 134 25} down_box DOWN_BOX
+          Fl_Button btn_logsettings {
+            label {Log Settings}
+            xywh {15 86 150 30} labelsize 18
           }
-          Fl_Check_Button log_local {
-            label {  Local Log}
-            xywh {15 119 134 25} down_box DOWN_BOX
+          Fl_Output btn_upload_server {
+            label {Upload Server}
+            xywh {15 125 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
           }
-          Fl_Check_Button log_full {
-            label {  Log Full Message}
-            xywh {15 152 134 25} down_box DOWN_BOX
+          Fl_Box framee2 {
+            xywh {170 125 255 30} box DOWN_FRAME
           }
-          Fl_Check_Button log_cc_events {
-            label {  Log CC Events}
-            xywh {15 185 134 25} down_box DOWN_BOX
+          Fl_Button btn_ping_upload_server {
+            label ping
+            xywh {430 125 50 30}
           }
-          Fl_Check_Button log_cc_messages {
-            label {  Log CC Messages}
-            xywh {15 218 134 25} down_box DOWN_BOX
+          Fl_Check_Button btn_nohup {
+            label {nohup.out}
+            xywh {274 182 100 15} down_box DOWN_BOX
           }
-          Fl_Check_Button log_bm_events {
-            label {  Log BM Events}
-            xywh {15 251 134 25} down_box DOWN_BOX
+          Fl_Check_Button btn_zsiposlog {
+            label {zsipos.log}
+            xywh {369 182 100 15} down_box DOWN_BOX
           }
-          Fl_Check_Button log_timers {
-            label {  Log Timers}
-            xywh {15 284 134 25} down_box DOWN_BOX
+          Fl_File_Browser browse_archive {
+            label archive
+            xywh {15 181 251 133} type Multi color 29 align 5 textsize 16
           }
-          Fl_Check_Button log_sip_proctime {
-            label {  Log SIP Processing Time}
-            xywh {185 86 134 25} down_box DOWN_BOX
+          Fl_Button btn_add_file {
+            label Select
+            xywh {275 220 87 25} labelsize 18
           }
-          Fl_Check_Button log_sip_debug_delay {
-            label {  SIP Debug Delay}
-            xywh {186 119 135 25} down_box DOWN_BOX
+          Fl_Button btn_remove_file {
+            label Deselect
+            xywh {377 220 87 25} labelsize 18
           }
-          Fl_Check_Button log_zrtp_events {
-            label {  Log ZRTP Events}
-            xywh {185 152 134 25} down_box DOWN_BOX
+          Fl_Button btn_show_selected {
+            label {Show selected files}
+            xywh {275 250 190 25} labelsize 18
           }
-          Fl_Check_Button log_zsession_events {
-            label {  Log ZSession Events}
-            xywh {185 185 134 25} down_box DOWN_BOX
+          Fl_Button btn_upload {
+            label {Send (takes minutes)}
+            xywh {275 280 189 25} labelsize 18
           }
-          Fl_Check_Button log_ice {
-            label {  Log ICE}
-            xywh {185 218 134 25} down_box DOWN_BOX
-          }
-          Fl_Check_Button log_dtmf {
-            label {  Log DTMF}
-            xywh {185 251 134 25} down_box DOWN_BOX
-          }
-          Fl_Counter log_level {
-            label {  PJLIB Log Level}
-            xywh {166 282 61 25} align 8 minimum 0 maximum 7 step 1
-            class Fl_Simple_Counter
-          }
-          Fl_Box box_warn_logs {
-            label {Do not activate logs unless advised.}
-            xywh {375 120 79 132} box BORDER_BOX labelsize 18 labelcolor 1 align 128
+          Fl_Progress upload {
+            label upload
+            xywh {286 304 106 21} align 277 hide
           }
         }
         Fl_Group group_experts {
-          label Experts open
+          label Experts open selected
           xywh {0 75 480 245}
         } {
           Fl_Output btn_local_proxy {
@@ -336,48 +321,22 @@ class CONFIGUI {open
             label ping
             xywh {425 90 50 30}
           }
-          Fl_Output btn_upload_server {
-            label {Upload Server}
-            xywh {10 155 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
-          }
-          Fl_Box framee2 {
-            xywh {165 155 255 30} box DOWN_FRAME
-          }
-          Fl_Button btn_ping_upload_server {
-            label ping
-            xywh {425 155 50 30}
-          }
-          Fl_Check_Button btn_sshd {
-            label {  SSH Daemon }
-            xywh {312 125 150 30} down_box DOWN_BOX hide
-          }
           Fl_Check_Button btn_skipzrtp1 {
-            label {  skip zrtp1}
-            xywh {15 120 100 30} down_box DOWN_BOX
+            label {  Skip ZRTP1}
+            xywh {25 200 100 30} down_box DOWN_BOX
           }
-          Fl_File_Browser browse_archive {
-            label archive
-            xywh {10 213 251 105} type Multi color 29 align 5 textsize 16
-          }
-          Fl_Button btn_add_file {
-            label Select
-            xywh {270 215 87 25} labelsize 18
-          }
-          Fl_Button btn_remove_file {
-            label Deselect
-            xywh {372 215 87 25} labelsize 18
-          }
-          Fl_Button btn_show_selected {
-            label {Show selected files}
-            xywh {270 245 190 25} labelsize 18
-          }
-          Fl_Button btn_upload {
-            label {Send (takes minutes)}
-            xywh {270 275 189 25} labelsize 18
-          }
-          Fl_Progress upload {
-            label upload selected
-            xywh {281 299 106 21} align 277 hide
+          Fl_Group group_sshd {
+            label {SSH Daemon} open
+            xywh {10 155 455 40} box DOWN_BOX
+          } {
+            Fl_Check_Button btn_sshd {
+              label { SSH Daemon On/Off}
+              xywh {25 161 166 30} down_box DOWN_BOX
+            }
+            Fl_Check_Button btn_autosshd {
+              label { SSHD Auto Start On/Off}
+              xywh {235 161 210 30} down_box DOWN_BOX
+            }
           }
         }
         Fl_Group group_passwd {
@@ -523,7 +482,7 @@ class CONFIGUI {open
         image {icons/abort.png} xywh {441 2 40 37} box FLAT_BOX labelsize 10
       }
       Fl_Group addressgroup {
-        label address open
+        label address
         xywh {0 30 516 370} labelsize 18
       } {
         Fl_Group ipgroup {open
@@ -542,7 +501,7 @@ class CONFIGUI {open
             xywh {25 63 70 44} down_box ROUND_DOWN_BOX labelsize 18
           }
         }
-        Fl_Group keyboardgroup_func {open
+        Fl_Group keyboardgroup_func {
           xywh {0 130 481 189}
         } {
           Fl_Button key_del {
@@ -573,7 +532,7 @@ class CONFIGUI {open
             xywh {9 231 57 40} align 16 hide deactivate
           }
         }
-        Fl_Group keyboardgroup_alpha {open
+        Fl_Group keyboardgroup_alpha {
           xywh {-20 111 511 208}
         } {
           Fl_Button key_comma_alpha {
@@ -911,5 +870,75 @@ class CONFIGUI {open
         }
       }
     }
+    Fl_Window winLogSettings {
+      label {Logfile Settings} open
+      xywh {309 57 490 325} type Double hide
+    } {
+      Fl_Button btn_logsettings_back {
+        label Back
+        image {icons/left.png} xywh {0 2 40 37}
+      }
+      Fl_Check_Button log_external {
+        label {  External Log}
+        xywh {20 91 134 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_local {
+        label {  Local Log}
+        xywh {20 124 134 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_full {
+        label {  Log Full Message}
+        xywh {20 157 134 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_cc_events {
+        label {  Log CC Events}
+        xywh {20 190 134 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_cc_messages {
+        label {  Log CC Messages}
+        xywh {20 223 134 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_bm_events {
+        label {  Log BM Events}
+        xywh {20 256 134 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_timers {
+        label {  Log Timers}
+        xywh {20 289 134 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_sip_proctime {
+        label {  Log SIP Processing Time}
+        xywh {190 91 134 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_sip_debug_delay {
+        label {  SIP Debug Delay}
+        xywh {191 124 135 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_zrtp_events {
+        label {  Log ZRTP Events}
+        xywh {190 157 134 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_zsession_events {
+        label {  Log ZSession Events}
+        xywh {190 190 134 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_ice {
+        label {  Log ICE}
+        xywh {190 223 134 25} down_box DOWN_BOX
+      }
+      Fl_Check_Button log_dtmf {
+        label {  Log DTMF}
+        xywh {190 256 134 25} down_box DOWN_BOX
+      }
+      Fl_Counter log_level {
+        label {  PJLIB Log Level}
+        xywh {171 287 61 25} align 8 minimum 0 maximum 7 step 1
+        class Fl_Simple_Counter
+      }
+      Fl_Box box_warn_logs {
+        label {Do not activate logs unless advised.}
+        xywh {65 18 389 59} box BORDER_BOX labelsize 18 labelcolor 1 align 128
+      }
+    }
   }
-} 
+}
