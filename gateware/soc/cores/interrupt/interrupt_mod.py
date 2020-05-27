@@ -8,6 +8,7 @@ class _IRQ():
 
 class Interrupt(Module):
     def __init__(self):
+        Module.__init__(self)
         self.ev = _IRQ()
 
 class ExtInterrupt(Interrupt):
