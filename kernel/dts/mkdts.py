@@ -9,7 +9,8 @@ from pyfdt.pyfdt import *
 MEM_BASE = 0x80000000
 
 copy_to_sel4 = ["riscv,plic0", "riscv,clint0"]
-move_to_sel4 = []
+move_to_sel4 = ["zsipos,to_sel4_slave", "zsipos,to_linux_master"]
+#move_to_sel4 = []
 
 
 def build_linux_dts(dtb, sel4_size, dst_dir):
@@ -99,6 +100,34 @@ def build_sel4_dts(dtb, sel4_size, dst_dir):
         f.write(fdt.to_dts()[9:]) # strip header
 
 
+def build_sel4_camkes(dtb, dst_dir):
+    camkes_name = os.path.join(dst_dir, "sel4dts.camkes")
+    fdt = dtb.to_fdt()
+    soc = fdt.resolve_path("/soc")
+    s = ""
+    for i in soc:
+        if not isinstance(i, FdtNode):
+            continue
+        try:
+            compat = i[i.index("compatible")][0]
+        except ValueError:
+            continue
+        if compat in ["zsipos,to_sel4_slave", "zsipos,to_linux_master"]:
+            name = i.get_name().split('@')
+            name = name[0] + name[1]
+            regs = i[i.index("reg")]
+            for u in range(3):
+                size = regs.words[u*2+1]
+                if size < 4096:
+                    size = 4096
+                s += name + ".reg" + str(u) + "_paddr = " + hex(regs.words[u*2]) + ";\n"
+                s += name + ".reg" + str(u) + "_size = " + hex(size) + ";\n"
+            irq = i[i.index("interrupts")][0]
+            s += name + ".irq_irq_number = " + hex(irq-1) + ";\n"
+    with open(camkes_name, "w") as f:
+        f.write(s)
+            
+            
 def build_dts(src_dts, sel4_size, dst_dir):
     dtb_name = os.path.join(dst_dir, "devicetree.dtb")
     os.spawnlp(os.P_WAIT, "dtc", "dtc", "-q", "-I", "dts", "-O", "dtb", "-o", dtb_name, src_dts)
@@ -107,6 +136,7 @@ def build_dts(src_dts, sel4_size, dst_dir):
     sel4_size = int(sel4_size, 16)
     build_linux_dts(dtb, sel4_size, dst_dir)
     build_sel4_dts(dtb, sel4_size, dst_dir)
+    build_sel4_camkes(dtb, dst_dir)
 
 
 if __name__ == "__main__":
