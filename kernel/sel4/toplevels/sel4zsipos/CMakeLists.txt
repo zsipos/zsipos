@@ -13,9 +13,10 @@ camkes_tool_setup_camkes_build_environment()
 # sources
 DeclareCAmkESComponent(Client INCLUDES include SOURCES components/Client/src/client.c)
 DeclareCAmkESComponent(Echo INCLUDES include SOURCES components/Echo/src/echo.c)
+DeclareCAmkESComponent(IPServ INCLUDES include SOURCES components/IPServ/src/ipserv.c)
 
 # targets
-DeclareCAmkESRootserver(ipsrv.camkes)
+DeclareCAmkESRootserver(ipserv.camkes)
 GenerateCAmkESRootserver()
 
 # simulation

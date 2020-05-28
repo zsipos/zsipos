@@ -1,0 +1,27 @@
+/* @TAG(DATA61_BSD) */
+
+/*
+ * CAmkES tutorial part 2: events and dataports
+ */
+
+import <std_connector.camkes>;
+
+import "components/IPServ/IPServ.camkes";
+
+assembly {
+    composition {
+	component IPServBase to_sel4_slave0;
+	component IPServ ipserv;
+
+        connection seL4HardwareMMIO ipserv_mem0(from ipserv.reg0, to to_sel4_slave0.reg0);
+        connection seL4HardwareMMIO ipserv_mem1(from ipserv.reg1, to to_sel4_slave0.reg1);
+        connection seL4HardwareMMIO ipserv_mem2(from ipserv.reg2, to to_sel4_slave0.reg2);
+        connection seL4HardwareInterrupt ipserv_irq(from to_sel4_slave0.irq, to ipserv.irq);
+    }
+    configuration {
+
+/* include configuration from dts */
+#include "ipserv.inc"
+
+    }
+}

@@ -1,0 +1,16 @@
+
+component IPServBase {
+    hardware;
+    dataport Buf reg0;
+    dataport Buf reg1;
+    dataport Buf reg2;
+    emits CallReady irq;
+}
+
+component IPServ {
+    dataport Buf reg0;
+    dataport Buf reg1;
+    dataport Buf reg2;
+    consumes CallReady irq;
+}
+
