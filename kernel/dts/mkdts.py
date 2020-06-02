@@ -123,7 +123,7 @@ def build_sel4_camkes(dtb, dst_dir):
                 s += name + ".reg" + str(u) + "_paddr = " + hex(regs.words[u*2]) + ";\n"
                 s += name + ".reg" + str(u) + "_size = " + hex(size) + ";\n"
             irq = i[i.index("interrupts")][0]
-            s += name + ".irq_irq_number = " + hex(irq-1) + ";\n"
+            s += name + ".irq_irq_number = " + hex(irq) + ";\n"
     with open(camkes_name, "w") as f:
         f.write(s)
             
