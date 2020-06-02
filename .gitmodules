@@ -99,3 +99,6 @@
 [submodule "kernel/sel4/tools/capdl"]
 	path = kernel/sel4/tools/capdl
 	url = https://github.com/seL4/capdl
+[submodule "kernel/sel4/projects/picotcp"]
+	path = kernel/sel4/projects/picotcp
+	url = https://github.com/SEL4PROJ/picotcp
