@@ -37,6 +37,7 @@ class DTSHelper():
         if names is None:
             names = [ name for name, _ in self.json["csr_bases"].items() ]
         align = self.json["constants"]["config_csr_alignment"] // 8
+        s += "#define LITEX_CSR_OFFSET(x)    ((x)*" + str(align) + ")\n\n"
         for name in names:
             base = self.json["csr_bases"][name]
             regs = []
@@ -44,16 +45,20 @@ class DTSHelper():
             maxlen_offset = 0
             for reg, vals in self.json["csr_registers"].items():
                 if reg.startswith(name+"_"):
-                    maxlen_name = max(maxlen_name, len(reg))
-                    offset = str((vals["addr"] - base) // align)
+                    offset = (vals["addr"] - base) // align
+                    if offset < 0:
+                        continue
+                    offset = str(offset)
                     maxlen_offset = max(maxlen_offset, len(offset))
+                    maxlen_name = max(maxlen_name, len(reg))
                     regs.append((reg, offset, vals["size"]))
             regs.sort(key=lambda i: int(i[1]))
             for reg, offset, width in regs:
                 s += "#define LITEX_" + reg.upper() + "_REG"
                 s += " "*(4+maxlen_name-len(reg))
-                s += "(" +str(align) + "*" + offset + ")"
+                s += "LITEX_CSR_OFFSET(" + offset + ")"
                 s += " "*(1+maxlen_offset-len(offset)) + "// u" + str(width*8) + "\n"
+            s += "\n"
         return s
 
     def get_sys_clk_freq(self):
