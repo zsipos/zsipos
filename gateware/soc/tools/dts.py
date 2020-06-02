@@ -238,7 +238,7 @@ class DTSHelper():
 
     def add_litex_timer(self, timer):
         s = ""
-        s += self.tabs(0) + timer + ": timer@" + self._base(timer)[2:] + " {\n"
+        s += self.tabs(0) + timer + ": " + timer + "@" + self._base(timer)[2:] + " {\n"
         s += self.tabs(1) + 'compatible = "litex,timer";\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(timer) + ">;\n"
