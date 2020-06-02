@@ -16,6 +16,7 @@ python3 $BOARD.py \
 	--csr-paging=4096 \
 	--output-dir $outdir \
 	--dts-file $outdir/software/include/generated/devicetree.dts \
+	--csr-offset-file $outdir/software/include/generated/csroffsets.h \
  	--csr-json $outdir/$BOARD.json \
 	$nobuild $*
 
