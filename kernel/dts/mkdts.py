@@ -99,6 +99,11 @@ def build_sel4_dts(dtb, sel4_size, dst_dir):
     with open(ovl_name, "w") as f:
         f.write(fdt.to_dts()[9:]) # strip header
 
+def fix_size(x):
+    if x < 4096:
+        x = 4096
+    return x
+
 
 def build_sel4_camkes(dtb, dst_dir):
     camkes_name = os.path.join(dst_dir, "sel4dts.camkes")
@@ -117,13 +122,20 @@ def build_sel4_camkes(dtb, dst_dir):
             name = name[0] + name[1]
             regs = i[i.index("reg")]
             for u in range(3):
-                size = regs.words[u*2+1]
-                if size < 4096:
-                    size = 4096
+                size = fix_size(regs.words[u*2+1])
                 s += name + ".reg" + str(u) + "_paddr = " + hex(regs.words[u*2]) + ";\n"
                 s += name + ".reg" + str(u) + "_size = " + hex(size) + ";\n"
             irq = i[i.index("interrupts")][0]
             s += name + ".irq_irq_number = " + hex(irq) + ";\n"
+        elif compat in ["litex,timer"]:
+            name = i.get_name().split('@')[0]
+            regs = i[i.index("reg")]
+            size = fix_size(regs.words[1])
+            s += name + ".reg_paddr = " + hex(regs.words[0]) + ";\n"
+            s += name + ".reg_size = " + hex(size) + ";\n"
+            irq = i[i.index("interrupts")][0]
+            s += name + ".irq_irq_number = " + hex(irq) + ";\n"
+
     with open(camkes_name, "w") as f:
         f.write(s)
             
