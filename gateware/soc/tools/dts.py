@@ -30,6 +30,9 @@ class DTSHelper():
         self.add_zsipos_clock()
 
     def print_csr_offsets(self, names=None):
+        print(self.get_csr_offsets(names))
+
+    def get_csr_offsets(self, names=None):
         s = ""
         if names is None:
             names = [ name for name, _ in self.json["csr_bases"].items() ]
@@ -49,9 +52,9 @@ class DTSHelper():
             for reg, offset, width in regs:
                 s += "#define LITEX_" + reg.upper() + "_REG"
                 s += " "*(4+maxlen_name-len(reg))
-                s += "LITEX_CSR_OFFSET(" + offset + ")"
+                s += "(" +str(align) + "*" + offset + ")"
                 s += " "*(1+maxlen_offset-len(offset)) + "// u" + str(width*8) + "\n"
-        print(s)
+        return s
 
     def get_sys_clk_freq(self):
         return self.json["constants"]["config_clock_frequency"]
@@ -228,6 +231,16 @@ class DTSHelper():
         s += self.tabs(0) + "};\n"
         self.dts += s
 
+    def add_litex_timer(self, timer):
+        s = ""
+        s += self.tabs(0) + timer + ": timer@" + self._base(timer)[2:] + " {\n"
+        s += self.tabs(1) + 'compatible = "litex,timer";\n'
+        s += self.tabs(1) + self._irqparent() + ";\n"
+        s += self.tabs(1) + "interrupts = <" + self._irq(timer) + ">;\n"
+        s += self.tabs(1) + "reg = <" + self._base(timer) + " " + self._size(timer) + ">;\n"
+        s += self.tabs(0) + "};\n"
+        self.dts += s
+
     def add_opencores_sdc(self, sdmmc):
         s = ""
         s += self.tabs(0) + sdmmc + ": ocsdc@" + self._membase(sdmmc)[2:] + " {\n"
@@ -359,4 +372,5 @@ class DTSHelper():
 
 
 def dtshelper_args(parser):
+    parser.add_argument("--csr-offset-file", default=None, help="csr offset c-header file")
     parser.add_argument("--dts-file", default=None, help="device tree file")

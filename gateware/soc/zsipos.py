@@ -5,8 +5,9 @@ import argparse
 from os import getenv
 
 from litex.soc.cores.clock import *
-from litex.soc.cores.gpio import *
+from litex.soc.cores.gpio import GPIOIn, GPIOOut
 from litex.soc.cores.spi_flash import SpiFlash
+from litex.soc.cores.timer import Timer
 
 from litex.soc.integration.soc_sdram import *
 from litex.soc.integration.builder import *
@@ -244,6 +245,10 @@ class MySoC(EthernetSoC):
             gpio1_signals = Cat(ws35a_pendown, sd_cd)
             self.submodules.gpio1 = GPIOIn(gpio1_signals)
             self.add_csr("gpio1")
+            # timer1
+            self.submodules.timer1 = Timer()
+            self.add_csr("timer1")
+            self.add_interrupt("timer1")
             # AES
             self.submodules.aes = AES(self.platform)
             self.add_memory_region("aes", self.mem_map["aes"], self.aes.get_size(), type="io")
@@ -270,9 +275,12 @@ class MySoC(EthernetSoC):
             self.submodules.dmatest = DMATest()
             self.add_wb_master(self.dmatest.master_bus)
             self.add_csr("dmatest")
+        self.dts = None
 
 
-    def get_dts(self):
+    def init_dts_object(self):
+        if self.dts:
+            return
         d = DTSHelper(self)
         d.add_litex_uart("uart")
         d.add_litex_eth("ethphy", "ethmac")
@@ -288,6 +296,7 @@ class MySoC(EthernetSoC):
             d.add_gpio_leds("gpio0", nleds=5, triggers=led_triggers)
             d.add_gpio_restart(reset_gpio=("gpio0", 5, 0))
             d.add_litex_gpio("gpio1", direction="in", ngpio=2)
+            d.add_litex_timer("timer1")
             if self.fast_sd:
                 d.add_opencores_sdc("sdmmc")
             else:
@@ -305,13 +314,29 @@ class MySoC(EthernetSoC):
             d.add_zsipos_sha1("sha1")
             d.add_zsipos_sel4_channel(0)
             d.add_zsipos_dmatest("dmatest")
-        s = self.cpu.build_dts(devices=d.get_devices())
+        self.dts = d
+
+
+    def get_dts(self):
+        self.init_dts_object()
+        s = self.cpu.build_dts(devices=self.dts.get_devices())
+        return s
+
+
+    def get_csr_offsets(self):
+        self.init_dts_object()
+        s = self.dts.get_csr_offsets()
         return s
 
 
     def write_dts(self, dts_file):
         with open(dts_file, "w") as f:
             f.write(self.get_dts())
+
+
+    def write_csr_offsets(self, offset_file):
+        with open(offset_file, "w") as f:
+            f.write(self.get_csr_offsets())
 
 
     def set_bios_ip(self, local_ip, remote_ip):
@@ -343,6 +368,8 @@ def main():
     builder.build()
     if args.dts_file:
         soc.write_dts(args.dts_file)
+    if args.csr_offset_file:
+        soc.write_csr_offsets(args.csr_offset_file)
     if args.load:
         load_bistream(builder, FLASH_BITSTREAM_IMAGE)
     if args.flash or args.flashrom:
