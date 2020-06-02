@@ -1,0 +1,14 @@
+
+component MSTickBase {
+    hardware;
+    dataport Buf reg;
+    emits MSTickIRQ irq;
+}
+
+component MSTick {
+    dataport Buf reg;
+    emits MSTickEvent tick0;
+    emits MSTickEvent tick1;
+    consumes MSTickIRQ irq;
+}
+

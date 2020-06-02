@@ -1,27 +1,35 @@
-/* @TAG(DATA61_BSD) */
-
-/*
- * CAmkES tutorial part 2: events and dataports
- */
-
 import <std_connector.camkes>;
 
 import "components/IPServ/IPServ.camkes";
+import "components/MSTick/MSTick.camkes";
 
 assembly {
-    composition {
-	component IPServBase to_sel4_slave0;
-	component IPServ ipserv;
+	composition {
 
-        connection seL4HardwareMMIO ipserv_mem0(from ipserv.reg0, to to_sel4_slave0.reg0);
-        connection seL4HardwareMMIO ipserv_mem1(from ipserv.reg1, to to_sel4_slave0.reg1);
-        connection seL4HardwareMMIO ipserv_mem2(from ipserv.reg2, to to_sel4_slave0.reg2);
-        connection seL4HardwareInterrupt ipserv_irq(from to_sel4_slave0.irq, to ipserv.irq);
+
+		/* MSTick timer */       
+		component MSTickBase timer1; // name must the same as in dts
+		component MSTick timer_1;
+
+		// connect timer hardware
+		connection seL4HardwareMMIO timer_1_mem(from timer_1.reg, to timer1.reg);
+		connection seL4HardwareInterrupt timer_1_irq(from timer1.irq, to timer_1.irq);
+
+
+		/* Linux communication hardware */
+		component IPServBase to_sel4_slave0; // name must be the same as in dts
+		component IPServ ipserv_1;
+
+		// connect linux communication hardware
+		connection seL4HardwareMMIO ipserv_1_mem0(from ipserv_1.reg0, to to_sel4_slave0.reg0);
+		connection seL4HardwareMMIO ipserv_1_mem1(from ipserv_1.reg1, to to_sel4_slave0.reg1);
+		connection seL4HardwareMMIO ipserv_1_mem2(from ipserv_1.reg2, to to_sel4_slave0.reg2);
+		connection seL4HardwareInterrupt ipserv_1_irq(from to_sel4_slave0.irq, to ipserv_1.irq);
     }
     configuration {
 
-/* include configuration from dts */
-#include "ipserv.inc"
+		/* include configuration from dts */
+		#include "ipserv.inc"
 
-    }
+	}
 }

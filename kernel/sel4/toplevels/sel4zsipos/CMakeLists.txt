@@ -4,6 +4,12 @@ include(settings.cmake)
 
 project(sel4ipsrv C CXX ASM)
 
+set(PICOTCP_PATH "${project_dir}/projects/picotcp" CACHE INTERNAL "")
+set(LibPicotcp ON CACHE BOOL "" FORCE)
+
+# project include directories
+include_directories(${CMAKE_CURRENT_LIST_DIR}/include)
+
 # used packages
 find_package(camkes-tool REQUIRED)
 
@@ -11,7 +17,14 @@ find_package(camkes-tool REQUIRED)
 camkes_tool_setup_camkes_build_environment()
 
 # sources
-DeclareCAmkESComponent(IPServ INCLUDES include SOURCES components/IPServ/src/ipserv.c)
+DeclareCAmkESComponent(MSTick 
+	INCLUDES include 
+	SOURCES components/MSTick/src/mstick.c)
+
+DeclareCAmkESComponent(IPServ 
+	INCLUDES include 
+	SOURCES components/IPServ/src/ipserv.c
+	LIBS picotcp)
 
 # targets
 DeclareCAmkESRootserver(ipserv.camkes)
