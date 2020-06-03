@@ -211,7 +211,7 @@ class DTSHelper():
 
     def add_litex_eth(self, phy, mac):
         s = ""
-        s += self.tabs(0) + mac + ": eth@" + self._base(mac)[2:] + " {\n"
+        s += self.tabs(0) + mac + ": " + mac + "@" + self._base(mac)[2:] + " {\n"
         s += self.tabs(1) + 'compatible = "litex,liteeth";\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(mac) + ">;\n"
