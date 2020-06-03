@@ -39,6 +39,7 @@ class DTSHelper():
         align = self.json["constants"]["config_csr_alignment"] // 8
         s += "#define LITEX_CSR_OFFSET(x)    ((x)*" + str(align) + ")\n\n"
         for name in names:
+            #csr offsets
             base = self.json["csr_bases"][name]
             regs = []
             maxlen_name = 0
@@ -58,7 +59,24 @@ class DTSHelper():
                 s += " "*(4+maxlen_name-len(reg))
                 s += "LITEX_CSR_OFFSET(" + offset + ")"
                 s += " "*(1+maxlen_offset-len(offset)) + "// u" + str(width*8) + "\n"
-            s += "\n"
+            if len(regs):
+                s += "\n"
+            #csr constants
+            consts = []
+            maxlen_name = 0
+            for const, val in self.json["constants"].items():
+                if const.startswith(name+"_"):
+                    if const.endswith("_interrupt"):
+                        continue
+                    maxlen_name = max(maxlen_name, len(const))
+                    consts.append((const, val))
+            consts.sort(key=lambda i: i[0])
+            for const, val in consts:
+                s += "#define LITEX_" + const.upper()
+                s += " "*(4+maxlen_name-len(const))
+                s += str(val) + "\n"
+            if len(consts):
+                s += "\n"
         return s
 
     def get_sys_clk_freq(self):
