@@ -1,16 +1,49 @@
 
 component IPServBase {
-    hardware;
-    dataport Buf reg0;
-    dataport Buf reg1;
-    dataport Buf reg2;
-    emits CallReady irq;
+	hardware;
+	
+	dataport Buf reg0;
+	dataport Buf reg1;
+	dataport Buf reg2;
+	
+	emits CallReady irq;
+}
+
+component EthBase {
+	hardware;
+	
+	dataport Buf reg0;
+	dataport Buf reg1;
+	dataport Buf reg2;
+	dataport Buf reg3;
+	
+	emits EthIrq irq;
+	
+	attribute int tx_fifo_depth;
+	attribute int rx_fifo_depth;
 }
 
 component IPServ {
-    dataport Buf reg0;
-    dataport Buf reg1;
-    dataport Buf reg2;
-    consumes CallReady irq;
+	control;
+	
+	has mutex pico_stack;
+	
+	dataport Buf ipc_reg0;
+	dataport Buf ipc_reg1;
+	dataport Buf ipc_reg2;
+	
+	consumes CallReady ipc_irq;
+	
+	dataport Buf eth_reg0;
+	dataport Buf eth_reg1;
+	dataport Buf eth_reg2;
+	dataport Buf eth_reg3;
+	
+	consumes EthIrq eth_irq;
+	
+	consumes MSTickEvent tick;
+	
+	attribute int    loopback;
+	attribute string ifname;
 }
 

@@ -7,9 +7,10 @@ import os, sys
 from pyfdt.pyfdt import *
 
 MEM_BASE = 0x80000000
+PAGESIZE = 4096
 
 copy_to_sel4 = ["riscv,plic0", "riscv,clint0"]
-move_to_sel4 = ["zsipos,to_sel4_slave", "zsipos,to_linux_master"]
+move_to_sel4 = ["litex,liteeth"]#, "zsipos,to_sel4_slave", "zsipos,to_linux_master"]
 #move_to_sel4 = []
 
 
@@ -22,6 +23,19 @@ def build_linux_dts(dtb, sel4_size, dst_dir):
     reg = mem[mem.index("reg")]
     reg.words[0] += sel4_size
     reg.words[1] -= sel4_size
+    # delete all moved devices
+    soc = fdt.resolve_path("/soc")
+    to_delete = []
+    for i in soc:
+        if isinstance(i, FdtNode):
+            try:
+                compat = i[i.index("compatible")][0]
+            except ValueError:
+                continue
+            if compat in move_to_sel4:
+                to_delete.append(i.get_name())
+    for i in to_delete:
+        soc.remove(i)
     # write dts
     with open(dts_name, "w") as f:
         f.write(fdt.to_dts())
@@ -100,8 +114,8 @@ def build_sel4_dts(dtb, sel4_size, dst_dir):
         f.write(fdt.to_dts()[9:]) # strip header
 
 def fix_size(x):
-    if x < 4096:
-        x = 4096
+    if x < PAGESIZE:
+        x = PAGESIZE
     return x
 
 
@@ -126,15 +140,36 @@ def build_sel4_camkes(dtb, dst_dir):
                 s += name + ".reg" + str(u) + "_paddr = " + hex(regs.words[u*2]) + ";\n"
                 s += name + ".reg" + str(u) + "_size = " + hex(size) + ";\n"
             irq = i[i.index("interrupts")][0]
-            s += name + ".irq_irq_number = " + hex(irq) + ";\n"
-        elif compat in ["litex,timer"]:
+            s += name + ".irq_irq_number = " + str(irq) + ";\n"
+            s += "\n"
+        elif compat == "litex,timer":
             name = i.get_name().split('@')[0]
             regs = i[i.index("reg")]
             size = fix_size(regs.words[1])
             s += name + ".reg_paddr = " + hex(regs.words[0]) + ";\n"
             s += name + ".reg_size = " + hex(size) + ";\n"
             irq = i[i.index("interrupts")][0]
-            s += name + ".irq_irq_number = " + hex(irq) + ";\n"
+            s += name + ".irq_irq_number = " + str(irq) + ";\n"
+            s += "\n"
+        elif compat == "litex,liteeth":
+            name = i.get_name().split('@')[0]
+            if name == "ethmac":
+                name += "0"
+            regs = i[i.index("reg")]
+            for u in range(2):
+                size = fix_size(regs.words[u*2+1])
+                s += name + ".reg" + str(u) + "_paddr = " + hex(regs.words[u*2]) + ";\n"
+                s += name + ".reg" + str(u) + "_size = " + hex(size) + ";\n"
+            # we have to generate 2 pages here
+            base = regs.words[4];
+            s += name + ".reg2_paddr = " + hex(base) + ";\n"
+            s += name + ".reg2_size = " + hex(PAGESIZE) + ";\n"
+            base += PAGESIZE
+            s += name + ".reg3_paddr = " + hex(base) + ";\n"
+            s += name + ".reg3_size = " + hex(PAGESIZE) + ";\n"
+            irq = i[i.index("interrupts")][0]
+            s += name + ".irq_irq_number = " + str(irq) + ";\n"
+            s += "\n"
 
     with open(camkes_name, "w") as f:
         f.write(s)

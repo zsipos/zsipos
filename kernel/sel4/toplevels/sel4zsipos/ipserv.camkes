@@ -7,29 +7,40 @@ assembly {
 	composition {
 
 
-		/* MSTick timer */       
-		component MSTickBase timer1; // name must the same as in dts
-		component MSTick timer_1;
-
-		// connect timer hardware
-		connection seL4HardwareMMIO timer_1_mem(from timer_1.reg, to timer1.reg);
-		connection seL4HardwareInterrupt timer_1_irq(from timer1.irq, to timer_1.irq);
-
-
-		/* Linux communication hardware */
-		component IPServBase to_sel4_slave0; // name must be the same as in dts
+		/* The ipserver. Handles ip & socket calls from linux */
 		component IPServ ipserv_1;
 
-		// connect linux communication hardware
-		connection seL4HardwareMMIO ipserv_1_mem0(from ipserv_1.reg0, to to_sel4_slave0.reg0);
-		connection seL4HardwareMMIO ipserv_1_mem1(from ipserv_1.reg1, to to_sel4_slave0.reg1);
-		connection seL4HardwareMMIO ipserv_1_mem2(from ipserv_1.reg2, to to_sel4_slave0.reg2);
-		connection seL4HardwareInterrupt ipserv_1_irq(from to_sel4_slave0.irq, to ipserv_1.irq);
+		/* MSTick timer */       
+		component MSTick timer_1;
+
+		// connect ethmac hardware
+		component EthBase ethmac0; // name must be same as in dts
+		connection seL4HardwareMMIO ipserv_1_eth_mem0(from ipserv_1.eth_reg0, to ethmac0.reg0);
+		connection seL4HardwareMMIO ipserv_1_eth_mem1(from ipserv_1.eth_reg1, to ethmac0.reg1);
+		connection seL4HardwareMMIO ipserv_1_eth_mem2(from ipserv_1.eth_reg2, to ethmac0.reg2);
+		connection seL4HardwareMMIO ipserv_1_eth_mem3(from ipserv_1.eth_reg3, to ethmac0.reg3);
+		connection seL4HardwareInterrupt ipserv_1_eth_irq(from ethmac0.irq, to ipserv_1.eth_irq);
+		
+		// connect linux (intra processor) communication hardware
+		component IPServBase to_sel4_slave0; // name must be the same as in dts
+		connection seL4HardwareMMIO ipserv_1_ipc_mem0(from ipserv_1.ipc_reg0, to to_sel4_slave0.reg0);
+		connection seL4HardwareMMIO ipserv_1_ipc_mem1(from ipserv_1.ipc_reg1, to to_sel4_slave0.reg1);
+		connection seL4HardwareMMIO ipserv_1_ipc_mem2(from ipserv_1.ipc_reg2, to to_sel4_slave0.reg2);
+		connection seL4HardwareInterrupt ipserv_1_ipc_irq(from to_sel4_slave0.irq, to ipserv_1.ipc_irq);
+		
+		// connect tick hardware
+		component MSTickBase timer1; // name must the same as in dts
+		connection seL4HardwareMMIO timer_1_mem(from timer_1.reg, to timer1.reg);
+		connection seL4HardwareInterrupt timer_1_irq(from timer1.irq, to timer_1.irq);
+		connection seL4Notification ipserv_1_tick(from timer_1.tick1, to ipserv_1.tick);
+		
     }
     configuration {
 
 		/* include configuration from dts */
 		#include "ipserv.inc"
-
+		
+		ipserv_1.loopback = 1;
+		ipserv_1.ifname   = "eth0";
 	}
 }

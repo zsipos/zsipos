@@ -2,7 +2,7 @@
 #ifndef _LINUX_LITEX_H
 #define _LINUX_LITEX_H
 
-#include "../../../../../gateware/soc/build_zsipos/software/include/generated/csroffsets.h"
+#include "csroffsets.h"
 
 static unsigned int LITEX_READ_REG(volatile void *_addr)
 {

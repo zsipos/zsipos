@@ -7,8 +7,8 @@ component MSTickBase {
 
 component MSTick {
     dataport Buf reg;
-    emits MSTickEvent tick0;
     emits MSTickEvent tick1;
+    emits MSTickEvent tick2;
     consumes MSTickIRQ irq;
 }
 

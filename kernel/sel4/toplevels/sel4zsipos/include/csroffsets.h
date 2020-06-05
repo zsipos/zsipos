@@ -1,0 +1,1 @@
+../../../../../gateware/soc/build_zsipos/software/include/generated/csroffsets.h

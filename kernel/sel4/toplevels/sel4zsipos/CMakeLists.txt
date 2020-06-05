@@ -18,13 +18,21 @@ camkes_tool_setup_camkes_build_environment()
 
 # sources
 DeclareCAmkESComponent(MSTick 
-	INCLUDES include 
-	SOURCES components/MSTick/src/mstick.c)
+	INCLUDES
+		include 
+	SOURCES
+		components/MSTick/src/mstick.c
+)
 
 DeclareCAmkESComponent(IPServ 
-	INCLUDES include 
-	SOURCES components/IPServ/src/ipserv.c
-	LIBS picotcp)
+	INCLUDES
+		include 
+	SOURCES
+		components/IPServ/src/ipserv.c
+		components/IPServ/src/pico_dev_litex.c
+	LIBS
+		picotcp
+)
 
 # targets
 DeclareCAmkESRootserver(ipserv.camkes)
