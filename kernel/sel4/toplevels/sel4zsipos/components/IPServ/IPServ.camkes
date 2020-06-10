@@ -1,12 +1,22 @@
 
-component IPServBase {
+component IPServSlaveBase {
 	hardware;
 	
 	dataport Buf reg0;
 	dataport Buf reg1;
 	dataport Buf reg2;
 	
-	emits CallReady irq;
+	emits SlaveRequest irq;
+}
+
+component IPServMasterBase {
+	hardware;
+	
+	dataport Buf reg0;
+	dataport Buf reg1;
+	dataport Buf reg2;
+	
+	emits MasterConfirm irq;
 }
 
 component EthBase {
@@ -28,11 +38,19 @@ component IPServ {
 	
 	has mutex pico_stack;
 	
-	dataport Buf ipc_reg0;
-	dataport Buf ipc_reg1;
-	dataport Buf ipc_reg2;
+	has semaphore m_confirm_sem;
 	
-	consumes CallReady ipc_irq;
+	dataport Buf s_request_reg;
+	dataport Buf s_confirm_reg;
+	dataport Buf s_buffer;
+	
+	consumes SlaveRequest s_request_irq;
+	
+	dataport Buf m_request_reg;
+	dataport Buf m_confirm_reg;
+	dataport Buf m_buffer;
+	
+	consumes MasterConfirm m_confirm_irq;
 	
 	dataport Buf eth_reg0;
 	dataport Buf eth_reg1;

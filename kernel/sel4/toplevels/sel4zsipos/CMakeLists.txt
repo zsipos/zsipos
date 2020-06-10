@@ -29,6 +29,7 @@ DeclareCAmkESComponent(IPServ
 		include 
 	SOURCES
 		components/IPServ/src/ipserv.c
+		components/IPServ/src/remcalls_s.c
 		components/IPServ/src/pico_dev_litex.c
 	LIBS
 		picotcp

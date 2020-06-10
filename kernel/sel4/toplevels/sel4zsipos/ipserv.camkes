@@ -6,7 +6,6 @@ import "components/MSTick/MSTick.camkes";
 assembly {
 	composition {
 
-
 		/* The ipserver. Handles ip & socket calls from linux */
 		component IPServ ipserv_1;
 
@@ -22,11 +21,16 @@ assembly {
 		connection seL4HardwareInterrupt ipserv_1_eth_irq(from ethmac0.irq, to ipserv_1.eth_irq);
 		
 		// connect linux (intra processor) communication hardware
-		component IPServBase to_sel4_slave0; // name must be the same as in dts
-		connection seL4HardwareMMIO ipserv_1_ipc_mem0(from ipserv_1.ipc_reg0, to to_sel4_slave0.reg0);
-		connection seL4HardwareMMIO ipserv_1_ipc_mem1(from ipserv_1.ipc_reg1, to to_sel4_slave0.reg1);
-		connection seL4HardwareMMIO ipserv_1_ipc_mem2(from ipserv_1.ipc_reg2, to to_sel4_slave0.reg2);
-		connection seL4HardwareInterrupt ipserv_1_ipc_irq(from to_sel4_slave0.irq, to ipserv_1.ipc_irq);
+		component IPServSlaveBase to_sel4_slave0; // name must be the same as in dts
+		connection seL4HardwareMMIO ipserv_1_slave_mem0(from ipserv_1.s_request_reg, to to_sel4_slave0.reg0);
+		connection seL4HardwareMMIO ipserv_1_slave_mem1(from ipserv_1.s_confirm_reg, to to_sel4_slave0.reg1);
+		connection seL4HardwareMMIO ipserv_1_slave_mem2(from ipserv_1.s_buffer, to to_sel4_slave0.reg2);
+		connection seL4HardwareInterrupt ipserv_1_req_irq(from to_sel4_slave0.irq, to ipserv_1.s_request_irq);
+		component IPServMasterBase to_linux_master0; // name must be the same as in dts
+		connection seL4HardwareMMIO ipserv_1_master_mem0(from ipserv_1.m_request_reg, to to_linux_master0.reg0);
+		connection seL4HardwareMMIO ipserv_1_master_mem1(from ipserv_1.m_confirm_reg, to to_linux_master0.reg1);
+		connection seL4HardwareMMIO ipserv_1_master_mem2(from ipserv_1.m_buffer, to to_linux_master0.reg2);
+		connection seL4HardwareInterrupt ipserv_1_conf_irq(from to_linux_master0.irq, to ipserv_1.m_confirm_irq);
 		
 		// connect tick hardware
 		component MSTickBase timer1; // name must the same as in dts
@@ -42,5 +46,6 @@ assembly {
 		
 		ipserv_1.loopback = 1;
 		ipserv_1.ifname   = "eth0";
+		
 	}
 }

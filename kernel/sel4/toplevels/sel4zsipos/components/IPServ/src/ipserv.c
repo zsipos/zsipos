@@ -17,7 +17,7 @@ int clk_get_time(void) {
 }
 
 
-#define NUM_PING 10
+#define NUM_PING 1
 
 static int finished = 0;
 
@@ -92,24 +92,35 @@ int run(void)
 	return 0;
 }
 
-void ipc_irq_handle(void)
+extern void handle_remcall(void *buffer);
+
+void s_request_irq_handle(void)
 {
     int error;
 
-    error = pico_stack_lock();
+    // clear irq flag
+    *((char*)s_request_reg) = 0;
 
-    printf("\nipc irq\n");
-    printf("data=%s\n", (char*)ipc_reg2);
+    handle_remcall((void*)s_buffer);
 
-    strcpy((char*)ipc_reg2, "Hello Linux!");
-    *((char*)ipc_reg1) = 1;
+    // trigger reply irq
+    *((char*)s_confirm_reg) = 1;
 
-    error = pico_stack_unlock();
+    // acknowledge irq
+    error = s_request_irq_acknowledge();
+}
+
+void m_confirm_irq_handle(void)
+{
+    int error;
 
     // clear irq flag
-    *((char*)ipc_reg0) = 0;
+    *((char*)m_confirm_reg) = 0;
+
+    error = m_confirm_sem_post();
+
     // acknowledge irq
-    error = ipc_irq_acknowledge();
+    error = m_confirm_irq_acknowledge();
 }
 
 void eth_irq_handle(void)
