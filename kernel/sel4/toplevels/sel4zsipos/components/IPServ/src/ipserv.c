@@ -16,29 +16,6 @@ int clk_get_time(void) {
 	return msticks;
 }
 
-
-#define NUM_PING 1
-
-static int finished = 0;
-
-/* gets called when the ping receives a reply, or encounters a problem */
-void cb_ping(struct pico_icmp4_stats *s)
-{
-    char host[30];
-    pico_ipv4_to_string(host, s->dst.addr);
-    if (s->err == 0) {
-        /* if all is well, print some pretty info */
-        printf("%lu bytes from %s: icmp_req=%lu ttl=%lu time=%lu ms\n", s->size,
-                host, s->seq, s->ttl, (long unsigned int)s->time);
-        if (s->seq >= NUM_PING)
-            finished = 1;
-    } else {
-        /* if something went wrong, print it and signal we want to stop */
-        printf("PING %lu to %s: Error %d\n", s->seq, host, s->err);
-        finished = 1;
-    }
-}
-
 int run(void)
 {
     int error, id;
@@ -72,9 +49,6 @@ int run(void)
 	pico_string_to_ipv4("192.168.0.55", &ipaddr.addr);
 	pico_string_to_ipv4("255.255.255.0", &netmask.addr);
 	pico_ipv4_link_add(deve, ipaddr, netmask);
-
-    id = pico_icmp4_ping("192.168.0.45", NUM_PING, 1000, 10000, 64, cb_ping);
-
 
     /* keep running stack ticks to have picoTCP do its network magic. Note that
      * you can do other stuff here as well, or sleep a little. This will impact
@@ -117,7 +91,7 @@ void m_confirm_irq_handle(void)
     // clear irq flag
     *((char*)m_confirm_reg) = 0;
 
-    error = m_confirm_sem_post();
+    error = request_confirmed_post();
 
     // acknowledge irq
     error = m_confirm_irq_acknowledge();

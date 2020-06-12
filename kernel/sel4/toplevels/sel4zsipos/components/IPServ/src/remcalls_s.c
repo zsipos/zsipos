@@ -8,32 +8,50 @@ typedef struct sock_priv {
 	void *priv;
 } sock_priv_t;
 
+static void *begin_master_request()
+{
+	int error = master_request_lock();
+	return (void*)m_buffer;
+}
+
 static void do_master_request()
 {
 	int error;
 
 	*((char*)m_request_reg) = 1;
-	error = m_confirm_sem_wait();
+	error = request_confirmed_wait();
 }
 
-static void handle_socket_event(uint16_t evt, struct pico_socket *s)
+static void end_master_request()
 {
-	remcb_arg_t                   *arg = (void*)m_buffer;
+	int error = master_request_unlock();
+}
+
+static void handle_socket_event(uint16_t ev, struct pico_socket *s)
+{
+	remcb_arg_t                   *arg = begin_master_request();
 	remcb_pico_socket_event_arg_t *a = &arg->u.remcb_pico_socket_event_arg;
 	sock_priv_t                   *priv = (sock_priv_t*)s->priv;
 
-	if (!priv) {
-		if (evt & (PICO_SOCK_EV_CLOSE | PICO_SOCK_EV_FIN))
+	printf("\n\n@>\n\n");
+
+	if (priv) {
+		arg->hdr.func = f_remcb_pico_socket_event;
+		a->wakeup     = priv->wakeup;
+		a->ev         = ev;
+		a->s          = s;
+		a->priv       = priv->priv;
+
+		do_master_request();
+	} else {
+		printf("ev %d on %llx without priv\n", ev, s);
+		if (ev & (PICO_SOCK_EV_CLOSE | PICO_SOCK_EV_FIN))
 			pico_socket_close(s);
-		return;
 	}
 
-	arg->hdr.func = f_remcb_pico_socket_event;
-	a->wakeup     = priv->wakeup;
-	a->evt        = evt;
-	a->s          = s;
-	a->priv       = priv->priv;
-	do_master_request();
+	end_master_request();
+
+	printf("\n\n@<\n\n");
 }
 
 static void handle_rem_stack_lock(rem_arg_t *arg)

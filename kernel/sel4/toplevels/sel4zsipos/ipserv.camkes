@@ -44,6 +44,9 @@ assembly {
 		/* include configuration from dts */
 		#include "ipserv.inc"
 		
+		/* initialize semaphore */
+		ipserv_1.request_confirmed = 0;
+		
 		ipserv_1.loopback = 1;
 		ipserv_1.ifname   = "eth0";
 		

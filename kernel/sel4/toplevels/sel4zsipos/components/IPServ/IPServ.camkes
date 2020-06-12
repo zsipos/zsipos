@@ -38,7 +38,8 @@ component IPServ {
 	
 	has mutex pico_stack;
 	
-	has semaphore m_confirm_sem;
+	has mutex            master_request;
+	has binary_semaphore request_confirmed;
 	
 	dataport Buf s_request_reg;
 	dataport Buf s_confirm_reg;
