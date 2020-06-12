@@ -22,11 +22,17 @@ static void handle_socket_event(uint16_t evt, struct pico_socket *s)
 	remcb_pico_socket_event_arg_t *a = &arg->u.remcb_pico_socket_event_arg;
 	sock_priv_t                   *priv = (sock_priv_t*)s->priv;
 
+	if (!priv) {
+		if (evt & (PICO_SOCK_EV_CLOSE | PICO_SOCK_EV_FIN))
+			pico_socket_close(s);
+		return;
+	}
+
 	arg->hdr.func = f_remcb_pico_socket_event;
-	a->wakeup = priv->wakeup;
-	a->evt    = evt;
-	a->s      = s;
-	a->priv   = priv->priv;
+	a->wakeup     = priv->wakeup;
+	a->evt        = evt;
+	a->s          = s;
+	a->priv       = priv->priv;
 	do_master_request();
 }
 
@@ -59,6 +65,61 @@ static void handle_rem_set_priv(rem_arg_t *arg)
 
 	s = (struct pico_socket *)a->s;
 	((sock_priv_t*)s->priv)->priv = a->priv;
+}
+
+static void handle_rem_get_devices(rem_arg_t *arg)
+{
+	rem_res_t             *res = (rem_res_t*)arg;
+	rem_get_devices_res_t *r = &res->u.rem_get_devices_res;
+	struct pico_tree_node *n;
+
+	r->devices.count = 0;
+	pico_tree_foreach(n, &Device_tree)
+	{
+		struct pico_device *dev = n->keyValue;
+
+		if (r->devices.count == MAX_DEVICES)
+			break;
+		if (strcmp(dev->name, "loop") == 0)
+			strncpy(r->devices.names[r->devices.count], "lo", MAX_DEVICE_NAME);
+		else
+			strncpy(r->devices.names[r->devices.count], dev->name, MAX_DEVICE_NAME);
+		r->devices.count++;
+	}
+	r->retval = 0;
+}
+
+static void handle_rem_get_device_config(rem_arg_t *arg)
+{
+	rem_res_t                   *res = (rem_res_t*)arg;
+	rem_get_device_config_arg_t *a = &arg->u.rem_get_device_config_arg;
+	rem_get_device_config_res_t *r = &res->u.rem_get_device_config_res;
+	char                        *name;
+	struct pico_device          *dev;
+	struct pico_ipv4_link       *ip4l;
+
+	name = strcmp(a->name, "lo") == 0 ? "loop" : a->name;
+	dev = pico_get_device(name);
+	if (!dev) {
+		printf("device %s not found\n", name);
+		r->retval = -1;
+		return;
+	}
+	memset(&r->config, 0, sizeof(r->config));
+	name = strcmp(dev->name, "loop") == 0 ? "lo" : dev->name;
+	strncpy(r->config.name, name, MAX_DEVICE_NAME);
+	if (dev->eth) {
+		r->config.hasmac = 1;
+		r->config.mac = dev->eth->mac;
+	}
+	r->config.mtu = dev->mtu;
+	ip4l = pico_ipv4_link_by_dev(dev);
+	if (ip4l) {
+		r->config.hasipv4link = 1;
+		r->config.address.ip4 = ip4l->address;
+		r->config.netmask.ip4 = ip4l->netmask;
+	}
+	r->retval = 0;
 }
 
 static void handle_rem_pico_socket_shutdown(rem_arg_t *arg)
@@ -130,10 +191,26 @@ static void handle_rem_pico_socket_accept(rem_arg_t *arg)
 	rem_res_t                    *res = (rem_res_t*)arg;
 	rem_pico_socket_accept_arg_t *a = &arg->u.rem_pico_socket_accept_arg;
 	rem_pico_socket_accept_res_t *r = &res->u.rem_pico_socket_accept_res;
-	struct pico_socket           *s;
+	sock_priv_t                  *priv;
+	struct pico_socket           *s, *n;
 
 	s = (struct pico_socket *)a->s;
-	r->retval = (rem_pico_socket_t*)pico_socket_accept(s, &r->orig, &r->port);
+
+	priv = malloc(sizeof(sock_priv_t));
+	if (!priv) {
+		r->retval = NULL;
+		res->hdr.pico_err = PICO_ERR_ENOMEM;
+		return;
+	}
+	priv->wakeup = ((sock_priv_t*)s->priv)->wakeup;
+	priv->priv = NULL;
+
+	n = pico_socket_accept(s, &r->orig, &r->port);
+	r->retval = (rem_pico_socket_t*)n;
+	if (n)
+		n->priv = priv;
+	else
+		free(priv);
 	res->hdr.pico_err = pico_err;
 }
 
@@ -254,6 +331,12 @@ void handle_remcall(void *buffer)
 		break;
 	case f_rem_set_priv:
 		handle_rem_set_priv(arg);
+		break;
+	case f_rem_get_devices:
+		handle_rem_get_devices(arg);
+		break;
+	case f_rem_get_device_config:
+		handle_rem_get_device_config(arg);
 		break;
 	case f_rem_pico_socket_shutdown:
 		handle_rem_pico_socket_shutdown(arg);
