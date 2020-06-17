@@ -22,24 +22,31 @@ static int tx_slot;
 
 static struct pico_device *litex;
 
+#define USE_IRQ
+
 static void pico_litex_recv()
 {
-	int error;
+	int error = 0;
 	unsigned char rx_slot;
 	int len;
 
+#ifdef USE_IRQ
 	error = pico_stack_lock();
+#endif
 
 	rx_slot = litex_csr_readb(macadr + LITEX_ETHMAC_SRAM_WRITER_SLOT_REG);
 	len = litex_csr_readl(macadr + LITEX_ETHMAC_SRAM_WRITER_LENGTH_REG);
 
     pico_stack_recv(litex, (void*)rxbadr + rx_slot * LITEX_ETHMAC_SLOT_SIZE, (uint32_t)len);
 
-	error = pico_stack_unlock();
+#ifdef USE_IRQ
+    error = pico_stack_unlock();
+#endif
 }
 
-void pico_litex_handle_irq()
+static int litex_poll_device()
 {
+	int ret = 0;
 	unsigned char reg;
 
 	reg = litex_csr_readb(macadr + LITEX_ETHMAC_SRAM_READER_EV_PENDING_REG);
@@ -49,9 +56,18 @@ void pico_litex_handle_irq()
 	}
 	reg = litex_csr_readb(macadr + LITEX_ETHMAC_SRAM_WRITER_EV_PENDING_REG);
 	if (reg) {
+		ret = 1;
 		pico_litex_recv();
 		litex_csr_writeb(1, macadr + LITEX_ETHMAC_SRAM_WRITER_EV_PENDING_REG);
 	}
+	return ret;
+}
+
+void pico_litex_handle_irq()
+{
+#ifdef USE_IRQ
+	litex_poll_device();
+#endif
 }
 
 static int pico_litex_send(struct pico_device *dev, void *buf, int len)
@@ -90,6 +106,19 @@ static int pico_litex_send(struct pico_device *dev, void *buf, int len)
 
 	return len;
 }
+
+#ifndef USE_IRQ
+static int pico_litex_poll(struct pico_device *dev, int loop_score)
+{
+    if (loop_score <= 0)
+        return 0;
+
+    if (litex_poll_device())
+    	loop_score--;
+
+    return loop_score;
+}
+#endif
 
 static int check_hw_config()
 {
@@ -163,6 +192,9 @@ struct pico_device *pico_litex_create()
     }
 
     litex->send = pico_litex_send;
+#ifndef USE_IRQ
+    litex->poll = pico_litex_poll;
+#endif
 
     return litex;
 }
