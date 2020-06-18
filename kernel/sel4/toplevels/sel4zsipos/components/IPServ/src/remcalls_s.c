@@ -43,14 +43,24 @@ static void handle_socket_event(uint16_t ev, struct pico_socket *s)
 	end_master_request();
 }
 
-static void handle_rem_stack_lock(rem_arg_t *arg)
+static inline void do_pico_stack_lock(void)
 {
 	int error = pico_stack_lock();
 }
 
-static void handle_rem_stack_unlock(rem_arg_t *arg)
+static inline void do_pico_stack_unlock(void)
 {
 	int error = pico_stack_unlock();
+}
+
+static void handle_rem_stack_lock(rem_arg_t *arg)
+{
+	do_pico_stack_lock();
+}
+
+static void handle_rem_stack_unlock(rem_arg_t *arg)
+{
+	do_pico_stack_unlock();
 }
 
 static void handle_rem_set_priv(rem_arg_t *arg)
@@ -69,13 +79,17 @@ static void handle_rem_get_devices(rem_arg_t *arg)
 	rem_get_devices_res_t *r = &res->u.rem_get_devices_res;
 	struct pico_tree_node *n;
 
+	do_pico_stack_lock();
+
 	r->devices.count = 0;
 	pico_tree_foreach(n, &Device_tree)
 	{
 		struct pico_device *dev = n->keyValue;
 
-		if (r->devices.count == MAX_DEVICES)
+		if (r->devices.count == MAX_DEVICES) {
+			printf("warning: get_devices: more than MAX_DEVICES.\n");
 			break;
+		}
 		if (strcmp(dev->name, "loop") == 0)
 			strncpy(r->devices.names[r->devices.count], "lo", MAX_DEVICE_NAME);
 		else
@@ -83,6 +97,8 @@ static void handle_rem_get_devices(rem_arg_t *arg)
 		r->devices.count++;
 	}
 	r->retval = 0;
+
+	do_pico_stack_unlock();
 }
 
 static void handle_rem_get_device_config(rem_arg_t *arg)
@@ -94,12 +110,13 @@ static void handle_rem_get_device_config(rem_arg_t *arg)
 	struct pico_device          *dev;
 	struct pico_ipv4_link       *ip4l;
 
+	do_pico_stack_lock();
+
 	name = strcmp(a->name, "lo") == 0 ? "loop" : a->name;
 	dev = pico_get_device(name);
 	if (!dev) {
-		printf("device %s not found\n", name);
 		r->retval = -1;
-		return;
+		goto quit;
 	}
 	memset(&r->config, 0, sizeof(r->config));
 	name = strcmp(dev->name, "loop") == 0 ? "lo" : dev->name;
@@ -116,6 +133,151 @@ static void handle_rem_get_device_config(rem_arg_t *arg)
 		r->config.netmask.ip4 = ip4l->netmask;
 	}
 	r->retval = 0;
+
+quit:
+
+	do_pico_stack_unlock();
+}
+
+static void handle_rem_set_device_address(rem_arg_t *arg)
+{
+	rem_res_t                    *res = (rem_res_t*)arg;
+	rem_set_device_address_arg_t *a = &arg->u.rem_set_device_address_arg;
+	rem_set_device_address_res_t *r = &res->u.rem_set_device_address_res;
+	struct pico_device           *dev;
+	struct pico_ipv4_link        *ip4l;
+
+	do_pico_stack_lock();
+
+	if (strcmp(a->name, "lo") == 0) {
+		r->retval = 0;
+		goto quit;
+	}
+
+	dev = pico_get_device(a->name);
+	if (!dev) {
+		r->retval = -1;
+		goto quit;
+	}
+
+	ip4l = pico_ipv4_link_by_dev(dev);
+	if (ip4l)
+		pico_ipv4_link_del(dev, ip4l->address);
+
+	r->retval = pico_ipv4_link_add(dev, a->address.ip4, a->netmask.ip4);
+
+quit:
+
+	do_pico_stack_unlock();
+}
+
+static void handle_rem_device_down(rem_arg_t *arg)
+{
+	rem_res_t             *res = (rem_res_t*)arg;
+	rem_device_down_arg_t *a = &arg->u.rem_device_down_arg;
+	rem_device_down_res_t *r = &res->u.rem_device_down_res;
+	struct pico_device    *dev;
+	struct pico_ipv4_link *ip4l;
+
+	do_pico_stack_lock();
+
+	if (strcmp(a->name, "lo") == 0) {
+		r->retval = -1;
+		goto quit;
+	}
+	dev = pico_get_device(a->name);
+	if (!dev) {
+		r->retval = -1;
+		goto quit;
+	}
+	ip4l = pico_ipv4_link_by_dev(dev);
+	if (ip4l)
+		pico_ipv4_link_del(dev, ip4l->address);
+	r->retval = 0;
+
+quit:
+
+	do_pico_stack_unlock();
+}
+
+static void handle_rem_device_addroute(rem_arg_t *arg)
+{
+	rem_res_t                 *res = (rem_res_t*)arg;
+	rem_device_addroute_arg_t *a = &arg->u.rem_device_addroute_arg;
+	rem_device_addroute_res_t *r = &res->u.rem_device_addroute_res;
+	struct pico_device        *dev;
+	struct pico_ipv4_link     *ip4l;
+	char                      *devname = a->name;
+
+	do_pico_stack_lock();
+
+	if (strcmp(devname, "lo") == 0) {
+		r->retval = -1;
+		goto quit;
+	}
+	if (!devname[0])
+		devname = "eth0";
+	dev = pico_get_device(devname);
+	if (!dev) {
+		printf("device %s not found\n", a->name);
+		r->retval = -1;
+		goto quit;
+	}
+	ip4l = pico_ipv4_link_by_dev(dev);
+	if (!ip4l) {
+		printf("device %s has no link!\n", a->name);
+		r->retval = -1;
+		goto quit;
+	}
+	if (pico_ipv4_route_add(a->address.ip4, a->genmask.ip4, a->gateway.ip4, a->metric, ip4l) < 0)
+		r->retval = 0 - pico_err;
+	else
+		r->retval = 0;
+
+quit:
+
+	do_pico_stack_unlock();
+}
+
+extern struct pico_tree Routes;
+
+static void handle_rem_get_routes(rem_arg_t *arg)
+{
+	rem_res_t              *res = (rem_res_t*)arg;
+	rem_get_routes_res_t   *r = &res->u.rem_get_routes_res;
+	struct pico_tree_node  *index;
+	pico_route_t           *route;
+
+	do_pico_stack_lock();
+
+	r->routes.count = 0;
+	pico_tree_foreach(index, &Routes)
+	{
+		struct pico_ipv4_route *r4 = index->keyValue;
+		int                     flags = 1;
+
+		if (r->routes.count == MAX_ROUTES) {
+			printf("warning: get_routes: more than MAX_ROUTES.\n");
+			break;
+		}
+
+		if (r4->netmask.addr == 0)
+			flags += 2;
+		route = &r->routes.routes[r->routes.count];
+		if (strcmp(r4->link->dev->name, "loop") == 0)
+			strcpy(route->devname, "lo");
+		else
+			strcpy(route->devname, r4->link->dev->name);
+		route->dest.ip4    = r4->dest;
+		route->gateway.ip4 = r4->gateway;
+		route->netmask.ip4 = r4->netmask;
+		route->flags       = flags;
+		route->metric      = r4->metric;
+		r->routes.count++;
+	}
+	r->retval = 0;
+
+	do_pico_stack_unlock();
 }
 
 static void handle_rem_pico_socket_shutdown(rem_arg_t *arg)
@@ -300,6 +462,18 @@ void handle_remcall(void *buffer)
 		break;
 	case f_rem_get_device_config:
 		handle_rem_get_device_config(arg);
+		break;
+	case f_rem_set_device_address:
+		handle_rem_set_device_address(arg);
+		break;
+	case f_rem_device_down:
+		handle_rem_device_down(arg);
+		break;
+	case f_rem_device_addroute:
+		handle_rem_device_addroute(arg);
+		break;
+	case f_rem_get_routes:
+		handle_rem_get_routes(arg);
 		break;
 	case f_rem_pico_socket_shutdown:
 		handle_rem_pico_socket_shutdown(arg);

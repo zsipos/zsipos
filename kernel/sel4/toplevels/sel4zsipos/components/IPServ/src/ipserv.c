@@ -42,13 +42,16 @@ int run(void)
 
     deve = pico_litex_create();
 	if (!deve) {
-		dbg("can't create loop device!\n");
+		dbg("can't create eth device!\n");
 		return -1;
 	}
+
+#if 0
 	/* assign the IP address to the ethernet interface */
 	pico_string_to_ipv4("192.168.0.55", &ipaddr.addr);
 	pico_string_to_ipv4("255.255.255.0", &netmask.addr);
 	pico_ipv4_link_add(deve, ipaddr, netmask);
+#endif
 
     /* keep running stack ticks to have picoTCP do its network magic. Note that
      * you can do other stuff here as well, or sleep a little. This will impact
