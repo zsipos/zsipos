@@ -6,6 +6,30 @@ git checkout master
 cd "$ZTOP/./gateware/migen"
 git checkout master
 
+#./kernel/sel4/tools/nanopb
+cd "$ZTOP/./kernel/sel4/tools/nanopb"
+git checkout master
+
+#./kernel/sel4/tools/camkes-tool
+cd "$ZTOP/./kernel/sel4/tools/camkes-tool"
+git checkout master
+
+#./kernel/sel4/tools/capdl
+cd "$ZTOP/./kernel/sel4/tools/capdl"
+git checkout master
+
+#./kernel/sel4/tools/riscv-pk
+cd "$ZTOP/./kernel/sel4/tools/riscv-pk"
+git checkout master
+
+#./kernel/sel4/projects/picotcp
+cd "$ZTOP/./kernel/sel4/projects/picotcp"
+git checkout master
+
+#./kernel/sel4/projects/projects_libs
+cd "$ZTOP/./kernel/sel4/projects/projects_libs"
+git checkout master
+
 #./kernel/initramfs/busybox
 cd "$ZTOP/./kernel/initramfs/busybox"
 git checkout master
