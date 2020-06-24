@@ -3,7 +3,7 @@ cd "$ZTOP"
 ZSIPOS_URL="https://github.com/zsipos"
 ZSIPOS_BRANCHNAMES="$ZTOP/scripts/checkout-zsipos-branchnames.sh"
 OTHER_BRANCHNAMES="$ZTOP/scripts/checkout-other-branchnames.sh"
-TMPFILE="/tmp/.saved-tmp"
+TMPFILE="/tmp/diff-tmp"
 
 #TRUE
 T=0
@@ -63,6 +63,7 @@ is_ahead()
 
 get_subprojects()
 {
+	cd "$ZTOP"
 	for i in `find . -name .git | grep -v build_64`
 	do
 		p=`echo $i | sed 's/\/\.git$//g'`
@@ -72,6 +73,7 @@ get_subprojects()
 
 get_zsipos_subprojects()
 {
+	cd "$ZTOP"
 	for i in `get_subprojects`
 	do
 		is_zsipos "$i" && echo "$i"
@@ -213,16 +215,18 @@ zsipos_check()
 			ok=$F
 		fi
 	done
-	save_zsipos_branchnames >"$TMPFILE"
+	zsipos_save_branchnames >"$TMPFILE"
 	if ! cmp -s "$TMPFILE" "$ZSIPOS_BRANCHNAMES"
 	then
 		echo "zsipos branchnames have changed"
+		diff "$TMPFILE" "$ZSIPOS_BRANCHNAMES"
 		ok=$F
 	fi
-	save_other_branchnames >"$TMPFILE"
-	if ! cmp -s "$TMPFILE" "$ZSIPOS_BRANCHNAMES"
+	other_save_branchnames >"$TMPFILE"
+	if ! cmp -s "$TMPFILE" "$OTHER_BRANCHNAMES"
 	then
 		echo "foreign branchnames have changed"
+		diff "$TMPFILE" "$OTHER_BRANCHNAMES"
 		ok=$F
 	fi
 	rm "$TMPFILE"
