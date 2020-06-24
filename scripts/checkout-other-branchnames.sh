@@ -14,10 +14,6 @@ git checkout master
 cd "$ZTOP/./toolchain/riscv-gnu-toolchain"
 git checkout master
 
-#./toolchain/riscv64/share/openocd/bscan_spi_bitstreams
-cd "$ZTOP/./toolchain/riscv64/share/openocd/bscan_spi_bitstreams"
-git checkout master
-
 #./toolchain/riscv-openocd
 cd "$ZTOP/./toolchain/riscv-openocd"
 git checkout riscv
