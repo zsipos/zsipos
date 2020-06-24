@@ -88,7 +88,7 @@ After that unpack the file `./output/rootfs.tar` to the root directory of a SD-c
 This is the root filesystem of the fpga system. You may want to edit the file `/etc/init.d/S40network`
 to match your network configuration. Start the fpga. 
 **The first time you start the system sshd will generate its keys. This can take some minutes.**
-After that yo can open a ssh session to the linux system on the fpga:
+After that you can open a ssh session to the linux system on the fpga:
 
 	$ ssh your_ip_address -l root
 
