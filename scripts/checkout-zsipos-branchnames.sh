@@ -30,6 +30,10 @@ git checkout master
 cd "$ZTOP/./software/microwindows"
 git checkout master-zsipos
 
+#./software/pjproject
+cd "$ZTOP/./software/pjproject"
+git checkout 2.9
+
 #./software/fltk
 cd "$ZTOP/./software/fltk"
 git checkout master-zsipos

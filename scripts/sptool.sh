@@ -166,11 +166,13 @@ zsipos_save_branchnames()
 		if ! is_taged "$i"
 		then
 			branchname=`get_branch "$i"`
-			echo "#$i"
-			echo "cd \"\$ZTOP/$i\""
-			echo "git checkout $branchname"
-			echo
+		else
+			branchname=`get_tag "$i"`
 		fi
+		echo "#$i"
+		echo "cd \"\$ZTOP/$i\""
+		echo "git checkout $branchname"
+		echo
 	done
 }
 
@@ -230,9 +232,8 @@ zsipos_check()
 	other_save_branchnames >"$TMPFILE"
 	if ! cmp -s "$TMPFILE" "$OTHER_BRANCHNAMES"
 	then
-		echo "foreign branchnames have changed"
+		echo "warning: foreign branchnames have changed"
 		mv "$TMPFILE" "$TMPFILE"-other
-		ok=$F
 	fi
 	rm -f "$TMPFILE"
 	if [ $ok == $T ]
