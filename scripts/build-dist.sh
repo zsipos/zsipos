@@ -28,6 +28,20 @@ cp "$ZTOP/gateware/soc/build_$BOARD/gateware/top.bit" "$DESTDIR"
 cp "$ZTOP/gateware/soc/build_$BOARD/gateware/top.bin" "$DESTDIR"/fpga-netboot.bin
 cp "$ZTOP/gateware/soc/build_$BOARD/gateware/rom.mcs" "$DESTDIR"/fpga-romboot.mcs
 
+if [ true ]
+then
+
+# copy sshtest only
+export ZSIPOSOVL_INIT="$ZTOP/system/buildroot/overlays/sshtest_overlay"
+unset  ZSIPOSOVL_APP
+INIT_DIR="$ZTOP/system/buildroot/buildroot/output/target/etc/init.d"
+rm -f "$INIT_DIR/S30display"
+rm -f "$INIT_DIR/S30zsiposconf"
+rm -f "$INIT_DIR/S49chrony"
+rm -f "$INIT_DIR/S49zsiposconf2"
+rm -f "$INIT_DIR/S99zsiposapp"
+
+else
 
 # copy app
 export ZSIPOSOVL_INIT="$OVERLAYDIR/init_overlay"
@@ -41,6 +55,8 @@ rm -rf "$ZSIPOSOVL_APP/root/zsipos/"*"/host"
 
 # sshd not auto startup
 test -f "$ZTOP/system/buildroot/buildroot/output/target/etc/init.d/S50sshd" && mv "$ZTOP/system/buildroot/buildroot/output/target/etc/init.d/S50sshd" "$ZTOP/system/buildroot/buildroot/output/target/etc/init.d/sshd"
+
+fi
 
 # repack rootfs.tar
 ./build-buildroot.sh
