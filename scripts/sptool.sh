@@ -27,6 +27,7 @@ is_ignored()
 	git status "$1" 2>&1 >/dev/null || return $T
 	case "$1" in
 		".") return $T;;
+		"./toolchain/riscv64/share/openocd/bscan_spi_bitstreams") return $T;;
 	esac
 	return $F
 }
