@@ -86,10 +86,11 @@ or flash the file `./output/fpga-romboot.mcs` to the fpga with the vivado tools.
 
 After that unpack the file `./output/rootfs.tar` to the root directory of a SD-card containing a empty ext4 filesystem. 
 This is the root filesystem of the fpga system. You may want to edit the file `/etc/init.d/S40network`
-to match your network configuration. Start the fpga. You can now open a ssh session to the linux system
-on the fpga:
+to match your network configuration. Start the fpga. 
+**The first time you start the system sshd will generate its keys. This can take some minutes.**
+After that yo can open a ssh session to the linux system on the fpga:
 
 	$ ssh your_ip_address -l root
 
-The initial password of user `root` is `root`. It is a good practive to change this for security reasons.
+The initial password of user `root` is `root`. It is a good practice to change this for security reasons.
 
