@@ -1,3 +1,8 @@
+
+echo "### only for cut+paste ###"
+
+exit 0
+
 #./gateware/soc/cores/sdcard/verilog
 cd "$ZTOP/./gateware/soc/cores/sdcard/verilog"
 git checkout master

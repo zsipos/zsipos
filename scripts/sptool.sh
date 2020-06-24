@@ -176,6 +176,11 @@ zsipos_save_branchnames()
 
 other_save_branchnames()
 {
+	echo
+	echo "echo \"### only for cut+paste ###\""
+	echo
+	echo "exit 0"
+	echo
 	for i in `get_subprojects`
 	do
 		if ! is_detached "$i" && ! is_zsipos "$i"
