@@ -13,7 +13,7 @@ zsipos is a fully transparent system to encrypt your sip phone calls with ZRTP. 
 
 ### Prerequisites
 
-We assume Ubuntu 18.04 and bash as the build environemnt.
+We assume Ubuntu 18.04 and bash as the build environment.
 
 You need around 80GB of free disk space.
 
@@ -69,9 +69,27 @@ At the end of the sel4test you should see the following message:
 
 The linux shell keeps accepting commands. To exit qemu please type **`Ctrl+A X`**.
 
+### Building the linux/sel4 ssh test program
 
+To build the linux/sel4 ssh test program please run its build script:
 
+	$ build-dist.sh rebuild
 
+### Running the linux/sel4 ssh test program
 
+You need the zsipos hardware to run the linux/sel4 ssh test program.
+First you have to flash the fpga hardware. Either connect the hardware and run the command
 
+	$ build-board.sh --nobuild --flash-rom
+
+or flash the file `./output/fpga-romboot.mcs` to the fpga with the vivado tools.
+
+After that unpack the file `./output/rootfs.tar` to the root directory of a SD-card containing a empty ext4 filesystem. 
+This is the root filesystem of the fpga system. You may want to edit the file `/etc/init.d/S40network`
+to match your network configuration. Start the fpga. You can now open a ssh session to the linux system
+on the fpga:
+
+	$ ssh your_ip_address -l root
+
+The initial password of user `root` is `root`. It is a good practive to change this for security reasons.
 
