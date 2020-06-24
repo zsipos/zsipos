@@ -219,17 +219,17 @@ zsipos_check()
 	if ! cmp -s "$TMPFILE" "$ZSIPOS_BRANCHNAMES"
 	then
 		echo "zsipos branchnames have changed"
-		diff "$TMPFILE" "$ZSIPOS_BRANCHNAMES"
+		mv "$TMPFILE" "$TMPFILE"-zsipos
 		ok=$F
 	fi
 	other_save_branchnames >"$TMPFILE"
 	if ! cmp -s "$TMPFILE" "$OTHER_BRANCHNAMES"
 	then
 		echo "foreign branchnames have changed"
-		diff "$TMPFILE" "$OTHER_BRANCHNAMES"
+		mv "$TMPFILE" "$TMPFILE"-other
 		ok=$F
 	fi
-	rm "$TMPFILE"
+	rm -f "$TMPFILE"
 	if [ $ok == $T ]
 	then
 		echo "Everything is fine!"
