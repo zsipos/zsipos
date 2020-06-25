@@ -20,6 +20,8 @@ fi
 build-toolchain.sh
 build-cmake.sh
 build-qemu.sh
+build-board.sh --nobuild
+build-sel4zsipos.sh 
 build-initramfs.sh
 build-linux.sh
 
