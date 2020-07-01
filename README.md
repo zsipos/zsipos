@@ -65,7 +65,7 @@ To build the linux/sel4 ssh test program please run its build script:
 You need the zsipos hardware to run the linux/sel4 ssh test program.
 First you have to flash the fpga hardware. Either connect the hardware and run the command
 
-	$ build-board.sh --nobuild --flash-rom
+	$ build-board.sh --nobuild --flashrom
 
 or flash the file `./output/fpga-romboot.mcs` to the fpga with the vivado tools.
 
