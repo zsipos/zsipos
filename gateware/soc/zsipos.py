@@ -271,6 +271,19 @@ class MySoC(EthernetSoC):
             self.submodules.to_linux_slave0 = MemIrq()
             self.add_csr("to_linux_slave0")
             self.add_interrupt("to_linux_slave0")
+            # channel 1
+            self.submodules.to_sel4_master1 = MemIrq()
+            self.add_csr("to_sel4_master1")
+            self.add_interrupt("to_sel4_master1")
+            self.submodules.to_sel4_slave1 = MemIrq()
+            self.add_csr("to_sel4_slave1")
+            self.add_interrupt("to_sel4_slave1")
+            self.submodules.to_linux_master1 = MemIrq()
+            self.add_csr("to_linux_master1")
+            self.add_interrupt("to_linux_master1")
+            self.submodules.to_linux_slave1 = MemIrq()
+            self.add_csr("to_linux_slave1")
+            self.add_interrupt("to_linux_slave1")
             # dma test
             self.submodules.dmatest = DMATest()
             self.add_wb_master(self.dmatest.master_bus)
@@ -313,6 +326,7 @@ class MySoC(EthernetSoC):
             d.add_zsipos_aes("aes")
             d.add_zsipos_sha1("sha1")
             d.add_zsipos_sel4_channel(0)
+            d.add_zsipos_sel4_channel(1)
             d.add_zsipos_dmatest("dmatest")
         self.dts = d
 
