@@ -22,31 +22,65 @@ static int tx_slot;
 
 static struct pico_device *litex;
 
-#define USE_IRQ
+//#define WITH_RINGBUF
+
+#ifdef WITH_RINGBUF
+
+#define RINGBUFFERS 10
+
+typedef struct {
+	uint8_t  buf[LITEX_ETHMAC_SLOT_SIZE];
+	int      len;
+} BufEntry;
+
+static int wrpos = 0;
+static int rdpos = 0;
+
+static BufEntry ringbuf[RINGBUFFERS];
+
+static int inc_pos(int pos)
+{
+	pos++;
+	if (pos == RINGBUFFERS)
+		pos = 0;
+	return pos;
+}
+
+#endif
 
 static void pico_litex_recv()
 {
-	int error = 0;
+	int           error;
 	unsigned char rx_slot;
-	int len;
-
-#ifdef USE_IRQ
-	error = pico_stack_lock();
-#endif
+	uint32_t      len;
 
 	rx_slot = litex_csr_readb(macadr + LITEX_ETHMAC_SRAM_WRITER_SLOT_REG);
-	len = litex_csr_readl(macadr + LITEX_ETHMAC_SRAM_WRITER_LENGTH_REG);
+	len = (uint32_t)litex_csr_readl(macadr + LITEX_ETHMAC_SRAM_WRITER_LENGTH_REG);
 
-    pico_stack_recv(litex, (void*)rxbadr + rx_slot * LITEX_ETHMAC_SLOT_SIZE, (uint32_t)len);
+#ifdef WITH_RINGBUF
+	error = ringbuf_lock();
 
-#ifdef USE_IRQ
-    error = pico_stack_unlock();
+	memcpy(ringbuf[wrpos].buf, (void*)rxbadr + rx_slot * LITEX_ETHMAC_SLOT_SIZE, len);
+	ringbuf[wrpos].len = len;
+
+	wrpos = inc_pos(wrpos);
+	if (wrpos == rdpos) {
+		printf("queue reading slow\n");
+		rdpos = inc_pos(rdpos);
+	}
+
+	error = ringbuf_unlock();
+#else
+	error = pico_stack_lock();
+
+    pico_stack_recv(litex, (void*)rxbadr + rx_slot * LITEX_ETHMAC_SLOT_SIZE, len);
+
+	error = pico_stack_unlock();
 #endif
 }
 
-static int litex_poll_device()
+void pico_litex_handle_irq()
 {
-	int ret = 0;
 	unsigned char reg;
 
 	reg = litex_csr_readb(macadr + LITEX_ETHMAC_SRAM_READER_EV_PENDING_REG);
@@ -56,18 +90,9 @@ static int litex_poll_device()
 	}
 	reg = litex_csr_readb(macadr + LITEX_ETHMAC_SRAM_WRITER_EV_PENDING_REG);
 	if (reg) {
-		ret = 1;
 		pico_litex_recv();
 		litex_csr_writeb(1, macadr + LITEX_ETHMAC_SRAM_WRITER_EV_PENDING_REG);
 	}
-	return ret;
-}
-
-void pico_litex_handle_irq()
-{
-#ifdef USE_IRQ
-	litex_poll_device();
-#endif
 }
 
 static int pico_litex_send(struct pico_device *dev, void *buf, int len)
@@ -107,14 +132,23 @@ static int pico_litex_send(struct pico_device *dev, void *buf, int len)
 	return len;
 }
 
-#ifndef USE_IRQ
+#ifdef WITH_RINGBUF
 static int pico_litex_poll(struct pico_device *dev, int loop_score)
 {
+	int error;
+
     if (loop_score <= 0)
         return 0;
 
-    if (litex_poll_device())
+    error = ringbuf_lock();
+
+    if (rdpos != wrpos) {
+        pico_stack_recv(dev, (void*)ringbuf[rdpos].buf, ringbuf[rdpos].len);
+        rdpos = inc_pos(rdpos);
     	loop_score--;
+    }
+
+    error = ringbuf_unlock();
 
     return loop_score;
 }
@@ -192,7 +226,7 @@ struct pico_device *pico_litex_create()
     }
 
     litex->send = pico_litex_send;
-#ifndef USE_IRQ
+#ifdef WITH_RINGBUF
     litex->poll = pico_litex_poll;
 #endif
 
