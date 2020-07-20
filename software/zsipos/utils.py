@@ -107,11 +107,11 @@ def showversion():
         print(gitFormat(i))
         
 def issel4():
-    return path.exists(path.join("proc", "net", "stack"))
+    return path.exists(path.join("/", "proc", "net", "stack"))
 
 def udpprotocol(isloc):
     if isloc and issel4():
-        return (1<<31)
+        return (1<<15)
     else:
         return 0
     
