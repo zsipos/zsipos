@@ -36,7 +36,7 @@ cimport srtp
 from pj cimport *
 import consts
 from config import config
-from utils import PYCALL
+from utils import PYCALL, udpprotocol
 
 log  = logging.getLogger("rtpstream")
 logz = logging.getLogger("zrtpcpp")

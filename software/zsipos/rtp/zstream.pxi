@@ -283,9 +283,9 @@ cdef class CyRTPStream:
                     self.extsockctrl = PJUDPSock(self.get_pool(), self.get_ioq(), addr2, qos_type = PJ_QOS_TYPE_CONTROL)
                     self.extsockctrl.setRcvCallback(<pjDatagramRcvCallback>self.extCtrlDataReceived, <void*>self)
                 else:
-                    self.locsock = PJUDPSock(self.get_pool(), self.get_ioq(), addr1, qos_type = PJ_QOS_TYPE_VOICE)
+                    self.locsock = PJUDPSock(self.get_pool(), self.get_ioq(), addr1, protocol = udpprotocol(True), qos_type = PJ_QOS_TYPE_VOICE)
                     self.locsock.setRcvCallback(<pjDatagramRcvCallback>self.locDataReceived, <void*>self)
-                    self.locsockctrl = PJUDPSock(self.get_pool(), self.get_ioq(), addr2, qos_type = PJ_QOS_TYPE_CONTROL)
+                    self.locsockctrl = PJUDPSock(self.get_pool(), self.get_ioq(), addr2, protocol = udpprotocol(True), qos_type = PJ_QOS_TYPE_CONTROL)
                     self.locsockctrl.setRcvCallback(<pjDatagramRcvCallback>self.locCtrlDataReceived, <void*>self)
                 return
             except RTPException as e:

@@ -17,6 +17,7 @@ Copyright (C) 2017 Stefan Adams
 """
 import gc
 import logging
+import socket
 
 from twisted.internet import reactor
 
@@ -25,7 +26,7 @@ from CallController import CallController
 from config import config
 import consts
 from SipProtocol import parseAddress, Request, parseURL, SipProtocol
-from utils import stringifyAddress, stringifyLogAddr, stringifyLogMsg
+from utils import stringifyAddress, stringifyLogAddr, stringifyLogMsg, udpprotocol
 import os
 
 UNKNOWNADDR = '"unknown"<sip:unknown@unknown.unknown:5060>'
@@ -403,27 +404,36 @@ class GMITM(object):
         
     def locSendRawData(self, addr, data):
         self.locProto.sendRawData(addr, data)
+        
+    def myListenUDP(self, port, proto, host, isloc):
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM|socket.SOCK_NONBLOCK, udpprotocol(isloc))
+        sock.bind((host, port))
+        return sock, reactor.adoptDatagramPort(sock.fileno(), socket.AF_INET, proto) # @UndefinedVariable
     
     def extStartListening(self, addr):
         self.extPhoneURL = parseURL("sip:" + addr + ":" + config.get(consts.SECTION, consts.EXTPHONEPORT))
         log.info("original phone address: %s", self.extPhoneURL.toString())
-        self.extPort = reactor.listenUDP(self.extPhoneURL.port, self.extProto, interface = self.extPhoneURL.host)  # @UndefinedVariable
+        self.extSock, self.extPort = self.myListenUDP(self.extPhoneURL.port, self.extProto, self.extPhoneURL.host, False)
 
     def locStartListening(self, addr):
         self.locProxyURL = parseURL("sip:" + addr + ":" + config.get(consts.SECTION, consts.LOCPROXYPORT))
         self.locRoute = '<' + self.locProxyURL.toString() + ';lr>'
         log.info("proxy address for phone: %s", self.locProxyURL.toString())
-        self.locPort = reactor.listenUDP(self.locProxyURL.port, self.locProto, interface = self.locProxyURL.host)  # @UndefinedVariable
+        self.locSock, self.locPort = self.myListenUDP(self.locProxyURL.port, self.locProto, self.locProxyURL.host, True)
 
     def extStopListening(self):
         if self.extPort:
             self.extPort.stopListening()
             self.extPort = None
+            self.extSock.close()
+            self.extSock = None
             
     def locStopListening(self):
         if self.locPort:
             self.locPort.stopListening()
             self.locPort = None
+            self.locSock.close()
+            self.locSock = None
             
     def messageReceived(self, msg, addr, external):
         if isinstance(msg, Request):
