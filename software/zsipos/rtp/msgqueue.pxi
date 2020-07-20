@@ -115,7 +115,7 @@ cdef pj_status_t pj_mq_put(pj_mq_t* mq, int id, void *data) nogil:
     msg.id = id
     msg.data = data
     msg.magic = MSGDMAGIC
-    status = pj_activesock_sendto(mq.sock, key, msg, &len, 0, &mq.addr, sizeof(mq.addr))
+    status = pj_activesock_sendto(mq.sock, key, msg, &len, 0, &mq.addr.ipv4, sizeof(mq.addr.ipv4))
     if status == PJ_SUCCESS:
         free(msg)
         free(key)
