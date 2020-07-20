@@ -16,7 +16,7 @@ Copyright (C) 2017 Stefan Adams
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  
 """
 from datetime import datetime, timedelta
-from os import uname
+from os import uname, path
 from sys import modules
 from SipProtocol import Request
 from twisted.python.compat import long
@@ -105,4 +105,13 @@ def showversion():
     print('GIT-MAGIC:', hex(getGitMagic()))
     for i in ['FPGA-GIT', 'KERNEL-GIT']:
         print(gitFormat(i))
+        
+def issel4():
+    return path.exists(path.join("proc", "net", "stack"))
 
+def udpprotocol(isloc):
+    if isloc and issel4():
+        return (1<<31)
+    else:
+        return 0
+    

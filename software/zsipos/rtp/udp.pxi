@@ -32,7 +32,7 @@ cdef class PJUDPSock(PJDatagramSock):
     def __dealloc__(self):
         self.close()
             
-    def __init__(self, PJPool pool, PJIOQueue ioq, addr, int maxlen = MAXRTPLEN, pj_qos_type qos_type = PJ_QOS_TYPE_BEST_EFFORT):
+    def __init__(self, PJPool pool, PJIOQueue ioq, addr, int protocol = 0, int maxlen = MAXRTPLEN, pj_qos_type qos_type = PJ_QOS_TYPE_BEST_EFFORT):
         global g
         self.maxlen = maxlen
         for i in xrange(MAXASYNC):
@@ -44,7 +44,7 @@ cdef class PJUDPSock(PJDatagramSock):
         pj_cstr(&tmpstr, addr[0])
         status = pj_sockaddr_init(pj_AF_INET(), &saddr, &tmpstr, addr[1])
         pj_check_status(status)
-        status = pj_sock_socket(saddr.addr.sa_family, pj_SOCK_DGRAM(), 0, &self.sock)
+        status = pj_sock_socket(saddr.addr.sa_family, pj_SOCK_DGRAM(), protocol, &self.sock)
         pj_check_status(status)
         status = pj_sock_set_qos_type(self.sock, qos_type)
         pj_check_status(status)
