@@ -48,7 +48,7 @@ cdef class PJUDPSock(PJDatagramSock):
         pj_check_status(status)
         status = pj_sock_set_qos_type(self.sock, qos_type)
         pj_check_status(status)
-        status = pj_sock_bind(self.sock, <pj_sockaddr_t*>&saddr, sizeof(saddr))
+        status = pj_sock_bind(self.sock, <pj_sockaddr_t*>&saddr.ipv4, sizeof(saddr.ipv4))
         pj_check_status(status)
         cdef pj_activesock_cb cb
         pj_memset(&cb, 0, sizeof(cb))
