@@ -8,6 +8,7 @@ assembly {
 
 		/* The ipserver. Handles ip & socket calls from linux */
 		component IPServ ipserv_1;
+		component IPServ ipserv_2;
 
 		/* MSTick timer */       
 		component MSTick timer_1;
@@ -36,8 +37,32 @@ assembly {
 		component MSTickBase timer1; // name must the same as in dts
 		connection seL4HardwareMMIO timer_1_mem(from timer_1.reg, to timer1.reg);
 		connection seL4HardwareInterrupt timer_1_irq(from timer1.irq, to timer_1.irq);
+		
+		// connect tick1
 		connection seL4Notification ipserv_1_tick(from timer_1.tick1, to ipserv_1.tick);
 		
+		// connect ethmac hardware
+		component EthBase ethmac1; // name must be same as in dts
+		connection seL4HardwareMMIO ipserv_2_eth_mem0(from ipserv_2.eth_reg0, to ethmac1.reg0);
+		connection seL4HardwareMMIO ipserv_2_eth_mem1(from ipserv_2.eth_reg1, to ethmac1.reg1);
+		connection seL4HardwareMMIO ipserv_2_eth_mem2(from ipserv_2.eth_reg2, to ethmac1.reg2);
+		connection seL4HardwareMMIO ipserv_2_eth_mem3(from ipserv_2.eth_reg3, to ethmac1.reg3);
+		connection seL4HardwareInterrupt ipserv_2_eth_irq(from ethmac1.irq, to ipserv_2.eth_irq);
+		
+		// connect linux (intra processor) communication hardware
+		component IPServSlaveBase to_sel4_slave1; // name must be the same as in dts
+		connection seL4HardwareMMIO ipserv_2_slave_mem0(from ipserv_2.s_request_reg, to to_sel4_slave1.reg0);
+		connection seL4HardwareMMIO ipserv_2_slave_mem1(from ipserv_2.s_confirm_reg, to to_sel4_slave1.reg1);
+		connection seL4HardwareMMIO ipserv_2_slave_mem2(from ipserv_2.s_buffer, to to_sel4_slave1.reg2);
+		connection seL4HardwareInterrupt ipserv_2_req_irq(from to_sel4_slave1.irq, to ipserv_2.s_request_irq);
+		component IPServMasterBase to_linux_master1; // name must be the same as in dts
+		connection seL4HardwareMMIO ipserv_2_master_mem0(from ipserv_2.m_request_reg, to to_linux_master1.reg0);
+		connection seL4HardwareMMIO ipserv_2_master_mem1(from ipserv_2.m_confirm_reg, to to_linux_master1.reg1);
+		connection seL4HardwareMMIO ipserv_2_master_mem2(from ipserv_2.m_buffer, to to_linux_master1.reg2);
+		connection seL4HardwareInterrupt ipserv_2_conf_irq(from to_linux_master1.irq, to ipserv_2.m_confirm_irq);
+		
+		// connect tick2
+		connection seL4Notification ipserv_2_tick(from timer_1.tick2, to ipserv_2.tick);
     }
     configuration {
 
@@ -46,9 +71,17 @@ assembly {
 		
 		/* initialize semaphore */
 		ipserv_1.request_confirmed = 0;
-		
+
+		/* configure stack */		
 		ipserv_1.loopback = 1;
 		ipserv_1.ifname   = "eth0";
+		
+		/* initialize semaphore */
+		ipserv_2.request_confirmed = 0;
+
+		/* configure stack */		
+		ipserv_2.loopback = 0;
+		ipserv_2.ifname   = "eth1";
 		
 	}
 }
