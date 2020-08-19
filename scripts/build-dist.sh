@@ -28,10 +28,11 @@ cp "$ZTOP/gateware/soc/build_$BOARD/gateware/top.bit" "$DESTDIR"
 cp "$ZTOP/gateware/soc/build_$BOARD/gateware/top.bin" "$DESTDIR"/fpga-netboot.bin
 cp "$ZTOP/gateware/soc/build_$BOARD/gateware/rom.mcs" "$DESTDIR"/fpga-romboot.mcs
 
-if [ true ]
+if false 
 then
 
 # copy sshtest only
+echo "copy sshtest ..."
 export ZSIPOSOVL_INIT="$ZTOP/system/buildroot/overlays/sshtest_overlay"
 unset  ZSIPOSOVL_APP
 INIT_DIR="$ZTOP/system/buildroot/buildroot/output/target/etc/init.d"
@@ -44,6 +45,7 @@ rm -f "$INIT_DIR/S99zsiposapp"
 else
 
 # copy app
+echo "copy zsipos app ..."
 export ZSIPOSOVL_INIT="$OVERLAYDIR/init_overlay"
 export ZSIPOSOVL_APP="$OVERLAYDIR/app_overlay"
 rm -rf "$ZSIPOSOVL_APP"
