@@ -13,7 +13,7 @@
 static int msticks = 0;
 
 int clk_get_time(void) {
-	return msticks;
+	return msticks/2;
 }
 
 int run(void)

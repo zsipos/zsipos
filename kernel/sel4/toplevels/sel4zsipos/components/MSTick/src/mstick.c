@@ -20,7 +20,7 @@ static void litex_start_timer(void)
 	litex_csr_writeb(1, (volatile void *)reg + LITEX_TIMER1_EV_ENABLE_REG);
 	// set hardware parameters
 	litex_csr_writel(0, (volatile void *)reg + LITEX_TIMER1_LOAD_REG);
-	litex_csr_writel(75000, (volatile void *)reg + LITEX_TIMER1_RELOAD_REG);
+	litex_csr_writel(75000*2, (volatile void *)reg + LITEX_TIMER1_RELOAD_REG);
 	// enable hardware timer
 	litex_csr_writeb(1, (volatile void *)reg + LITEX_TIMER1_EN_REG);
 }
