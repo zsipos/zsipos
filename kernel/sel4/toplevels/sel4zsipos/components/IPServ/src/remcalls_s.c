@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <camkes.h>
 #include <picotcp.h>
+typedef void *iprcchan_t;
 #include <remcalls.h>
 
 static void *begin_master_request()
@@ -406,6 +407,18 @@ static void handle_rem_pico_socket_recvfrom(rem_arg_t *arg)
 	res->hdr.pico_err = pico_err;
 }
 
+static void handle_rem_pico_socket_udp_poll(rem_arg_t *arg)
+{
+	rem_res_t                      *res = (rem_res_t*)arg;
+	rem_pico_socket_udp_poll_arg_t *a = &arg->u.rem_pico_socket_udp_poll_arg;
+	rem_pico_socket_udp_poll_res_t *r = &res->u.rem_pico_socket_udp_poll_res;
+	struct pico_socket             *s;
+
+	s = (struct pico_socket *)a->s;
+	r->retval = s->q_in.size;
+	res->hdr.pico_err = pico_err;
+}
+
 static void handle_rem_pico_socket_open(rem_arg_t *arg)
 {
 	rem_res_t                  *res = (rem_res_t*)arg;
@@ -504,6 +517,9 @@ void handle_remcall(void *buffer)
 		break;
 	case f_rem_pico_socket_recvfrom:
 		handle_rem_pico_socket_recvfrom(arg);
+		break;
+	case f_rem_pico_socket_udp_poll:
+		handle_rem_pico_socket_udp_poll(arg);
 		break;
 	case f_rem_pico_socket_open:
 		handle_rem_pico_socket_open(arg);
