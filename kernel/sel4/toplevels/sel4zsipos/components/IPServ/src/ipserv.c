@@ -6,6 +6,8 @@
 #include <pico_icmp4.h>
 #include <pico_dev_loop.h>
 
+#include "sel4zsipos_config.h"
+
 #include "pico_dev_litex.h"
 
 
@@ -13,7 +15,7 @@
 static int msticks = 0;
 
 int clk_get_time(void) {
-	return msticks/2;
+	return msticks/TICKMUL;
 }
 
 int run(void)
@@ -59,11 +61,16 @@ int run(void)
      * you don't go overboard with the delays). */
     for (;;)
     {
+    	int i;
     	tick_wait();
+    	if ((msticks % TICKDIV) == 0) {
+    		for (i = 0; i < 2; i++) {
+    			error = pico_stack_lock();
+    			pico_stack_tick();
+    			error = pico_stack_unlock();
+    		}
+    	}
     	msticks++;
-    	error = pico_stack_lock();
-        pico_stack_tick();
-        error = pico_stack_unlock();
     }
 
 	return 0;

@@ -22,11 +22,11 @@ static int tx_slot;
 
 static struct pico_device *litex;
 
-//#define WITH_RINGBUF
+#define WITH_RINGBUF
 
 #ifdef WITH_RINGBUF
 
-#define RINGBUFFERS 10
+#define RINGBUFFERS 20
 
 typedef struct {
 	uint8_t  buf[LITEX_ETHMAC_SLOT_SIZE];
@@ -38,7 +38,7 @@ static int rdpos = 0;
 
 static BufEntry ringbuf[RINGBUFFERS];
 
-static int inc_pos(int pos)
+static inline int inc_pos(int pos)
 {
 	pos++;
 	if (pos == RINGBUFFERS)
@@ -79,6 +79,34 @@ static void pico_litex_recv()
 	error = pico_stack_unlock();
 #endif
 }
+
+#ifdef WITH_RINGBUF
+static int pico_litex_poll(struct pico_device *dev, int loop_score)
+{
+	int error;
+
+    if (loop_score <= 0)
+        return 0;
+
+    error = ringbuf_lock();
+
+    if (rdpos != wrpos) {
+    	loop_score--;
+    	while(rdpos != wrpos) {
+    		if (pico_stack_recv(dev, (void*)ringbuf[rdpos].buf, ringbuf[rdpos].len) <= 0)
+    			printf("pico_dev_litex: frame discarded!\n");
+    		rdpos = inc_pos(rdpos);
+    		// give interrupt a chance
+    		error = ringbuf_unlock();
+    		error = ringbuf_lock();
+    	}
+    }
+
+    error = ringbuf_unlock();
+
+    return loop_score;
+}
+#endif
 
 void pico_litex_handle_irq()
 {
@@ -122,7 +150,7 @@ static int pico_litex_send(struct pico_device *dev, void *buf, int len)
 		seL4_Yield();
 	}
 	if (timeout) {
-		dbg("WARNING: tx slow. packet dropped.\n");
+		dbg("WARNING: pico_dev_litex: tx slow. packet dropped.\n");
 		return 0;
 	}
 
@@ -132,29 +160,6 @@ static int pico_litex_send(struct pico_device *dev, void *buf, int len)
 
 	return len;
 }
-
-#ifdef WITH_RINGBUF
-static int pico_litex_poll(struct pico_device *dev, int loop_score)
-{
-	int error;
-
-    if (loop_score <= 0)
-        return 0;
-
-    error = ringbuf_lock();
-
-    if (rdpos != wrpos) {
-        if (pico_stack_recv(dev, (void*)ringbuf[rdpos].buf, ringbuf[rdpos].len) <= 0)
-        	printf("pico_dev_litex: frame discarded!\n");
-        rdpos = inc_pos(rdpos);
-    	loop_score--;
-    }
-
-    error = ringbuf_unlock();
-
-    return loop_score;
-}
-#endif
 
 static int check_hw_config()
 {

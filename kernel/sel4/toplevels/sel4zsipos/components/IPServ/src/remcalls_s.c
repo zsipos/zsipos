@@ -4,6 +4,14 @@
 typedef void *iprcchan_t;
 #include <remcalls.h>
 
+#ifdef MINLOCK
+#define SLOCK()		do_pico_stack_lock()
+#define SUNLOCK()	do_pico_stack_unlock()
+#else
+#define SLOCK()
+#define SUNLOCK()
+#endif
+
 static void *begin_master_request()
 {
 	int error = master_request_lock();
@@ -288,9 +296,13 @@ static void handle_rem_pico_socket_shutdown(rem_arg_t *arg)
 	rem_pico_socket_shutdown_res_t *r = &res->u.rem_pico_socket_shutdown_res;
 	struct pico_socket             *s;
 
+	do_pico_stack_lock();
+
 	s = (struct pico_socket *)a->s;
 	r->retval = pico_socket_shutdown(s, a->mode);
 	res->hdr.pico_err = pico_err;
+
+	do_pico_stack_unlock();
 }
 
 static void handle_rem_pico_socket_connect(rem_arg_t *arg)
@@ -300,9 +312,13 @@ static void handle_rem_pico_socket_connect(rem_arg_t *arg)
 	rem_pico_socket_connect_res_t *r = &res->u.rem_pico_socket_connect_res;
 	struct pico_socket            *s;
 
+	SLOCK();
+
 	s = (struct pico_socket *)a->s;
 	r->retval = pico_socket_connect(s, &a->srv_addr, a->remote_port);
 	res->hdr.pico_err = pico_err;
+
+	SUNLOCK();
 }
 
 static void handle_rem_pico_socket_close(rem_arg_t *arg)
@@ -325,11 +341,15 @@ static void handle_rem_pico_socket_bind(rem_arg_t *arg)
 	struct pico_socket         *s;
 	uint16_t                    port;
 
+	SLOCK();
+
 	s = (struct pico_socket *)a->s;
 	port = a->port;
 	r->retval = pico_socket_bind(s, &a->local_addr, &port);
 	r->port   = port;
 	res->hdr.pico_err = pico_err;
+
+	SUNLOCK();
 }
 
 static void handle_rem_pico_socket_getname(rem_arg_t *arg)
@@ -339,12 +359,16 @@ static void handle_rem_pico_socket_getname(rem_arg_t *arg)
 	rem_pico_socket_getname_res_t *r = &res->u.rem_pico_socket_getname_res;
 	struct pico_socket            *s;
 
+	SLOCK();
+
 	s = (struct pico_socket *)a->s;
 	if (a->peer)
 		r->retval = pico_socket_getpeername(s, &r->local_addr, &r->port, &r->proto);
 	else
 		r->retval = pico_socket_getname(s, &r->local_addr, &r->port, &r->proto);
 	res->hdr.pico_err = pico_err;
+
+	SUNLOCK();
 }
 
 static void handle_rem_pico_socket_accept(rem_arg_t *arg)
@@ -366,9 +390,13 @@ static void handle_rem_pico_socket_listen(rem_arg_t *arg)
 	rem_pico_socket_listen_res_t *r = &res->u.rem_pico_socket_listen_res;
 	struct pico_socket           *s;
 
+	SLOCK();
+
 	s = (struct pico_socket *)a->s;
 	r->retval = pico_socket_listen(s, a->backlog);
 	res->hdr.pico_err = pico_err;
+
+	SUNLOCK();
 }
 
 static void handle_rem_pico_socket_sendto(rem_arg_t *arg)
@@ -378,9 +406,13 @@ static void handle_rem_pico_socket_sendto(rem_arg_t *arg)
 	rem_pico_socket_sendto_res_t *r = &res->u.rem_pico_socket_sendto_res;
 	struct pico_socket           *s;
 
+	SLOCK();
+
 	s = (struct pico_socket *)a->s;
 	r->retval = pico_socket_sendto(s, &a->buf[0], a->len, &a->dst, a->remote_port);
 	res->hdr.pico_err = pico_err;
+
+	SUNLOCK();
 }
 
 static void handle_rem_pico_socket_send(rem_arg_t *arg)
@@ -390,9 +422,13 @@ static void handle_rem_pico_socket_send(rem_arg_t *arg)
 	rem_pico_socket_send_res_t *r = &res->u.rem_pico_socket_send_res;
 	struct pico_socket         *s;
 
+	SLOCK();
+
 	s = (struct pico_socket *)a->s;
 	r->retval = pico_socket_send(s, &a->buf[0], a->len);
 	res->hdr.pico_err = pico_err;
+
+	SUNLOCK();
 }
 
 static void handle_rem_pico_socket_recvfrom(rem_arg_t *arg)
@@ -402,9 +438,13 @@ static void handle_rem_pico_socket_recvfrom(rem_arg_t *arg)
 	rem_pico_socket_recvfrom_res_t *r = &res->u.rem_pico_socket_recvfrom_res;
 	struct pico_socket             *s;
 
+	SLOCK();
+
 	s = (struct pico_socket *)a->s;
 	r->retval = pico_socket_recvfrom(s, &r->buf[0], a->len, &r->orig, &r->local_port);
 	res->hdr.pico_err = pico_err;
+
+	SUNLOCK();
 }
 
 static void handle_rem_pico_socket_udp_poll(rem_arg_t *arg)
@@ -437,11 +477,15 @@ static void handle_rem_pico_socket_getoption(rem_arg_t *arg)
 	struct pico_socket              *s;
 	int                              optlen;
 
+	SLOCK();
+
 	s = (struct pico_socket *)a->s;
 	optlen = a->optlen;
 	r->retval = pico_socket_getoption(s, a->option, &r->value[0]);
 	r->optlen = optlen;
 	res->hdr.pico_err = pico_err;
+
+	SUNLOCK();
 }
 
 static void handle_rem_pico_socket_setoption(rem_arg_t *arg)
@@ -451,9 +495,13 @@ static void handle_rem_pico_socket_setoption(rem_arg_t *arg)
 	rem_pico_socket_setoption_res_t *r = &res->u.rem_pico_socket_setoption_res;
 	struct pico_socket              *s;
 
+	SLOCK();
+
 	s = (struct pico_socket *)a->s;
 	r->retval = pico_socket_setoption(s, a->option, &a->value[0]);
 	res->hdr.pico_err = pico_err;
+
+	SUNLOCK();
 }
 
 void handle_remcall(void *buffer)

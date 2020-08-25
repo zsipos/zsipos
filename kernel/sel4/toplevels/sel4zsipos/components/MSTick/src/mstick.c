@@ -2,6 +2,7 @@
 #include <camkes.h>
 
 #include <litex.h>
+#include <sel4zsipos_config.h>
 
 static void litex_stop_timer(void)
 {
@@ -20,7 +21,7 @@ static void litex_start_timer(void)
 	litex_csr_writeb(1, (volatile void *)reg + LITEX_TIMER1_EV_ENABLE_REG);
 	// set hardware parameters
 	litex_csr_writel(0, (volatile void *)reg + LITEX_TIMER1_LOAD_REG);
-	litex_csr_writel(75000*2, (volatile void *)reg + LITEX_TIMER1_RELOAD_REG);
+	litex_csr_writel(75000*TICKMUL/2, (volatile void *)reg + LITEX_TIMER1_RELOAD_REG);
 	// enable hardware timer
 	litex_csr_writeb(1, (volatile void *)reg + LITEX_TIMER1_EN_REG);
 }
@@ -34,8 +35,12 @@ void irq_handle(void)
 {
 	int error;
 
-	tick1_emit();
-	tick2_emit();
+	static int count = 0;
+
+	if (count++ & 1)
+		tick1_emit();
+	else
+		tick2_emit();
 
 	// clear hardware irq
 	litex_csr_writeb(1, (volatile void *)reg + LITEX_TIMER1_EV_PENDING_REG);
