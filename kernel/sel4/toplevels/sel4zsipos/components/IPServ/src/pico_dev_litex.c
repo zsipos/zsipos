@@ -72,10 +72,7 @@ static void pico_litex_recv()
 	error = ringbuf_unlock();
 #else
 	error = pico_stack_lock();
-
-    if (pico_stack_recv(litex, (void*)rxbadr + rx_slot * LITEX_ETHMAC_SLOT_SIZE, len) <= 0)
-    	printf("pico_dev_litex: frame discarded!\n");
-
+    pico_stack_recv(litex, (void*)rxbadr + rx_slot * LITEX_ETHMAC_SLOT_SIZE, len);
 	error = pico_stack_unlock();
 #endif
 }
@@ -93,8 +90,7 @@ static int pico_litex_poll(struct pico_device *dev, int loop_score)
     if (rdpos != wrpos) {
     	loop_score--;
     	while(rdpos != wrpos) {
-    		if (pico_stack_recv(dev, (void*)ringbuf[rdpos].buf, ringbuf[rdpos].len) <= 0)
-    			printf("pico_dev_litex: frame discarded!\n");
+    		pico_stack_recv(dev, (void*)ringbuf[rdpos].buf, ringbuf[rdpos].len);
     		rdpos = inc_pos(rdpos);
     		// give interrupt a chance
     		error = ringbuf_unlock();
@@ -212,7 +208,7 @@ static int pico_litex_init()
 	return 1;
 }
 
-char *ethname;
+const char *ethname;
 
 struct pico_device *pico_litex_create()
 {
