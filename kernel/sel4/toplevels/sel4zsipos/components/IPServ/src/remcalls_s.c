@@ -42,6 +42,7 @@ static void handle_socket_event(uint16_t ev, struct pico_socket *s)
 		a->ev         = ev;
 		a->s          = s;
 		a->priv       = priv;
+		a->err        = pico_err;
 
 		do_master_request();
 	} else {
