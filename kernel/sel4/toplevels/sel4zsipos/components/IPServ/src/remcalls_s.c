@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <camkes.h>
 #include <picotcp.h>
+#include <pico_tcp.h>
+
 typedef void *iprcchan_t;
 #include <remcalls.h>
 
@@ -439,13 +441,19 @@ static void handle_rem_pico_socket_recvfrom(rem_arg_t *arg)
 	rem_pico_socket_recvfrom_res_t *r = &res->u.rem_pico_socket_recvfrom_res;
 	struct pico_socket             *s;
 
-	SLOCK();
+	if (a->lock)
+		SLOCK();
 
 	s = (struct pico_socket *)a->s;
 	r->retval = pico_socket_recvfrom(s, &r->buf[0], a->len, &r->orig, &r->local_port);
+	if (s->proto->proto_number == PICO_PROTO_UDP)
+		r->more = s->q_in.size > 0;
+	else
+		r->more = !pico_tcp_queue_in_is_empty(s);
 	res->hdr.pico_err = pico_err;
 
-	SUNLOCK();
+	if (a->lock)
+		SUNLOCK();
 }
 
 static void handle_rem_pico_socket_udp_poll(rem_arg_t *arg)
@@ -456,7 +464,19 @@ static void handle_rem_pico_socket_udp_poll(rem_arg_t *arg)
 	struct pico_socket             *s;
 
 	s = (struct pico_socket *)a->s;
-	r->retval = s->q_in.size;
+	r->retval = s->q_in.size > 0;
+	res->hdr.pico_err = pico_err;
+}
+
+static void handle_rem_pico_socket_tcp_poll(rem_arg_t *arg)
+{
+	rem_res_t                      *res = (rem_res_t*)arg;
+	rem_pico_socket_tcp_poll_arg_t *a = &arg->u.rem_pico_socket_tcp_poll_arg;
+	rem_pico_socket_tcp_poll_res_t *r = &res->u.rem_pico_socket_tcp_poll_res;
+	struct pico_socket             *s;
+
+	s = (struct pico_socket *)a->s;
+	r->retval = !pico_tcp_queue_in_is_empty(s);
 	res->hdr.pico_err = pico_err;
 }
 
@@ -569,6 +589,9 @@ void handle_remcall(void *buffer)
 		break;
 	case f_rem_pico_socket_udp_poll:
 		handle_rem_pico_socket_udp_poll(arg);
+		break;
+	case f_rem_pico_socket_tcp_poll:
+		handle_rem_pico_socket_tcp_poll(arg);
 		break;
 	case f_rem_pico_socket_open:
 		handle_rem_pico_socket_open(arg);
