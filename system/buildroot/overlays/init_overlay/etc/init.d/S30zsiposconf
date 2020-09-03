@@ -140,6 +140,51 @@ EOF
         echo >/etc/resolv.conf # empty file
     fi
 
+    # different ip configuration for sel4ip stack
+    if [ -f /proc/net/stack ]
+    then
+	if [ -n "$DHCP" ]
+	then
+		if [ -n "$DNSSERVER" ]
+		then
+			DNSOUT="/dev/null"
+		else
+			DNSOUT="/etc/resolv.conf"
+		fi
+		IF0CMD="/bin/sel4iptool eth0 dhcp >$DNSOUT"
+	else
+		IF0CMD="ifconfig eth0 $ETH0 netmask $NETMASK\n\troute add default gw $GATEWAY"
+	fi
+	cat >/etc/init.d/S40network <<EOF
+#!/bin/sh
+# This file is auto-generated. Please do not edit.
+case "\$1" in
+start)
+       	echo "Starting network: "
+	$IF0CMD
+	ifconfig eth1 $LOCALPROXY netmask $LOCALNET up
+	echo "OK"
+	;;
+stop)
+	printf "Stopping network: "
+	ifconfig eth0 down
+	ifconfig eth1 down
+	echo "OK"
+	;;
+restart|reload)
+	"\$0" stop
+	"\$0" start
+	;;
+*)
+	echo "Usage: \$0 {start|stop|restart}"
+	exit 1
+esac
+exit 0
+EOF
+	chmod ugo+xr /etc/init.d/S40network
+    fi
+
+
     # load kernel modules
     #modprobe ocaes
     #modprobe swsha1
