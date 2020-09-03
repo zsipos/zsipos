@@ -62,8 +62,8 @@ start() {
     fi
 
     # some error deleted zsipos.cfg
-    if [ -s /root/zsipos.cfg ]; then
-        if [ ! -s /root/zsipos.cfg.bak ] ; then
+    if [ ! -s /root/zsipos.cfg ]; then
+        if [ -s $CFGBAK ] ; then
             cp $CFGBAK $CFG
         else
             cp $FACTORY $CFG
