@@ -155,9 +155,11 @@ EOF
 		else
 			DNSOUT="/etc/resolv.conf"
 		fi
-		IF0CMD="/bin/sel4iptool eth0 dhcp >$DNSOUT"
+		IF0CMD1="/bin/sel4iptool eth0 dhcp >$DNSOUT"
+		IF0CMD2="#"
 	else
-		IF0CMD="ifconfig eth0 $ETH0 netmask $NETMASK\n\troute add default gw $GATEWAY"
+		IF0CMD1="ifconfig eth0 $ETH0 netmask $NETMASK"
+		IF0CMD2="route add default gw $GATEWAY"
 	fi
 	cat >/etc/init.d/S40network <<EOF
 #!/bin/sh
@@ -165,7 +167,8 @@ EOF
 case "\$1" in
 start)
        	echo "Starting network: "
-	$IF0CMD
+	$IF0CMD1
+	$IF0CMD2
 	ifconfig eth1 $LOCALPROXY netmask $LOCALNET up
 	echo "OK"
 	;;
