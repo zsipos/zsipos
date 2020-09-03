@@ -2,8 +2,10 @@
 #include <camkes.h>
 #include <picotcp.h>
 #include <pico_tcp.h>
+#include <pico_dhcp_client.h>
 
 typedef void *iprcchan_t;
+#include <sel4ip.h>
 #include <remcalls.h>
 
 #ifdef MINLOCK
@@ -292,6 +294,142 @@ static void handle_rem_get_routes(rem_arg_t *arg)
 	do_pico_stack_unlock();
 }
 
+/* dhcp */
+
+/* dhcp blocks the rem_call until a dhcp result is returned ... */
+
+static uint32_t    dhcp_xid = -1;
+static int         dhcp_finished;
+static int         dhcp_code;
+static pico_err_t  dhcp_err;
+
+static void dhcp_callback(void *cli, int code)
+{
+	dhcp_err      = pico_err;
+	dhcp_code     = code;
+	dhcp_finished = 1;
+}
+
+static void handle_rem_dhcp(rem_arg_t *arg)
+{
+	rem_res_t          *res = (rem_res_t*)arg;
+	rem_dhcp_arg_t     *a = &arg->u.rem_dhcp_arg;
+	rem_dhcp_res_t     *r = &res->u.rem_dhcp_res;
+	struct pico_device *dev;
+	int                 ret;
+
+	do_pico_stack_lock();
+
+	if (dhcp_xid != -1) {
+		pico_dhcp_client_abort(dhcp_xid);
+		dhcp_xid = -1;
+	}
+
+	dhcp_finished = 0;
+
+	dev = pico_get_device(a->name);
+	if (!dev) {
+		printf("dhcp: device %s not found\n", a->name);
+		r->retval = -1;
+		res->hdr.pico_err = pico_err;
+		do_pico_stack_unlock();
+		return;
+	}
+
+	ret = pico_dhcp_initiate_negotiation(dev, dhcp_callback, &dhcp_xid);
+
+	r->retval = 0;
+	res->hdr.pico_err = pico_err;
+
+	do_pico_stack_unlock();
+
+	if (ret) {
+		r->retval = -1;
+		printf("dhcp: can not start negotiation\n");
+		return;
+	}
+
+	while (!dhcp_finished)
+		seL4_Yield();
+
+	if (dhcp_code == PICO_DHCP_SUCCESS) {
+		void *cli = pico_dhcp_get_identifier(dhcp_xid);
+		int   count = 0;
+
+		for(;;) {
+			struct pico_ip4 addr;
+
+			addr = pico_dhcp_get_nameserver(cli, count);
+			if (addr.addr <= 0)
+				break;
+			r->nameserver_addrs[count].ip4 = addr;
+			r->nameserver_count = ++count;
+		}
+	} else {
+		printf("dhcp: failed\n");
+		r->retval = -1;
+		res->hdr.pico_err = dhcp_err;
+	}
+}
+
+/* ping */
+
+/* ping blocks the rem_call until all replies are returned... */
+
+static int                 ping_replies;
+static sel4ip_ping_stat_t *ping_stats;
+
+static void ping4_callback(struct pico_icmp4_stats *stats)
+{
+	sel4ip_ping_stat_t *p = &ping_stats[ping_replies];
+
+	p->err  = stats->err;
+	p->size = stats->size;
+	p->seq  = stats->seq;
+	p->ttl  = stats->ttl;
+	p->time = stats->time;
+
+	ping_replies++;
+}
+
+static void handle_rem_ping(rem_arg_t *arg)
+{
+	rem_res_t      *res = (rem_res_t*)arg;
+	rem_ping_arg_t *a = &arg->u.rem_ping_arg;
+	rem_ping_res_t *r = &res->u.rem_ping_res;
+	int             count, ret, i;
+
+	do_pico_stack_lock();
+
+	count = a->count;
+	ping_replies = 0;
+	ping_stats = r->stats;
+
+	for (i = 0; i < count; i++)
+		r->stats[i].err = 0xffff;
+
+	{	char host[16];
+
+		pico_ipv4_to_string(host, a->addr.ip4.addr);
+		ret = pico_icmp4_ping(host, count, 1000, 10000, 64, ping4_callback);
+
+		r->retval = 0;
+		res->hdr.pico_err = pico_err;
+
+		do_pico_stack_unlock();
+
+		if (ret == -1) {
+			r->retval = -1;
+			return;
+		}
+	}
+
+	while (ping_replies < count)
+		seL4_Yield();
+}
+
+/**/
+
 static void handle_rem_pico_socket_shutdown(rem_arg_t *arg)
 {
 	rem_res_t                      *res = (rem_res_t*)arg;
@@ -556,6 +694,12 @@ void handle_remcall(void *buffer)
 		break;
 	case f_rem_get_routes:
 		handle_rem_get_routes(arg);
+		break;
+	case f_rem_dhcp:
+		handle_rem_dhcp(arg);
+		break;
+	case f_rem_ping:
+		handle_rem_ping(arg);
 		break;
 	case f_rem_pico_socket_shutdown:
 		handle_rem_pico_socket_shutdown(arg);
