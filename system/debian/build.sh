@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2018-2019 Jonathan Richard Robert Kimmitt <jrrk2@cam.ac.uk>
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+#
+# SPDX-License-Identifier: Apache-2.0
 set -e
 WRKDIR=debian-rootfs
 if [ ! -d "$WRKDIR" ]

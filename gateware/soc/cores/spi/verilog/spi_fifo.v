@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2000-2002 Rudolf Usselmann <rudi@asics.ws>
+// SPDX-FileCopyrightText: 2000-2002 Richard Herveille <richard@asics.ws>
+// SPDX-License-Identifier: LicenseRef-asics-1
 /////////////////////////////////////////////////////////////////////
 ////                                                             ////
 //// FIFO 1024 entries deep                                      ////

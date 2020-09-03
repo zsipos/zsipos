@@ -1,9 +1,8 @@
 #!/bin/sh
-#
-# Start the network....
-#
 
-# Debian ifupdown needs the /run/network lock directory
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 mkdir -p /run/network
 
 case "$1" in

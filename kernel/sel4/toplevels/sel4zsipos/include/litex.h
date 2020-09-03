@@ -1,24 +1,14 @@
-/* SPDX-License-Identifier: GPL-2.0 */
-#ifndef _LINUX_LITEX_H
-#define _LINUX_LITEX_H
+// SPDX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+#ifndef _SEL4_LITEX_H
+#define _SEL4_LITEX_H
 
 #include "csroffsets.h"
 
-static unsigned int LITEX_READ_REG(volatile void *_addr)
-{
-	volatile unsigned int *addr = _addr;
-	return *addr;
-}
-
-static void LITEX_WRITE_REG(unsigned int val, volatile void *_addr)
-{
-	volatile unsigned int *addr = _addr;
-	*addr = val;
-}
-
 static inline void litex_csr_writeb(unsigned char val, volatile void *reg)
 {
-	LITEX_WRITE_REG(val, reg);
+	*(volatile unsigned int *)reg = val;
 }
 
 static inline void litex_csr_writew(unsigned short val, volatile void *reg)
@@ -37,7 +27,7 @@ static inline void litex_csr_writel(unsigned int val, volatile void *reg)
 
 static inline unsigned char litex_csr_readb(volatile void *reg)
 {
-	return LITEX_READ_REG(reg);
+	return *(volatile unsigned int *)reg;
 }
 
 static inline unsigned short litex_csr_readw(volatile void *reg)
@@ -54,4 +44,4 @@ static inline unsigned int litex_csr_readl(volatile void *reg)
 			((unsigned int)litex_csr_readb(reg + LITEX_CSR_OFFSET(3)) <<  0);
 }
 
-#endif /* _LINUX_LITEX_H */
+#endif

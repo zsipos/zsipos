@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+// SPDX-FileCopyrightText: 2002 Richard Herveille <richard@asics.ws>
+// SPDX-License-Identifier: LicenseRef-asics-1
 /////////////////////////////////////////////////////////////////////
 ////                                                             ////
 ////  Copyright (C) 2019 Stefan Adams <stefan.adams@vipcomag.de> ////

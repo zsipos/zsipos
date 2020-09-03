@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2020 Esther Bergter <esther.bergter@vipcomag.de>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 #/etc/systemd/system/icestorage.service
 [Unit]
 Description=ICE Storage Server

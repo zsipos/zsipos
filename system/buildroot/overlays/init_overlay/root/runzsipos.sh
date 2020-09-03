@@ -1,4 +1,8 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: 2019 Esther Bergter <esther.bergter@vipcomag.de>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 #
 # zsiposapp    Start zsipos
 #

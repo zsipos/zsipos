@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
 INITRAMFS=$(ZTOP)/kernel/build_$(BITS)/initramfs.cpio
 KERNELDIR=$(ZTOP)/kernel/build_$(BITS)/linux
 WRKDIR=$(ZTOP)/kernel/build_$(BITS)/busybox

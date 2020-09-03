@@ -1,3 +1,6 @@
+// SPDX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>
+// SPDX-License-Identifier: GPL-3.0-or-later
+
 #ifndef INCLUDE_PICO_DEV_LITEX_H
 #define INCLUDE_PICO_DEV_LITEX_H
 

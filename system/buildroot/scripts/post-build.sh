@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: CC0-1.0
 #
 # This is a buildroot internal helper script.
 #

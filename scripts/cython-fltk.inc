@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 FLUID       = $(ZTOP)/software/build_host/fltk/bin/fluid
 FLUID_FLAGS = 
 FLCFG_FLAGS = --use-images --use-forms

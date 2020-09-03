@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 cmake_minimum_required(VERSION 3.7.2)
 
 include(settings.cmake)

@@ -1,3 +1,8 @@
+<!--
+SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+
 # zsipos
 
 zsipos is a fully transparent system to encrypt your sip phone calls with ZRTP. It gets plugged between your sip phone and your sip proxy.

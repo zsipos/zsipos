@@ -1,4 +1,4 @@
-363
+304
 00-DejaVuSans.ttf -misc-dejavu sans-medium-r-normal--0-0-0-0-p-0-adobe-standard
 00-DejaVuSans.ttf -misc-dejavu sans-medium-r-normal--0-0-0-0-p-0-ascii-0
 00-DejaVuSans.ttf -misc-dejavu sans-medium-r-normal--0-0-0-0-p-0-ibm-cp437
@@ -303,62 +303,3 @@
 11-DejaVuSerif-BoldItalic.ttf -misc-dejavu serif-bold-i-normal--0-0-0-0-p-0-koi8-uni
 11-DejaVuSerif-BoldItalic.ttf -misc-dejavu serif-bold-i-normal--0-0-0-0-p-0-microsoft-cp1252
 11-DejaVuSerif-BoldItalic.ttf -misc-dejavu serif-bold-i-normal--0-0-0-0-p-0-suneu-greek
-12-Symbol.ttf -monotype-symbol-medium-r-normal--0-0-0-0-p-0-iso8859-1
-12-Symbol.ttf -monotype-symbol-medium-r-normal--0-0-0-0-p-0-microsoft-symbol
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-adobe-standard
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-ascii-0
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-ibm-cp437
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-ibm-cp850
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-ibm-cp852
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-ibm-cp866
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso10646-1
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-1
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-10
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-11
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-13
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-15
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-16
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-2
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-3
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-4
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-5
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-6
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-6.16
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-6.8x
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-8
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-iso8859-9
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-koi8-e
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-koi8-r
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-koi8-ru
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-koi8-u
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-koi8-uni
-13-LucidaTypewriterRegular.ttf -b&h-lucida sans typewriter-medium-r-normal--0-0-0-0-m-0-microsoft-cp1252
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-adobe-standard
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-ascii-0
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-ibm-cp437
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-ibm-cp850
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-ibm-cp852
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-ibm-cp866
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso10646-1
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-1
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-10
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-11
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-13
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-15
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-16
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-2
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-3
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-4
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-5
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-6
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-6.16
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-6.8x
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-8
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-iso8859-9
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-koi8-e
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-koi8-r
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-koi8-ru
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-koi8-u
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-koi8-uni
-14-LucidaTypewriterBold.ttf -b&h-lucida sans typewriter-bold-r-normal--0-0-0-0-m-0-microsoft-cp1252
-15-ITCZapfDingbatsMedium.ttf -misc-itc zapf dingbats-medium-r-normal--0-0-0-0-p-0-iso10646-1

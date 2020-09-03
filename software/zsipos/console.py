@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 class ConsoleOutput(object):
 
     def __init__(self):

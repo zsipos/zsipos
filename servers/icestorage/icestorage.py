@@ -1,5 +1,10 @@
 #!/usr/bin/python
+# SPDX-FileCopyrightText: 2017 Joachim Bauch / struktur AG <bauch@struktur.de>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 """
+
 Copyright (C) 2017 Joachim Bauch / struktur AG <bauch@struktur.de>
 
    This program is free software; you can redistribute it and/or modify

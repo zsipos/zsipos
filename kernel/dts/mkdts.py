@@ -1,7 +1,8 @@
-"""
-Note: this program assumes that the dts is generated from zsipos chip generator.
-It will not work on a generic devicetree!!!
-"""
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Note: this program assumes that the dts is generated from zsipos chip generator.
+# It will not work on a generic devicetree!!!
 
 import os, sys
 from pyfdt.pyfdt import *

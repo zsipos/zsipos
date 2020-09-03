@@ -1,4 +1,8 @@
 #!/bin/sh
+# SPDX-FileCopyrightText: 2019 Esther Bergter <esther.bergter@vipcomag.de>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 #
 # zsiposconf2   configure steps after ntp is up , before sshd starts
 #

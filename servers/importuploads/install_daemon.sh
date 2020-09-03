@@ -1,3 +1,5 @@
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
 DMnr=8
 DMpar=DAEMON{$DMnr}
 if o_get_config DMpar

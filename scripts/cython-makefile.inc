@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 #
 # Makefile for cython module.
 # Just include and set $(MODULE) to the desired module name.

@@ -1,4 +1,7 @@
 #! /bin/sh
+# SPDX-FileCopyrightText: buildroot
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
 
 # In case the interface is used as nfsroot, avoid ifup, otherwise
 # nfsroot may lose response

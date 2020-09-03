@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 BBL="$ZTOP/kernel/sel4/build_${BITS}_bbl/bbl"
 QEMU=qemu-system-riscv$BITS
 

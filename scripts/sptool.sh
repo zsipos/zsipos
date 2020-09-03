@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 cd "$ZTOP"
 
 ZSIPOS_URL="https://github.com/zsipos"
@@ -159,8 +162,16 @@ other_list_branches()
 	done
 }
 
+spdx_header()
+{
+	echo "# SPDX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>"
+	echo "# SPDX-License-Identifier: GPL-3.0-or-later"
+	echo
+}
+
 zsipos_save_branchnames()
 {
+	spdx_header
 	for i in `get_zsipos_subprojects`
 	do
 		if ! is_taged "$i"
@@ -178,6 +189,7 @@ zsipos_save_branchnames()
 
 other_save_branchnames()
 {
+	spdx_header
 	echo
 	echo "echo \"### only for cut+paste ###\""
 	echo

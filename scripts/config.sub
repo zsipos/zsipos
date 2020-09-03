@@ -1,4 +1,7 @@
 #! /bin/sh
+# SPDX-FileCopyrightText: Copyright 1992-2019 Free Software Foundation, Inc.
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 # Configuration validation subroutine script.
 #   Copyright 1992-2019 Free Software Foundation, Inc.
 

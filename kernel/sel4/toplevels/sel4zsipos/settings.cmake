@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 set(project_dir "${CMAKE_CURRENT_LIST_DIR}/../../")
 file(GLOB project_modules ${project_dir}/projects/*)
 

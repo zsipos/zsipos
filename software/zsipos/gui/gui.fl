@@ -1,3 +1,8 @@
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-FileCopyrightText: 2019 Esther Bergter <esther.bergter@vipcomag.de>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 # data file for the Fltk User Interface Designer (fluid)
 version 1.0304
 header_name {.h}

@@ -1,3 +1,7 @@
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 version = 'importUploads  1.0.1  vom 18. Februar 2019'
 
 from email.mime.text import MIMEText

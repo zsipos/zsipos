@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 import os
 from migen import *
 from litex.soc.interconnect import wishbone

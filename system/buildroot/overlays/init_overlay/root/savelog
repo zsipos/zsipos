@@ -1,4 +1,12 @@
 #! /bin/sh
+# SPDX-FileCopyrightText: 1987, 1988 Ronald S. Karr and Landon Curt Noll
+# SPDX-FileCopyrightText: 1992  Ronald S. Karr
+# SPDX-FileCopyrightText: Ian A. Murdock <imurdock@gnu.ai.mit.edu>
+# SPDX-FileCopyrightText: Guy Maor <maor@debian.org>
+# SPDX-FileCopyrightText: 2019 Esther Bergter <esther.bergter@vipcomag.de>
+#
+# SPDX-License-Identifier: LicenseRef-smail-1
+#
 # savelog - save a log file
 #    Copyright (C) 1987, 1988 Ronald S. Karr and Landon Curt Noll
 #    Copyright (C) 1992  Ronald S. Karr

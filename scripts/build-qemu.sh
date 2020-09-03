@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 set -e
 echo "buildind qemu .."
 
@@ -46,7 +49,7 @@ then
 		--disable-werror 
 
 	# workaround ubuntu 18.04 bug
-	if grep -s "Ubuntu 18.04.4 LTS" /etc/os-release
+	if grep -s "Ubuntu 18\\.04\\..* LTS" /etc/os-release
 	then
 		grep -v LIBSSH_CFLAGS config-host.mak >xx
 		mv xx config-host.mak
