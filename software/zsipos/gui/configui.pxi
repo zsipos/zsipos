@@ -1243,7 +1243,7 @@ def is_valid_ipv4_mask(netmask):
         except socket.error:
             return False
         s4 = netmask.split('.')
-        c4 = map(int, s4)
+        c4 = list(map(int, s4))
         m = ((c4[0]*256+c4[1])*256+c4[2])*256+c4[3]
         #debug('subnet mask')
         #debug(bin(m))
