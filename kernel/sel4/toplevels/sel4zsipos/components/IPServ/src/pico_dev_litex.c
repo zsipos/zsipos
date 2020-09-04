@@ -10,9 +10,6 @@
 
 #include <litex.h>
 
-static const unsigned char mac[6] = {0x10, 0xe2, 0xd5, 0x00, 0x00, 0x00}; //todo
-
-
 #define LITEX_COUNTER_RESET			100
 #define LITEX_COUNTER_READER_READY	5
 
@@ -68,7 +65,7 @@ static void pico_litex_recv()
 
 	wrpos = inc_pos(wrpos);
 	if (wrpos == rdpos) {
-		printf("queue reading slow\n");
+		printf("WARNING: pico_dev_litex: queue reading slow\n");
 		rdpos = inc_pos(rdpos);
 	}
 
@@ -130,7 +127,7 @@ static int pico_litex_send(struct pico_device *dev, void *buf, int len)
     IGNORE_PARAMETER(dev);
 
 	if (len > LITEX_ETHMAC_SLOT_SIZE) {
-		dbg("WARNING: packet too big. dropped.\n");
+		printf("WARNING: pico_dev_ltex: packet too big. dropped.\n");
 		return 0;
 	}
 
@@ -149,7 +146,7 @@ static int pico_litex_send(struct pico_device *dev, void *buf, int len)
 		seL4_Yield();
 	}
 	if (timeout) {
-		dbg("WARNING: pico_dev_litex: tx slow. packet dropped.\n");
+		printf("WARNING: pico_dev_litex: tx slow. packet dropped.\n");
 		return 0;
 	}
 
@@ -213,7 +210,7 @@ static int pico_litex_init()
 
 const char *ethname;
 
-struct pico_device *pico_litex_create()
+struct pico_device *pico_litex_create(unsigned char *mac)
 {
     litex = PICO_ZALLOC(sizeof(struct pico_device));
 

@@ -8,7 +8,7 @@
 #include <pico_device.h>
 
 void pico_litex_destroy(struct pico_device *loop);
-struct pico_device *pico_litex_create();
+struct pico_device *pico_litex_create(unsigned char *mac);
 
 void pico_litex_handle_irq(void);
 

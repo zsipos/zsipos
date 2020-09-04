@@ -25,7 +25,7 @@ int run(void)
 {
     int error, id;
     struct pico_ip4 ipaddr, netmask;
-    struct pico_device *devl, *deve;
+    struct pico_device *devl;
 
     pico_stack_init();
 
@@ -40,12 +40,6 @@ int run(void)
 		pico_string_to_ipv4("255.0.0.0", &netmask.addr);
 		pico_ipv4_link_add(devl, ipaddr, netmask);
     }
-
-    deve = pico_litex_create();
-	if (!deve) {
-		dbg("can't create eth device!\n");
-		return -1;
-	}
 
     for (;;)
     {

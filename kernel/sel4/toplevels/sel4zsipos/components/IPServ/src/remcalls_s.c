@@ -11,6 +11,8 @@ typedef void *iprcchan_t;
 #include <sel4ip.h>
 #include <remcalls.h>
 
+#include "pico_dev_litex.h"
+
 #ifdef MINLOCK
 #define SLOCK()		do_pico_stack_lock()
 #define SUNLOCK()	do_pico_stack_unlock()
@@ -88,6 +90,19 @@ static void handle_rem_set_priv(rem_arg_t *arg)
 
 	s = (struct pico_socket *)a->s;
 	s->priv = a->priv;
+}
+
+static void handle_rem_init_eth(rem_arg_t *arg)
+{
+	rem_res_t          *res = (rem_res_t*)arg;
+	rem_init_eth_arg_t *a = &arg->u.rem_init_eth_arg;
+	rem_init_eth_res_t *r = &res->u.rem_init_eth_res;
+
+	do_pico_stack_lock();
+
+    r->retval = pico_litex_create(a->macaddr) ? 0 : -1;
+
+	do_pico_stack_unlock();
 }
 
 static void handle_rem_get_devices(rem_arg_t *arg)
@@ -679,6 +694,9 @@ void handle_remcall(void *buffer)
 		break;
 	case f_rem_set_priv:
 		handle_rem_set_priv(arg);
+		break;
+	case f_rem_init_eth:
+		handle_rem_init_eth(arg);
 		break;
 	case f_rem_get_devices:
 		handle_rem_get_devices(arg);
