@@ -44,7 +44,7 @@ from time import sleep
 import crypt
 from gitversions import gitversions,gitdates
 from iputils import split_host_port
-from utils import getGitMagic,gitFormat,tstr
+from utils import getGitMagic,gitFormat,tstr,issel4
 
 cdef CONFIGUI* configui
 
@@ -1008,7 +1008,10 @@ def do_ping(host):
     configui.winHelp.show()
 
     try:
-        out += subprocess.check_output(["ping", "-c", "2", host], stderr=subprocess.STDOUT, encoding="utf8")
+        if issel4():
+            out += subprocess.check_output(["sel4iptool", "eth0", "ping", host, "2"], stderr=subprocess.STDOUT, encoding="utf8")
+        else:
+            out += subprocess.check_output(["ping", "-c", "2", host], stderr=subprocess.STDOUT, encoding="utf8")
     except CalledProcessError as e:
         if len(e.output):
             out += e.output
