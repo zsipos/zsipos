@@ -287,7 +287,11 @@ cdef void on_btn_ping(Fl_Widget *widget, void *cfdata) with gil:
     else:
             val = ""
     #debug("on_btn_ping: val %s" % (val, ))
-    do_ping(val)
+    if myopt == consts.LOCPROXYADDR:
+        ifnr = 1
+    else:
+        ifnr = 0
+    do_ping(val, ifnr)
 
 cdef void on_btn_sysinfo(Fl_Widget *widget, void *data) with gil:
 
@@ -998,7 +1002,7 @@ def do_back_fl_choice():
         configui.window.hide()
 '''
 
-def do_ping(host):
+def do_ping(host, ifnr):
     global helpTextBuffer
 
     #debug("do_ping: host %s" % (host,))
@@ -1009,7 +1013,7 @@ def do_ping(host):
 
     try:
         if issel4():
-            out += subprocess.check_output(["sel4iptool", "eth0", "ping", host, "2"], stderr=subprocess.STDOUT, encoding="utf8")
+            out += subprocess.check_output(["sel4iptool", "eth"+str(ifnr), "ping", host, "2"], stderr=subprocess.STDOUT, encoding="utf8")
         else:
             out += subprocess.check_output(["ping", "-c", "2", host], stderr=subprocess.STDOUT, encoding="utf8")
     except CalledProcessError as e:
