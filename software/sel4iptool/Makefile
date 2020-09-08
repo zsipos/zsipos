@@ -1,3 +1,6 @@
+# SPDX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-License-Identifier: GPL-3.0-or-later
+
 PROG=sel4iptool
 
 KERNDIR=$(ZTOP)/kernel/linux/net/sel4ip
