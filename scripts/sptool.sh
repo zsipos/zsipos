@@ -164,8 +164,8 @@ other_list_branches()
 
 spdx_header()
 {
-	echo "# SPDX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>"
-	echo "# SPDX-License-Identifier: GPL-3.0-or-later"
+	echo "# SP""DX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>"
+	echo "# SP""DX-License-Identifier: GPL-3.0-or-later"
 	echo
 }
 
