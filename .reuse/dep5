@@ -1,0 +1,13 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Zsipos
+Upstream-Contact: Stefan Adams <stefan.adams@vipcomag.de>
+Source: https://github.com/zsipos/zsipos
+
+Files: software/fonts/*DejaVu*
+Copyright: Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Bitstream Vera is a trademark of Bitstream, Inc.
+License: LicenseRef-bitstream-1
+
+Files: software/fonts/fonts.*
+Copyright: generated
+License: CC0-1.0
+
