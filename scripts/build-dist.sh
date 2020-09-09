@@ -59,9 +59,6 @@ cp -r "$ZTOP/software/zsipos" "$ZSIPOSOVL_APP/root"
 cp -r "$ZTOP/software/fonts" "$ZSIPOSOVL_APP/root"
 rm -rf "$ZSIPOSOVL_APP/root/zsipos/"*"/host"
 
-# sshd not auto startup
-test -f "$ZTOP/system/buildroot/buildroot/output/target/etc/init.d/S50sshd" && mv "$ZTOP/system/buildroot/buildroot/output/target/etc/init.d/S50sshd" "$ZTOP/system/buildroot/buildroot/output/target/etc/init.d/sshd"
-
 fi
 
 # repack rootfs.tar
