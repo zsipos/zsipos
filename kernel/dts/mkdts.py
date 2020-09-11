@@ -18,6 +18,9 @@ move_to_sel4 = ["litex,liteeth"]#, "zsipos,to_sel4_slave", "zsipos,to_linux_mast
 def build_linux_dts(dtb, sel4_size, dst_dir):
     dts_name = os.path.join(dst_dir, "linux.dts")
     fdt = dtb.to_fdt()
+    # set root partition
+    chosen = fdt.resolve_path("/chosen")
+    chosen.add_subnode(FdtPropertyWords("partition", [1]))
     # fix the memory
     mem = fdt.resolve_path("/memory@" + hex(MEM_BASE)[2:])
     mem.name = "memory@" + hex(MEM_BASE+sel4_size)[2:]
