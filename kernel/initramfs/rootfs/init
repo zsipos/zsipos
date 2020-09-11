@@ -47,10 +47,22 @@ read -p "Hit enter within $TIMEOUT seconds to enter shell" -t $TIMEOUT dummy && 
 echo
 echo Normal startup ...
 
-bb mkdir -p /proc /dev /etc /mnt
+bb mkdir -p /proc /dev /etc /mnt /sys
 bb mount -t proc none /proc
+bb mount -t sysfs    none   /sys
 bb mount -t devtmpfs udev /dev
 bb ln -sf /proc/mounts /etc/fstab
+
+# get partition to boot from devicetree
+P=/proc/device-tree/chosen/partition 
+if bb [ -f $P ]
+then
+	PARTNR=`bb cat $P`
+	PARTNR=`printf "%d" "'$PARTNR"`
+	echo setting boot partition to $PARTNR
+	ROOTDEV=/dev/mmcblk0p"$PARTNR"
+fi
+
 #NOTE: fsck.ext4 with shared libs makes initramfs huge, rely on ext4 recovery
 #/sbin/fsck.ext4 -y $ROOTDEV
 
@@ -58,10 +70,10 @@ bb ln -sf /proc/mounts /etc/fstab
 bb [ -b $ROOTDEV ] || ROOTDEV=/dev/vda
 
 # check for nfs boot
-bb mount $ROOTDEV /mnt || (echo "WARNING: can not mount $ROOTDEV !";bb umount /proc /dev;enter_shell)
+bb mount $ROOTDEV /mnt || (echo "WARNING: can not mount $ROOTDEV !";bb umount /proc /dev /sys;enter_shell)
 bb [ -f /mnt/nfs_boot ] && bb [ -d /proc/sys/fs/nfs ]
 START_NFS=$?
-bb umount /proc /dev
+bb umount /proc /dev /sys
 
 if bb [ $START_NFS == 0 ]
 then
