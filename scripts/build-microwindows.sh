@@ -1,16 +1,19 @@
 # SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
 # SPDX-License-Identifier: GPL-3.0-or-later
+set -e
 
 build_for_processor() 
 {
 	echo "building microwindows ..."
 	cd "$ZTOP/software/microwindows/src"
 	export CONFIG="`pwd`/Configs/config.zsipos"
-	make -k $2 CONFIG=$CONFIG
 	if [ x"$2" == x"clean" ]
 	then
-		return
+		m=clean
+	else
+		m=
 	fi
+	make -k $m CONFIG=$CONFIG
 	cd lib
 	rm -f libX11.a
 	ln -s `pwd`/libNX11.a libX11.a
