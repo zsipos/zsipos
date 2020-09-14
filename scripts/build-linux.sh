@@ -47,6 +47,6 @@ then
 		grep -v "CONFIG_ARCH_RV32I" <"$CONFIGDIR/$DEFCONFIG" >"$CONFIGDIR/zsipos_64_defconfig"
 	fi
 else
-	linuxmake -j8 vmlinux $1
+	linuxmake -j8 vmlinux
 fi
 

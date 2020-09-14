@@ -6,5 +6,13 @@ echo "building dts ..."
 
 cd "$ZTOP/kernel/dts"
 
-make $1
+if [ "$1"x == "clean"x ]
+then
+	m=clean
+else
+	m=
+fi
+
+make $m
+
 

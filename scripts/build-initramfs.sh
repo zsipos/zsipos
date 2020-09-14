@@ -4,5 +4,14 @@
 set -e
 echo "building initramfs ..."
 
+if [ "$1"x == "clean"x ]
+then
+	m=clean
+else
+	m=
+fi
+
 cd "$ZTOP/kernel/initramfs"
-make $1
+
+make $m
+

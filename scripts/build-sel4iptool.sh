@@ -4,5 +4,15 @@
 set -e
 echo "building sel4iptools ..."
 
-(cd "$ZTOP/software/sel4iptool"; make $1)
+cd "$ZTOP/software/sel4iptool"
+
+if [ "$1"x == "clean"x ]
+then
+	m=clean
+else
+	m=
+fi
+
+make $m
+
 
