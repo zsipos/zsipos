@@ -85,6 +85,10 @@ git checkout master-zsipos
 cd "$ZTOP/./kernel/linux"
 git checkout linux-4.19.y-zsipos-sel4
 
+#./kernel/u-boot
+cd "$ZTOP/./kernel/u-boot"
+git checkout master-zsipos
+
 #./kernel/riscv-pk
 cd "$ZTOP/./kernel/riscv-pk"
 git checkout zsipos-sel4

@@ -8,9 +8,12 @@ build-sel4zsipos.sh $1
 build-initramfs.sh $1
 build-linux.sh $1
 build-bbl.sh $1
+build-u-boot.sh $1
 
-if [ x"$1" != x"clean" ] && [ -d /tftpboot ] && [ -w /tftpboot/boot.bin ]
+S="$ZTOP/kernel/build_$BITS/bbl/bbl.bin"
+D=/tftpboot/boot.bin
+if [ x"$1" != x"clean" ] && [ -d /tftpboot ] && [ -w $D ]
 then
-	cp "$ZTOP/kernel/build_$BITS/bbl/bbl.bin" /tftpboot/boot.bin
-	echo "bbl.bin installed to /tftpboot/boot.bin"
+	cp "$S" "$D"
+	echo "$S installed to $D"
 fi

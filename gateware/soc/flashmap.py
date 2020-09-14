@@ -11,7 +11,7 @@ FLASH_BITSTREAM_IMAGE = os.path.join(
 
 FLASH_BOOTROM_OFFSET = 0x400000
 FLASH_BOOTROM_IMAGE = os.path.join(
-    ZTOP, "kernel", "build_" + os.environ["BITS"], "bbl", "bbl.bin")
+    ZTOP, "kernel", "build_" + os.environ["BITS"], "u-boot", "u-boot.bin")
 
 FLASH_MAP = {
     FLASH_BITSTREAM_OFFSET :  (FLASH_BITSTREAM_IMAGE, "bit" , False),

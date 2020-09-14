@@ -47,7 +47,7 @@ rm -f "$INIT_DIR/S99zsiposapp"
 
 else
 
-# copy app
+# copy app + kernel
 echo "copy zsipos app ..."
 export ZSIPOSOVL_INIT="$OVERLAYDIR/init_overlay"
 export ZSIPOSOVL_APP="$OVERLAYDIR/app_overlay"
@@ -58,6 +58,7 @@ cp "$ZTOP/software/sel4iptool/sel4iptool" "$ZSIPOSOVL_APP/bin"
 cp -r "$ZTOP/software/zsipos" "$ZSIPOSOVL_APP/root"
 cp -r "$ZTOP/software/fonts" "$ZSIPOSOVL_APP/root"
 rm -rf "$ZSIPOSOVL_APP/root/zsipos/"*"/host"
+cp "$ZTOP/kernel/build_$BITS/u-boot/sel4+linux" "$ZSIPOSOVL_APP"
 
 fi
 
