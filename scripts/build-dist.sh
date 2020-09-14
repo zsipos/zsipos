@@ -14,7 +14,7 @@ then
 	build-all.sh clean
 	build-all.sh
 else
-	build-zsipos.sh
+	build-all.sh $1
 fi
 
 rm -rf "$DESTDIR"
