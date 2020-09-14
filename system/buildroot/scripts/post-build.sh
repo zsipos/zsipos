@@ -16,3 +16,5 @@ test -f "$F" && mv "$F" "$DSTDIR/etc/init.d/sshd"
 F="$DSTDIR/root/.ssh/id_rsa"
 test -f "$F" && chmod 600 "$F"
 
+exit 0
+
