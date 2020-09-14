@@ -160,6 +160,12 @@ class DTSHelper():
     def tabs(self, extra):
         return "\t" * (self.indent+extra)
 
+    def _label(self, devname):
+        for i, c in enumerate(devname):
+            if c.isdigit():
+                return devname[:i] + "@" + devname[i:]
+        return devname + "@0"
+
     def _base(self, name):
         return hex(self.json["csr_bases"][name])
 
@@ -222,7 +228,7 @@ class DTSHelper():
 
     def add_litex_uart(self, uart):
         s = ""
-        s += self.tabs(0) + uart + ": uart@" + self._base(uart)[2:] + " {\n"
+        s += self.tabs(0) + uart + ": " + self._label(uart) + " {\n"
         s += self.tabs(1) + 'compatible = "litex,uart0";\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(uart) + ">;\n"
@@ -232,7 +238,7 @@ class DTSHelper():
 
     def add_litex_eth(self, phy, mac):
         s = ""
-        s += self.tabs(0) + mac + ": " + mac + "@" + self._base(mac)[2:] + " {\n"
+        s += self.tabs(0) + mac + ": " + self._label(mac) + " {\n"
         s += self.tabs(1) + 'compatible = "litex,liteeth";\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(mac) + ">;\n"
@@ -247,7 +253,7 @@ class DTSHelper():
     def add_litex_gpio(self, gpio, direction, ngpio):
         assert direction in ["in", "out"]
         s = ""
-        s += self.tabs(0) + gpio + ": gpio@" + self._base(gpio)[2:] + " {\n"
+        s += self.tabs(0) + gpio + ": " + self._label(gpio) + " {\n"
         s += self.tabs(1) + "#gpio-cells = <2>;\n"
         s += self.tabs(1) + 'compatible = "litex,gpio";\n'
         s += self.tabs(1) + "gpio-controller;\n"
@@ -259,7 +265,7 @@ class DTSHelper():
 
     def add_litex_timer(self, timer):
         s = ""
-        s += self.tabs(0) + timer + ": " + timer + "@" + self._base(timer)[2:] + " {\n"
+        s += self.tabs(0) + timer + ": " + self._label(timer) + " {\n"
         s += self.tabs(1) + 'compatible = "litex,timer";\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
         s += self.tabs(1) + "interrupts = <" + self._irq(timer) + ">;\n"
@@ -269,7 +275,7 @@ class DTSHelper():
 
     def add_opencores_sdc(self, sdmmc):
         s = ""
-        s += self.tabs(0) + sdmmc + ": ocsdc@" + self._membase(sdmmc)[2:] + " {\n"
+        s += self.tabs(0) + sdmmc + ": " + self._label(sdmmc) + " {\n"
         s += self.tabs(1) + 'compatible = "opencores,ocsdc";\n'
         s += self.tabs(1) + 'clocks = <&zsiposclock>;\n'
         s += self.tabs(1) + self._irqparent() + ";\n"
@@ -280,7 +286,7 @@ class DTSHelper():
 
     def add_zsipos_spi(self, spi, devices=None):
         s = ""
-        s += self.tabs(0) + spi + ": spi@" + self._membase(spi)[2:] + " {\n"
+        s += self.tabs(0) + spi + ": " + self._label(spi) + " {\n"
         s += self.tabs(1) + "#address-cells = <1>;\n"
         s += self.tabs(1) + "#size-cells = <0>;\n"
         s += self.tabs(1) + 'compatible = "zsipos,spi";\n'
@@ -295,7 +301,7 @@ class DTSHelper():
 
     def add_zsipos_spim(self, spim, devices=None):
         s = ""
-        s += self.tabs(0) + spim + ": spi@" + self._base(spim)[2:] + " {\n"
+        s += self.tabs(0) + spim + ": " + self._label(spim)+ " {\n"
         s += self.tabs(1) + "#address-cells = <1>;\n"
         s += self.tabs(1) + "#size-cells = <0>;\n"
         s += self.tabs(1) + 'compatible = "zsipos,spi-m";\n'
@@ -315,7 +321,7 @@ class DTSHelper():
 
     def add_zsipos_aes(self, aes):
         s = ""
-        s += self.tabs(0) + aes + ": aes@" + self._membase(aes)[2:] + " {\n"
+        s += self.tabs(0) + aes + ": " + self._label(aes) + " {\n"
         s += self.tabs(1) + 'compatible = "zsipos,aes";\n'
         s += self.tabs(1) + "reg = <" + self._memreg(aes) + ">;\n"
         s += self.tabs(0) + "};\n"
@@ -323,7 +329,7 @@ class DTSHelper():
 
     def add_zsipos_sha1(self, sha1):
         s = ""
-        s += self.tabs(0) + sha1 + ": sha1@" + self._membase(sha1)[2:] + " {\n"
+        s += self.tabs(0) + sha1 + ": " + self._label(sha1) + " {\n"
         s += self.tabs(1) + 'compatible = "zsipos,sha1";\n'
         s += self.tabs(1) + "reg = <" + self._memreg(sha1) + ">;\n"
         s += self.tabs(0) + "};\n"

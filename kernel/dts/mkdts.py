@@ -147,7 +147,8 @@ def build_sel4_camkes(dtb, dst_dir):
             s += name + ".irq_irq_number = " + str(irq) + ";\n"
             s += "\n"
         elif compat == "litex,timer":
-            name = i.get_name().split('@')[0]
+            name = i.get_name().split('@')
+            name = name[0] + name[1]
             regs = i[i.index("reg")]
             size = fix_size(regs.words[1])
             s += name + ".reg_paddr = " + hex(regs.words[0]) + ";\n"
@@ -156,9 +157,8 @@ def build_sel4_camkes(dtb, dst_dir):
             s += name + ".irq_irq_number = " + str(irq) + ";\n"
             s += "\n"
         elif compat == "litex,liteeth":
-            name = i.get_name().split('@')[0]
-            if name == "ethmac":
-                name += "0"
+            name = i.get_name().split('@')
+            name = name[0] + name[1]
             regs = i[i.index("reg")]
             for u in range(2):
                 size = fix_size(regs.words[u*2+1])
