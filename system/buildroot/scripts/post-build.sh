@@ -9,8 +9,10 @@ rm -f "$DSTDIR/etc/network/interfaces"
 rm -f "$DSTDIR/etc/resolv.conf"
 
 # sshd not auto startup
-test -f "$DSTDIR/etc/init.d/S50sshd" && mv "$DSTDIR/etc/init.d/S50sshd" "$DSTDIR/etc/init.d/sshd"
+F="$DSTDIR/etc/init.d/S50sshd"
+test -f "$F" && mv "$F" "$DSTDIR/etc/init.d/sshd"
 
 # rsa_id correct permissions
-chmod 600 "$DSTDIR/root/.ssh/id_rsa"
+F="$DSTDIR/root/.ssh/id_rsa"
+test -f "$F" && chmod 600 "$F"
 
