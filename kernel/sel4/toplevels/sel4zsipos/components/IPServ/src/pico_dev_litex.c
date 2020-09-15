@@ -10,7 +10,7 @@
 
 #include <litex.h>
 
-#define LITEX_COUNTER_RESET			100
+#define LITEX_COUNTER_RESET			1000
 #define LITEX_COUNTER_READER_READY	5
 
 static volatile void *macadr;
