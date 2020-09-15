@@ -321,33 +321,25 @@ cdef void on_btn_addfile(Fl_Widget* widget, void *cfdata) with gil:
         log.info("on_btn_addfile: remove %s" %(myfile,))
         remove_file(myfile)
 
-cdef void on_btn_addfiles(Fl_Widget* widget, void *data) with gil:
-    size = configui.browse_archive.size()
-    for index in range(1, size+1):
-        if configui.browse_archive.selected(index):
-            file = configui.browse_archive.text(index)
-            #if len(file) > 2: # exclude . and ..
-            add_file_browser(file)
-            #configui.browse_archive.select(index,0)
-
-cdef void on_btn_removefiles(Fl_Widget* widget, void *data) with gil:
-    size = configui.browse_archive.size()
-    for index in range(1, size+1):
-        if configui.browse_archive.selected(index):
-            file = configui.browse_archive.text(index)
-            if len(file) > 2: # exclude . and ..
-                remove_file_browser(file)
-            configui.browse_archive.select(index,0)
-
-cdef void on_btn_show_selected(Fl_Widget* widget, void *data) with gil:
+cdef void on_browser_archive_click(Fl_Widget* widget, void *data) with gil:
+    global sendfiles
+    
+    #log.info("on_browser_archive_click: sendfiles %s" %(sendfiles))
     size = configui.browse_archive.size()
     for index in range(1, size+1):
         filename = configui.browse_archive.text(index)
         relfile = os.path.join("archive", filename)
-        if relfile in sendfiles: # exclude . and ..
-            configui.browse_archive.select(index,1)
+        if configui.browse_archive.selected(index):
+            if relfile in sendfiles:
+                log.info("on_browser_archive_click: remove %s" %(filename,))
+                remove_file(relfile)
+                configui.browse_archive.select(index,0)
+            else:
+                log.info("on_browser_archive_click: add %s" %(filename,))
+                add_file(relfile)
         else:
-            configui.browse_archive.select(index,0)
+            if relfile in sendfiles: 
+                configui.browse_archive.select(index,1)
 
 cdef void on_btn_upload(Fl_Widget* widget, void *data) with gil:
     add_stdfiles()
@@ -639,10 +631,6 @@ def add_file(char *filename):
         if filename not in sendfiles:
             sendfiles.add(filename)
     log.info("add_file: sendfiles %s" %(sendfiles))
-
-def add_file_browser(char *filename):
-    relfile = os.path.join("archive", filename)
-    add_file(relfile)
 
 def add_stdfiles():
     global sendfiles;
@@ -1588,10 +1576,6 @@ def remove_file(char *filename):
     if filename in sendfiles:
         sendfiles.remove(filename)
 
-def remove_file_browser(char *filename):
-    relfile = os.path.join("archive", filename)
-    remove_file(relfile)
-
 def save_root_pw(newpw):
 
     cmd = ['/usr/bin/passwd', 'root']
@@ -2145,9 +2129,7 @@ def configui_init(infstr):
     #ui.browse_archive.filter("[a-zA-Z0-9]*")
     ui.browse_archive.load("archive")
     ui.browse_archive.remove(1) # hide ../
-    ui.btn_add_file.callback(on_btn_addfiles, NULL)
-    ui.btn_remove_file.callback(on_btn_removefiles, NULL)
-    ui.btn_show_selected.callback(on_btn_show_selected, NULL)
+    ui.browse_archive.callback(on_browser_archive_click, NULL)
     ui.btn_upload.callback(on_btn_upload, NULL)
 
     # Group Experts
@@ -2237,10 +2219,7 @@ cdef extern from "gui.cxx":
         Fl_Check_Button*    btn_nohup
         Fl_Check_Button*    btn_zsiposlog
         Fl_File_Browser*    browse_archive
-        Fl_Button*          btn_add_file
-        Fl_Button*          btn_remove_file
         Fl_Button*          btn_upload
-        Fl_Button*          btn_show_selected
         # LogSettings
         Fl_Double_Window*   winLogSettings
         Fl_Button*          btn_logsettings_back
@@ -2262,16 +2241,9 @@ cdef extern from "gui.cxx":
         Fl_Group*           group_experts
         Fl_Output*          btn_local_proxy
         Fl_Button*          btn_ping_local_proxy
-        Fl_Output*          btn_upload_server
-        Fl_Button*          btn_ping_upload_server
         Fl_Check_Button*    btn_skipzrtp1
         Fl_Check_Button*    btn_sshd
         Fl_Check_Button*    btn_autosshd
-        Fl_File_Browser*    browse_archive
-        Fl_Button*          btn_add_file
-        Fl_Button*          btn_remove_file
-        Fl_Button*          btn_upload
-        Fl_Button*          btn_show_selected
 
         # Password
         Fl_Group*           group_passwd

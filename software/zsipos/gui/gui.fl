@@ -290,18 +290,6 @@ class CONFIGUI {open
             label archive
             xywh {15 181 251 133} type Multi color 29 align 5 textsize 16
           }
-          Fl_Button btn_add_file {
-            label Select
-            xywh {275 220 87 25} labelsize 18
-          }
-          Fl_Button btn_remove_file {
-            label Deselect
-            xywh {377 220 87 25} labelsize 18
-          }
-          Fl_Button btn_show_selected {
-            label {Show selected files}
-            xywh {275 250 190 25} labelsize 18
-          }
           Fl_Button btn_upload {
             label {Send (takes minutes)}
             xywh {275 280 189 25} labelsize 18
@@ -335,11 +323,11 @@ class CONFIGUI {open
             xywh {10 155 455 40} box DOWN_BOX
           } {
             Fl_Check_Button btn_sshd {
-              label { SSH Daemon On/Off}
+              label { SSH Daemon On}
               xywh {25 161 166 30} down_box DOWN_BOX
             }
             Fl_Check_Button btn_autosshd {
-              label { SSHD Auto Start On/Off}
+              label { SSHD Auto Start On}
               xywh {235 161 210 30} down_box DOWN_BOX
             }
           }
