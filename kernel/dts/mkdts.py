@@ -7,8 +7,9 @@
 import os, sys
 from pyfdt.pyfdt import *
 
-MEM_BASE = 0x80000000
-PAGESIZE = 4096
+MEM_BASE    = 0x80000000
+PAGESIZE    = 4096
+PLACEHOLDER = "**PLACEHOLDER**" # must be big enough to hold the strings we modify in bootloader 
 
 copy_to_sel4 = ["riscv,plic0", "riscv,clint0"]
 move_to_sel4 = ["litex,liteeth"]#, "zsipos,to_sel4_slave", "zsipos,to_linux_master"]
@@ -20,7 +21,8 @@ def build_linux_dts(dtb, sel4_size, dst_dir):
     fdt = dtb.to_fdt()
     # set root partition
     chosen = fdt.resolve_path("/chosen")
-    chosen.add_subnode(FdtPropertyWords("partition", [1]))
+    chosen.add_subnode(FdtPropertyStrings("zsipos,partition", [PLACEHOLDER]))
+    chosen.add_subnode(FdtPropertyStrings("zsipos,boot-version", [PLACEHOLDER]))
     # fix the memory
     mem = fdt.resolve_path("/memory@" + hex(MEM_BASE)[2:])
     mem.name = "memory@" + hex(MEM_BASE+sel4_size)[2:]

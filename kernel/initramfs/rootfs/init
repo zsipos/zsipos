@@ -54,13 +54,18 @@ bb mount -t devtmpfs udev /dev
 bb ln -sf /proc/mounts /etc/fstab
 
 # get partition to boot from devicetree
-P=/proc/device-tree/chosen/partition 
+P=/proc/device-tree/chosen/zsipos,partition 
 if bb [ -f $P ]
 then
 	PARTNR=`bb cat $P`
-	PARTNR=`printf "%d" "'$PARTNR"`
-	echo setting boot partition to $PARTNR
-	ROOTDEV=/dev/mmcblk0p"$PARTNR"
+	R=/dev/mmcblk0p"$PARTNR"
+	if bb [ -b $R ]
+	then
+		echo setting boot partition to $PARTNR
+		ROOTDEV=$R
+	else
+		echo partition $PARTNR does not exist. using $ROOTDEV.
+	fi
 fi
 
 #NOTE: fsck.ext4 with shared libs makes initramfs huge, rely on ext4 recovery

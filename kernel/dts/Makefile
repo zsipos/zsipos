@@ -8,7 +8,7 @@ GENERATED = $(DSTDIR)/devicetree.dtb $(DSTDIR)/linux.dts $(DSTDIR)/sel4.dts $(DS
 
 all: $(GENERATED)
 
-$(GENERATED): $(DEVSRC)
+$(GENERATED): $(DEVSRC) mkdts.py
 	mkdir -p $(DSTDIR)
 	python mkdts.py $(DEVSRC) $(SEL4MEMSIZE) $(DSTDIR)
 
