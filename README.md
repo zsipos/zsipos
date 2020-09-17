@@ -59,51 +59,28 @@ You must initialize this environemt by typing:
 
 The first time you call this script it will set up a python virtual environemnt for you which may take some time.
 
-### Building the linux/sel4 ssh test program
+### Building zsipos
 
-To build the linux/sel4 ssh test program please run its build script:
+To build zsipos please run its build script:
 
 	$ build-dist.sh rebuild
 
-### Running the linux/sel4 ssh test program
+### Preparing the hardware
 
-You need the zsipos hardware to run the linux/sel4 ssh test program.
-First you have to flash the fpga hardware. Either connect the hardware and run the command
+You have to flash the fpga hardware. Either connect the hardware and run the command
 
 	$ build-board.sh --nobuild --flashrom
 
 or flash the file `./output/fpga-romboot.mcs` to the fpga with the vivado tools.
 
-After that unpack the file `./output/rootfs.tar` to the root directory of a SD-card containing a empty ext4 filesystem. 
-This is the root filesystem of the fpga system. You may want to edit the file `/etc/init.d/S40network`
-to match your network configuration. Start the fpga. 
-**The first time you start the system sshd will generate its keys. This can take some minutes.**
-After that you can open a ssh session to the linux system on the fpga:
+### Preparing the boot media
 
-	$ ssh your_ip_address -l root
+Prepare a sd-card with two linux partitions. Each partition should have a size of at least 1GB. Unpack the file
+`./output/rootfs.tar` to the root directory of the first partition. 
 
-The initial password of user `root` is `root`. It is a good practice to change this for security reasons.
+### Starting the zsipos system the first time
 
-### Building the linux/sel4 test suite
-
-To build the linux/sel4 test suite please run its build script:
-
-	$ build-sel4test.sh
-
-### Running the linux/sel4 test suite
-
-To run the linux/sel4 test suite please run 
-
-	$ run-sel4test.sh
-
-Both the linux system and the sel4test program write their output to the same console, so the output gets mixed.
-To verify that the linux system is functional you can give a shell command, e.g. `ls -l` during the sel4test.
-At the end of the sel4test you should see the following message:
-
-	Test suite passed. 115 tests passed. 46 tests disabled.
-	All is well in the universe
-
-
-The linux shell keeps accepting commands. To exit qemu please type **`Ctrl+A X`**.
+The first time you start the system you will be forced to enter a new system password. The initial system password is zsipos2018.
+If you enable sshd the first time you start the system with sshd it will generate its keys. This can take several minutes.
 
 
