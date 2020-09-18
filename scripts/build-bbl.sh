@@ -24,7 +24,6 @@ cd "$WRKDIR"
 
 if [ ! -f config.status ]
 then
-	export CFLAGS=-DBBL_IS_SECOND_STAGE
 	"$SRCDIR/configure" \
 		--host="$ZTC_PREFIX" \
 		--with-arch=rv${BITS}imac \
@@ -35,6 +34,7 @@ then
 		--with-devicetree="../dts/linux.dts" 
 fi
 
+export CFLAGS=-DBBL_IS_SECOND_STAGE
 make
 
 
