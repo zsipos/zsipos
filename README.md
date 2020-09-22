@@ -33,10 +33,6 @@ For all the other dependencies we prepared a install script for you:
 
 	$ scripts/install-deps.sh
 
-Also please setup the haskell compiler:
-
-	$ stack config set system-ghc --global true
-
 Please configure your git identity:
 
 	$ git config --global user.email "you@example.com"
