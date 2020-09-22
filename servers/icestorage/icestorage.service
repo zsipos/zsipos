@@ -8,7 +8,7 @@ Description=ICE Storage Server
 After=network.target syslog.target
 
 [Service]
-ExecStart=/usr/bin/python /root/icestorage/icestorage.py
+ExecStart=/usr/bin/python3 /root/icestorage/icestorage.py
 ExecStop=/usr/bin/pkill -F /var/run/icestorage.pid
 
 [Install]

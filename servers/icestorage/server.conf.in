@@ -1,9 +1,0 @@
-# SPDX-FileCopyrightText: 2017 Joachim Bauch / struktur AG <bauch@struktur.de>
-#
-# SPDX-License-Identifier: GPL-3.0-or-later
-[stun]
-server = stun.domain.invalid
-
-[turn]
-server = turn.domain.invalid:443
-shared-secret = this-is-the-shared-secret

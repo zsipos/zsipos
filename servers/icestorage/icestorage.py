@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
+
+# SPDX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>
 # SPDX-FileCopyrightText: 2017 Joachim Bauch / struktur AG <bauch@struktur.de>
-#
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 """
-
 Copyright (C) 2017 Joachim Bauch / struktur AG <bauch@struktur.de>
 
    This program is free software; you can redistribute it and/or modify
@@ -21,222 +21,178 @@ Copyright (C) 2017 Joachim Bauch / struktur AG <bauch@struktur.de>
    along with this program; if not, write to the Free Software Foundation,
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301
 """
-import BaseHTTPServer
-import binascii
-import ConfigParser
-import hashlib
-import hmac
-try:
-  import json
-except ImportError:
-  import simplejson as json
+
+import tornado.web
+import tornado.ioloop
+
+import json
 import random
 import string
-import SocketServer
 import time
 
 # Stored data is valid for 5 minutes
 EXPIRE_DELAY_SECONDS = 5 * 60
 
 def calculateChecksum(s):
-  check = 7
-  for ch in s:
-    check = (check ^ int(ch)) % 10
-  return check
+    check = 7
+    for ch in s:
+        check = (check ^ int(ch)) % 10
+    return check
+
 
 def generateRandomId(length):
-  # Don't start with a leading zero.
-  rnd = [random.randint(1, 9)]
-  for x in xrange(length-2):
-    part = random.randint(0, 9)
-    while part == rnd[x]:
-      # Prevent duplicate characters.
-      part = random.randint(0, 9)
-    rnd.append(part)
-  rnd.append(calculateChecksum(rnd))
-  return ''.join(map(str, rnd))
+    # Don't start with a leading zero.
+    rnd = [random.randint(1, 9)]
+    for x in range(length-2):
+        part = random.randint(0, 9)
+        while part == rnd[x]:
+            # Prevent duplicate characters.
+            part = random.randint(0, 9)
+        rnd.append(part)
+    rnd.append(calculateChecksum(rnd))
+    return ''.join(map(str, rnd))
 
-def isValidRandomId(id):
-  if not id or not id.isdigit():
-    return False
 
-  check = calculateChecksum(id[:-1])
-  return check == int(id[-1])
+def isValidRandomId(dtmfid):
+    if not dtmfid or not dtmfid.isdigit():
+        return False
+    check = calculateChecksum(dtmfid[:-1])
+    return check == int(dtmfid[-1])
+
 
 def getRandomString(length):
-  return ''.join(random.choice(string.lowercase) for i in range(length))
+    return ''.join(random.choice(string.ascii_lowercase) for _ in range(length))
 
-class IceStorageHandler(BaseHTTPServer.BaseHTTPRequestHandler):
 
-  def send_json(self, data):
-    encoded = json.dumps(data, sort_keys=True, indent=4)
-    self.send_response(200)
-    self.send_header('Content-Type', 'application/json')
-    self.send_header('Content-Length', len(encoded))
-    self.send_header('Cache-Control', 'no-cache, no-store, must-revalidate')
-    self.send_header('Pragma', 'no-cache')
-    self.send_header('Expires', '0')
-    self.end_headers()
-    self.wfile.write(encoded)
+class IceStorageHandler(tornado.web.RequestHandler):
+    
+    def _send_json(self, data):
+        encoded = json.dumps(data, sort_keys=True, indent=4).encode("utf8")
+        self.set_status(200)
+        self.set_header('Content-Type', 'application/json')
+        self.set_header('Content-Length', len(encoded))
+        self.set_header('Cache-Control', 'no-cache, no-store, must-revalidate')
+        self.set_header('Pragma', 'no-cache')
+        self.set_header('Expires', '0')
+        self.write(encoded)
 
-  def do_GET(self):
-    path = self.path
-    while '//' in path:
-      path = path.replace('//', '/')
-    if path[:1] == '/':
-      path = path[1:]
+    def _getRequestBody(self):
+        try:
+            data = json.loads(self.request.body)
+        except ValueError as e:
+            self.set_status(400, 'Can\'t decode JSON: %s' % (e))
+            return
+        return data
+    
+    def get(self):
+        path = self.request.path
+        while '//' in path:
+            path = path.replace('//', '/')
+        if path[:1] == '/':
+            path = path[1:]
 
-    if not isValidRandomId(path):
-      self.send_error(404)
-      return
+        if not isValidRandomId(path):
+            self.send_error(404)
+            return
 
-    data = self.server.getSettings(path)
-    if data is None:
-      self.send_error(404)
-      return
+        data = self.application.getSettings(path)
+        if data is None:
+            self.send_error(404)
+            return
 
-    data = data.copy()
-    data.pop('_update_token', None)
-    self.send_json(data)
+        data = data.copy()
+        data.pop('_update_token', None)
+        self._send_json(data)
 
-  def _getRequestBody(self):
-    content_len = int(self.headers.getheader('Content-Length', 0))
-    data = self.rfile.read(content_len)
-    if not data:
-      self.send_error(400)
-      return
+    def put(self):
+        data = self._getRequestBody()
+        if data is None:
+            # Already returned an error
+            return
+        data['_update_token'] = getRandomString(32)
+        dtmfid = self.application.storeSettings(data)
+        response = {
+          'id': dtmfid,
+          'token': data['_update_token'],
+        }
+        self._send_json(response)
 
-    try:
-      data = json.loads(data)
-    except ValueError, e:
-      self.send_error(400, 'Can\'t decode JSON: %s' % (e))
-      return
+    def post(self):
+        token = self.request.headers.get('X-icestorage-token', None)
+        path = self.request.path
+        while '//' in path:
+            path = path.replace('//', '/')
+        if path[:1] == '/':
+            path = path[1:]
+        dtmfid = path
+        if not isValidRandomId(dtmfid):
+            self.send_error(404)
+            return
+        data = self._getRequestBody()
+        if data is None:
+            # Already returned an error
+            return
+        stored_data = self.application.getSettings(dtmfid)
+        if stored_data is None:
+            self.send_error(404)
+            return
+        if token != stored_data['_update_token']:
+            print('Update token mismatch', (token, stored_data['_update_token']))
+            self.set_error(404)
+            return
+        data.pop('_update_token', None)
+        stored_data.update(data)
+        self.application.updateSettings(dtmfid, stored_data)
+        self._send_json({
+          'id': dtmfid,
+          'token': stored_data['_update_token'],
+        })
+        
+        
+class IceStorageApp(tornado.web.Application):
+    
+    allow_reuse_address = True
+    id_length           = 10
 
-    return data
+    def __init__(self, *args, **kwargs):
+        tornado.web.Application.__init__(self, *args, **kwargs)
+        self.data = {}
 
-  def do_PUT(self):
-    data = self._getRequestBody()
-    if data is None:
-      # Already returned an error
-      return
+    def expireSetttings(self):
+        now = time.time()
+        for k, v in list(self.data.items()):
+            if v['expires'] <= now:
+                print('Expire settings', k)
+                del self.data[k]
 
-    data['_update_token'] = getRandomString(32)
-    id = self.server.storeSettings(data)
-    response = {
-      'id': id,
-      'token': data['_update_token'],
-    }
-    try:
-      stun_server = self.server.config.get('stun', 'server')
-    except ConfigParser.NoOptionError:
-      stun_server = None
-    if stun_server:
-      response['stun'] = {
-        'server': stun_server,
-      }
-    try:
-      turn_server = self.server.config.get('turn', 'server')
-      turn_secret = self.server.config.get('turn', 'shared-secret')
-    except ConfigParser.NoOptionError:
-      turn_server = turn_secret = None
-    if turn_server and turn_secret:
-      response['turn'] = {
-        'server': turn_server,
-      }
-      # temporary-username = "timestamp" + ":" + "username"
-      now = int(time.time())
-      random_username = getRandomString(16)
-      temp_username = str(now) + ':' + random_username
+    def getSettings(self, dtmfid):
+        self.expireSetttings()
+        return self.data.get(dtmfid, None)
 
-      # temporary-password = base64_encode(hmac-sha1(
-      #     input = temporary-username, key = shared-secret))
-      h = hmac.new(turn_secret, digestmod=hashlib.sha1)
-      h.update(temp_username)
-      raw_password = h.digest()
+    def storeSettings(self, data):
+        self.expireSetttings()
+        dtmfid = generateRandomId(self.id_length)
+        while dtmfid in self.data:
+            dtmfid = generateRandomId(self.id_length)
+        assert isValidRandomId(dtmfid), dtmfid
+        data['expires'] = time.time() + EXPIRE_DELAY_SECONDS
+        self.data[dtmfid] = data
+        return dtmfid
 
-      response['turn']['username'] = temp_username
-      response['turn']['password'] = binascii.b2a_base64(raw_password).strip()
+    def updateSettings(self, dtmfid, data):
+        data['expires'] = time.time() + EXPIRE_DELAY_SECONDS
+        self.data[dtmfid] = data
 
-    self.send_json(response)
-
-  def do_POST(self):
-    token = self.headers.getheader('X-icestorage-token', None)
-    path = self.path
-    while '//' in path:
-      path = path.replace('//', '/')
-    if path[:1] == '/':
-      path = path[1:]
-
-    id = path
-    if not isValidRandomId(id):
-      self.send_error(404)
-      return
-
-    data = self._getRequestBody()
-    if data is None:
-      # Already returned an error
-      return
-
-    stored_data = self.server.getSettings(id)
-    if stored_data is None:
-      self.send_error(404)
-      return
-
-    if token != stored_data['_update_token']:
-      print 'Update token mismatch', (token, stored_data['_update_token'])
-      self.send_error(404)
-      return
-
-    data.pop('_update_token', None)
-    stored_data.update(data)
-    self.server.updateSettings(id, stored_data)
-    self.send_json({
-      'id': id,
-      'token': stored_data['_update_token'],
-    })
-
-class IceStorageServer(SocketServer.TCPServer):
-  
-  allow_reuse_address = True
-
-  id_length = 10
-
-  def __init__(self, *args, **kw):
-    SocketServer.TCPServer.__init__(self, *args, **kw)
-    self.config = ConfigParser.ConfigParser()
-    self.config.read('server.conf')
-    self.data = {}
-
-  def expireSetttings(self):
-    now = time.time()
-    for k, v in self.data.items():
-      if v['expires'] <= now:
-        print 'Expire settings', k
-        del self.data[k]
-
-  def getSettings(self, id):
-    self.expireSetttings()
-    return self.data.get(id, None)
-
-  def storeSettings(self, data):
-    self.expireSetttings()
-    id = generateRandomId(self.id_length)
-    while id in self.data:
-      id = generateRandomId(self.id_length)
-    assert isValidRandomId(id), id
-    data['expires'] = time.time() + EXPIRE_DELAY_SECONDS
-    self.data[id] = data
-    return id
-
-  def updateSettings(self, id, data):
-    data['expires'] = time.time() + EXPIRE_DELAY_SECONDS
-    self.data[id] = data
 
 def main():
-  PORT = 9090
-  httpd = IceStorageServer(('', PORT), IceStorageHandler)
-  print 'Running server on :%d ...' % PORT
-  httpd.serve_forever()
+    PORT = 9090
+    print('Running server on :%d ...' % PORT)
+    application = IceStorageApp([
+        (r"/[0-9]*", IceStorageHandler),
+    ])
+    application.listen(PORT)
+    tornado.ioloop.IOLoop.current().start()
+
 
 if __name__ == '__main__':
-  main()
+    main()
