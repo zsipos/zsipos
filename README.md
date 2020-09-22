@@ -71,7 +71,7 @@ or flash the file `./output/fpga-romboot.mcs` to the fpga with the vivado tools.
 
 ### Preparing the boot media
 
-Prepare a sd-card with two linux partitions. Each partition should have a size of at least 1GB. Unpack the file
+Prepare a sd-card with two linux partitions containing a ext4 filesystem. Each partition must have a size of at least 1GB. Unpack the file
 `./output/rootfs.tar` to the root directory of the first partition. 
 
 ### Starting the zsipos system the first time
