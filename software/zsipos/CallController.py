@@ -41,7 +41,7 @@ from rtp import CyZRTPSession  #@UnresolvedImport
 
 log = logging.getLogger("gmitm.cc")
 
-def fixConnection(sdp, raddr, raddrctrl):
+def oldFixConnection(sdp, raddr, raddrctrl):
     #
     # to be reimplemented ...
     #
@@ -116,6 +116,104 @@ def fixConnection(sdp, raddr, raddrctrl):
     laddrctrl.port = laddrctrl.port + 1
     return (laddr, laddrctrl, (8000, int(ptime), pcmu, int(pt)))
 
+def newFixConnection(sdp, raddr, raddrctrl):
+    #
+    # still should be smarter ...
+    #
+    ptime = 20
+    c = sdp.headers.get('c', None)
+    m = sdp.headers['m']
+    o = sdp.headers['o']
+    if not m:
+        log.error('no m= - unable to fix.')
+        log.error("sdp: " + sdp.toString())
+        return
+    if not c:
+        c = m[0].headers.get('c')
+        if not c:
+            log.error('no c= - unable to fix.')
+            log.error("sdp: " + sdp.toString())
+            return
+        sdp.headers['c'] = c
+        del m[0].headers['c']
+    laddr = sdpaddr2url(sdp.headers['c'][0], m[0].value.split()[1])
+    sdp.headers['c'] = [ url2sdpaddr(raddr) ]
+    sdp.headers['m'] = [ m[0] ]
+    oparts = o[0].split(' ')
+    oparts[-1] = raddr.host
+    o[0] = ' '.join(oparts)
+    sdp.headers['o'] = [ o[0] ]
+    # first iteration: collect rtp map, fmtp args
+    rtp_map_by_id = {}
+    rtp_map_by_name = {}
+    fmtp_map = {}
+    for i in m[0].headers['a']:
+        try:
+            aparts = i.split(':', 1)
+        except IndexError:
+            continue # does not contain ':'
+        if aparts[0] == 'fmtp':
+            r = aparts[1].split(' ', 1)
+            fmtp_map[r[0]] = r[1] 
+        elif aparts[0] == 'rtpmap':
+            r = aparts[1].split(' ', 1)
+            # we only suuport this three
+            if r[1] in ['telephone-event/8000', 'PCMU/8000', 'PCMA/8000' ]:
+                rtp_map_by_id[r[0]] = r[1]
+                rtp_map_by_name[r[1]] = r[0]
+    # second iteration: rebuild the offer with the things we support
+    a_new = []
+    values = m[0].value.split(' ')
+    values[1] = str(raddr.port)
+    m[0].value = " ".join(values[:3])
+    used_codecs = values[3:]
+    first_codec = None
+    for i in m[0].headers['a']:
+        try:
+            aparts = i.split(':', 1)
+        except IndexError:
+            continue # does not contain ':'
+        if aparts[0] == 'rtcp':
+            a_new.append('rtcp:' + str(raddrctrl.port))
+        elif aparts[0] == 'fmtp':
+            if r[0] in used_codecs and r[0] in rtp_map_by_id:
+                a_new.append(i)
+        elif aparts[0] == 'rtpmap':
+            r = aparts[1].split(' ', 1)
+            if r[0] in used_codecs and r[0] in rtp_map_by_id:
+                m[0].value += ' ' + r[0]
+                a_new.append(i)
+                if not first_codec:
+                    first_codec = r[0]
+        elif aparts[0] == 'ptime':
+            ptime = aparts[1]
+            a_new.append(i)
+        elif aparts[0] == 'crypto':
+            pass
+        else:
+            a_new.append(i)
+    pt = rtp_map_by_name.get('telephone-event/8000')
+    if not pt:
+        a_new.append('rtpmap:' + pt + ' telephone-event/8000')
+        pt = '101'
+    if not pt in fmtp_map:
+        a_new.append('fmtp:' + pt + ' 0-15')
+    if not pt in used_codecs:
+        m[0].value += ' ' + pt
+    m[0].headers['a'] = a_new
+    laddrctrl = deepcopy(laddr)
+    laddrctrl.port = laddrctrl.port + 1
+    if not first_codec:
+        pcmu = False
+        log.error("no G.711 codec found")
+    else:
+        pcmu = rtp_map_by_id[first_codec] == 'PCMU/8000'
+    return (laddr, laddrctrl, (8000, int(ptime), pcmu, int(pt)))
+
+def fixConnection(sdp, raddr, raddrctrl):
+    return newFixConnection(sdp, raddr, raddrctrl)
+    #return oldFixConnection(sdp, raddr, raddrctrl)
+    
 def reduce2audio(sdp):
     m = sdp.headers.get('m')
     if m:
