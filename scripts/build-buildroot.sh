@@ -20,7 +20,12 @@ fi
 if [ "$1"x == "config"x ]
 then
 	make menuconfig
-	cp .config ../config
+	{
+		echo "# SP""DX-FileCopyrightText: 2020 Stefan Adams <stefan.adams@vipcomag.de>"
+		echo "# SP""DX-License-Identifier: CC0-1.0"
+		echo
+		cat .config
+	} >../config
 else
 	make
 fi
