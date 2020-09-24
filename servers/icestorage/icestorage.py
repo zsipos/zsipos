@@ -30,34 +30,37 @@ import random
 import string
 import time
 
+
 # Stored data is valid for 5 minutes
 EXPIRE_DELAY_SECONDS = 5 * 60
 
-def calculateChecksum(s):
-    check = 7
-    for ch in s:
-        check = (check ^ int(ch)) % 10
-    return check
+def checksum(s):
+    l = int(s)
+    return "%02d" % (98 - l % 97)
+
+
+def checkdup(rnd):
+    last = ""
+    for i in rnd:
+        if i == last:
+            return True
+        last = i
+    return False
 
 
 def generateRandomId(length):
-    # Don't start with a leading zero.
-    rnd = [random.randint(1, 9)]
-    for x in range(length-2):
-        part = random.randint(0, 9)
-        while part == rnd[x]:
-            # Prevent duplicate characters.
-            part = random.randint(0, 9)
-        rnd.append(part)
-    rnd.append(calculateChecksum(rnd))
-    return ''.join(map(str, rnd))
+    while True:
+        # no leading zero
+        rnd = str(random.randint(1, 9))
+        rnd += ''.join(str(random.randint(0, 9)) for _ in range(length-1))
+        if not checkdup(rnd + checksum(rnd)):
+            return rnd
 
 
 def isValidRandomId(dtmfid):
     if not dtmfid or not dtmfid.isdigit():
         return False
-    check = calculateChecksum(dtmfid[:-1])
-    return check == int(dtmfid[-1])
+    return True
 
 
 def getRandomString(length):
