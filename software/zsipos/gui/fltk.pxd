@@ -195,7 +195,8 @@ cdef extern from "FL/Fl_Group.H":
 cdef extern from "FL/Fl_Window.H":
 
     cdef cppclass Fl_Window(Fl_Group):
-        pass
+
+        void wait_for_expose() nogil
 
 
 cdef extern from "FL/Fl_Double_Window.H":
@@ -391,7 +392,9 @@ cdef extern from "FL/Fl_Text_Display.H":
 cdef extern from "FL/Fl_Text_Buffer.H":
 
     cdef cppclass Fl_Text_Buffer:
+        void append(const char* text) nogil
         int length() nogil
+        void replace(int startPos, int endPos, const char* text) nogil
         void text(const char* text) nogil
 
 

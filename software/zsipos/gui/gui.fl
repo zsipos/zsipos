@@ -1,8 +1,3 @@
-# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
-# SPDX-FileCopyrightText: 2019 Esther Bergter <esther.bergter@vipcomag.de>
-#
-# SPDX-License-Identifier: GPL-3.0-or-later
-
 # data file for the Fltk User Interface Designer (fluid)
 version 1.0304
 header_name {.h}
@@ -12,7 +7,7 @@ class MAINUI {open
   Function {MAINUI()} {open
   } {
     Fl_Window window {open
-      xywh {319 279 480 320} type Double labelsize 32 visible
+      xywh {765 436 480 320} type Double labelsize 32 visible
     } {
       Fl_Button btn_onhook {
         image {icons/phone.png} xywh {140 75 200 200} box NO_BOX deactivate
@@ -43,7 +38,7 @@ class CALLUI {} {
   } {
     code {this->pyobj = pyobj;} {}
     Fl_Window window {open
-      xywh {319 339 480 260} type Double labelfont 14
+      xywh {765 535 480 260} type Double labelfont 14
       class Fl_Group visible
     } {
       Fl_Button btn_callinfo {
@@ -105,7 +100,7 @@ class CONFIGUI {open
   } {
     Fl_Window window {
       label Configuration open
-      xywh {304 219 480 320} type Double visible
+      xywh {237 156 480 320} type Double visible
     } {
       Fl_Button btn_back {
         label Back
@@ -124,7 +119,7 @@ class CONFIGUI {open
         xywh {35 93 407 59} labelcolor 1 align 128 hide
       }
       Fl_Tabs tab_config {open
-        xywh {0 45 535 281} box UP_BOX
+        xywh {-20 45 597 281} box UP_BOX
       } {
         Fl_Group group_ip {
           label {IP Config} open
@@ -142,7 +137,7 @@ class CONFIGUI {open
               xywh {106 85 81 30} type Radio down_box ROUND_DOWN_BOX labelsize 18
             }
           }
-          Fl_Group group_btn_dns {open
+          Fl_Group group_btn_dns {
             xywh {225 80 242 40} box BORDER_BOX align 129
           } {
             Fl_Round_Button btn_static_dns {
@@ -154,7 +149,7 @@ class CONFIGUI {open
               xywh {230 85 81 30} type Radio down_box ROUND_DOWN_BOX labelsize 18
             }
           }
-          Fl_Group group_static_ip {open
+          Fl_Group group_static_ip {
             xywh {10 109 465 159} labelsize 18 align 129
           } {
             Fl_Output btn_ext_phone {
@@ -183,8 +178,8 @@ class CONFIGUI {open
               xywh {425 225 50 30}
             }
           }
-          Fl_Group group_dns {open
-            xywh {10 265 470 50} labelsize 18 align 129
+          Fl_Group group_dns {
+            xywh {10 265 480 50} labelsize 18 align 129
           } {
             Fl_Output btn_dns_server {
               label {DNS Server}
@@ -300,8 +295,8 @@ class CONFIGUI {open
           }
         }
         Fl_Group group_experts {
-          label Experts open selected
-          xywh {0 75 480 245}
+          label Experts open
+          xywh {0 75 480 245} hide
         } {
           Fl_Output btn_local_proxy {
             label {Local Proxy  }
@@ -333,7 +328,7 @@ class CONFIGUI {open
           }
         }
         Fl_Group group_passwd {
-          label Password open
+          label Passwd open
           xywh {0 75 480 245} hide
         } {
           Fl_Button btn_root_pw {
@@ -404,15 +399,60 @@ class CONFIGUI {open
           }
           Fl_Group group_git {
             label {Git Versions} open
-            xywh {230 155 244 150} box BORDER_FRAME color 0 labelsize 16
+            xywh {230 160 244 150} box BORDER_FRAME color 0 labelsize 16
           } {
             Fl_Button btn_show_git {
               label {List of Submodules}
-              xywh {250 260 190 30} labelsize 16
+              xywh {257 266 190 30} labelsize 16
             }
             Fl_Output out_git_magic {
-              xywh {240 168 225 80} type Multiline color 29 labelsize 18 textsize 16
+              xywh {240 175 225 80} type Multiline color 29 labelsize 18 textsize 16
             }
+          }
+          Fl_Output out_bootversion {
+            label {boot-version}
+            xywh {240 101 225 30} labelsize 18 align 1 textsize 16
+          }
+        }
+        Fl_Group group_update {
+          label Update open
+          xywh {0 75 577 245}
+        } {
+          Fl_Output out_current_version {
+            label {Current Version}
+            xywh {160 110 200 30} labelsize 18
+          }
+          Fl_Output out_alternate_version {
+            label {Alternate Version}
+            xywh {160 155 200 30} labelsize 18
+          }
+          Fl_Group group_btn_bootversion {
+            label {next boot} open
+            xywh {363 108 102 78} box BORDER_BOX labelsize 19 align 129
+          } {
+            Fl_Round_Button btn_boot_current {
+              label Current
+              xywh {370 110 87 30} type Radio down_box ROUND_DOWN_BOX
+            }
+            Fl_Round_Button btn_boot_alternate {
+              label Alternate
+              xywh {370 155 87 30} type Radio down_box ROUND_DOWN_BOX
+            }
+          }
+          Fl_Output out_update_server {
+            label {Update URL}
+            xywh {0 195 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
+          }
+          Fl_Button btn_ping_update_url {
+            label ping
+            xywh {420 195 50 30}
+          }
+          Fl_Box frameu1 {
+            xywh {150 195 273 30} box DOWN_FRAME
+          }
+          Fl_Button btn_update_info {
+            label {Look for Updates}
+            xywh {155 260 204 30} labelsize 18
           }
         }
       }
@@ -423,11 +463,11 @@ class CONFIGUI {open
       Fl_Group group_save {open
         xywh {0 0 435 200} color 7 selection_color 7
       } {
-        Fl_Button btn_save {
+        Fl_Button btn_save_ok {
           label Save
           xywh {224 147 75 50} labelsize 18
         }
-        Fl_Button btn_cancel {
+        Fl_Button btn_save_cancel {
           label Cancel
           xywh {353 147 75 50} labelsize 18
         }
@@ -449,14 +489,14 @@ class CONFIGUI {open
         label Back
         image {icons/left.png} xywh {0 2 40 37} box FLAT_BOX labelsize 10
       }
-      Fl_Text_Display helpDisplay {
+      Fl_Text_Display txt_helpDisplay {
         label Help
         xywh {20 60 440 240} box DOWN_BOX labelsize 18 textfont 1 textsize 18
       }
     }
     Fl_Window winEditAddress {
       label EditAddress open
-      xywh {909 655 480 320} type Double hide
+      xywh {765 436 480 320} type Double visible
     } {
       Fl_Button btn_address_back {
         label Back
@@ -475,7 +515,7 @@ class CONFIGUI {open
         image {icons/abort.png} xywh {441 2 40 37} box FLAT_BOX labelsize 10
       }
       Fl_Group addressgroup {
-        label address
+        label address open
         xywh {0 30 516 370} labelsize 18
       } {
         Fl_Group ipgroup {open
@@ -494,7 +534,7 @@ class CONFIGUI {open
             xywh {25 63 70 44} down_box ROUND_DOWN_BOX labelsize 18
           }
         }
-        Fl_Group keyboardgroup_func {
+        Fl_Group keyboardgroup_func {open
           xywh {0 130 481 189}
         } {
           Fl_Button key_del {
@@ -931,6 +971,173 @@ class CONFIGUI {open
       Fl_Box box_warn_logs {
         label {Do not activate logs unless advised.}
         xywh {65 18 389 59} box BORDER_BOX labelsize 18 labelcolor 1 align 128
+      }
+    }
+    Fl_Window winUpdateInfo {open
+      xywh {724 155 480 320} type Double visible
+    } {
+      Fl_Button btn_updateinfo_back {
+        label Back
+        image {icons/left.png} xywh {10 12 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Text_Display txt_updateinfo {
+        label {Update Info} selected
+        xywh {75 79 335 199} type Multiline color 29 labelsize 18 align 1 textsize 16
+      }
+      Fl_Button btn_updateinfo_ok {
+        label {Update Now}
+        xywh {165 285 160 30} labelsize 18
+      }
+    }
+    Fl_Window winUpdateSure {
+      xywh {1252 153 480 320} type Double visible
+    } {
+      Fl_Group group_updatesure {
+        xywh {0 0 480 320}
+      } {
+        Fl_Box box_updatesure {
+          label {Are you sure to update now?}
+          xywh {78 64 334 25} labelsize 22 labelcolor 88
+        }
+        Fl_Button btn_updatesure_cancel {
+          label Cancel
+          xywh {300 155 75 50} labelsize 18
+        }
+        Fl_Button btn_updatesure_ok {
+          label Update
+          xywh {105 155 120 50} labelsize 18
+        }
+      }
+    }
+    Fl_Window winUpdateProgress {
+      xywh {227 569 480 320} type Double visible
+    } {
+      Fl_Text_Display txt_updateprogress {
+        label {Update Progress}
+        xywh {50 47 365 208}
+      }
+      Fl_Button btn_updateprogress_back {
+        label Back
+        image {icons/left.png} xywh {0 2 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Button btn_updateprogress_cancel {
+        label Cancel
+        xywh {65 274 120 35}
+      }
+      Fl_Button btn_updateprogress_reboot {
+        label Reboot
+        xywh {290 273 120 35} deactivate
+      }
+    }
+    Fl_Window winEditHex {
+      label EditHex open
+      xywh {724 568 480 320} type Double visible
+    } {
+      Fl_Button btn_hex_back {
+        label Back
+        image {icons/left.png} xywh {0 2 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Button btn_hex_ok {
+        label OK
+        image {icons/ok.png} xywh {390 2 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Button btn_hex_cancel {
+        label Abort
+        image {icons/abort.png} xywh {425 2 40 37} box FLAT_BOX labelsize 10
+      }
+      Fl_Group hexgroup {
+        label {Fingerprint SHA-256} open
+        xywh {0 30 480 292} labelsize 18
+      } {
+        Fl_Input input_hex {
+          label Fingerprint
+          xywh {25 72 195 207} type Multiline labelsize 18 align 1 textsize 18
+        }
+        Fl_Button btn_hex_warn {
+          label {input does not match sha256 hexdigest, please try again}
+          xywh {30 90 390 60} labelcolor 1 hide
+        }
+        Fl_Group keyboardgroup_hex_func {open
+          xywh {263 56 203 57}
+        } {
+          Fl_Button key_hex_del {
+            image {icons/del.png} xywh {408 65 50 40} labelcolor 8
+          }
+          Fl_Button key_hex_back {
+            image {icons/pos_left.png} xywh {278 65 40 40}
+          }
+          Fl_Button key_hex_forward {
+            image {icons/pos_right.png} xywh {333 65 40 40}
+          }
+        }
+        Fl_Group keyboardgroup_hex {open
+          xywh {252 114 218 208} color 7 labelcolor 7 align 17
+        } {
+          Fl_Button key_h1 {
+            label 1
+            xywh {272 120 40 40}
+          }
+          Fl_Button key_h2 {
+            label 2
+            xywh {322 120 40 40}
+          }
+          Fl_Button key_h3 {
+            label 3
+            xywh {372 120 40 40}
+          }
+          Fl_Button key_h4 {
+            label 4
+            xywh {422 120 40 40}
+          }
+          Fl_Button key_h5 {
+            label 5
+            xywh {272 170 40 40}
+          }
+          Fl_Button key_h6 {
+            label 6
+            xywh {322 170 40 40}
+          }
+          Fl_Button key_h7 {
+            label 7
+            xywh {372 170 40 40}
+          }
+          Fl_Button key_h8 {
+            label 8
+            xywh {422 170 40 40}
+          }
+          Fl_Button key_h9 {
+            label 9
+            xywh {272 220 40 40}
+          }
+          Fl_Button key_h0 {
+            label 0
+            xywh {422 270 40 40}
+          }
+          Fl_Button key_hA {
+            label A
+            xywh {322 220 40 40}
+          }
+          Fl_Button key_hB {
+            label B
+            xywh {372 220 40 40}
+          }
+          Fl_Button key_hC {
+            label C
+            xywh {422 220 40 40}
+          }
+          Fl_Button key_hD {
+            label D
+            xywh {272 270 40 40}
+          }
+          Fl_Button key_hE {
+            label E
+            xywh {322 270 40 40}
+          }
+          Fl_Button key_hF {
+            label F
+            xywh {372 270 40 40}
+          }
+        }
       }
     }
   }

@@ -77,6 +77,7 @@ UPLOADSERVER="uploadServer"
 UPLOADPORT="uploadPort"
 UPLOADUSER="uploadUser"
 UPLOADID= "uploadId"
+UPDATEURI= "updateURI"
 #gui
 ICONDIR = "iconDirectory"
 #misc 
@@ -87,4 +88,5 @@ CFGFILE = "zsipos.cfg"
 CFGFILEBAK = "zsipos.cfg.bak"
 CFGFILEFACTORY = "zsipos_factory.cfg"
 ZIDFILE = "zsipos.zid"
+# not used
 NDBFILE = "zsipos.ndb"

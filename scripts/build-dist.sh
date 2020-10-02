@@ -66,8 +66,12 @@ fi
 ./build-buildroot.sh
 
 cp "$ZTOP/system/buildroot/buildroot/output/images/rootfs.tar" "$DESTDIR"
+gzip -f -9 "$DESTDIR/rootfs.tar"
 
 cp "$ZTOP/kernel/build_$BITS/bbl/bbl.bin" "$DESTDIR"/boot.bin
+
+cd $ZTOP
+python scripts/zsipos-sha.py >"$DESTDIR/sha256.txt"
 
 umask $oldumask
 
