@@ -16,5 +16,8 @@ test -f "$F" && mv "$F" "$DSTDIR/etc/init.d/sshd"
 F="$DSTDIR/root/.ssh/id_rsa"
 test -f "$F" && chmod 600 "$F"
 
+# chrony_factory.conf instead of chrony.conf
+rm -f "$DSTDIR/etc/chrony.conf"
+
 exit 0
 

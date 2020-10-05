@@ -2,9 +2,7 @@
 /root/zsipos.cfg
 /root/zsipos.zid
 /root/zsipos.log
-/etc/chrony.conf
 /etc/init.d/S50sshd
-/etc/ntp.conf
 /etc/passwd
 /etc/pointercal
 /etc/shadow

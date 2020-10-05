@@ -32,22 +32,8 @@ start() {
     FACTORY=/root/zsipos_factory.cfg
     ZID=/root/zsipos.zid
     NDB=/root/zsipos.ndb
-    if [ -x /usr/sbin/chronyd ]; then
-        NTP=/etc/chrony.conf
-        NTPFACTORY=/etc/chrony_factory.conf
-	rm -f /etc/ntp.conf
-	rm -f /etc/ntp_factory.conf
-    else
-        NTP=/etc/ntp.conf
-        NTPFACTORY=/etc/ntp_factory.conf
-	rm -f /etc/chrony.conf
-	rm -f /etc/chrony_factory.conf
-    fi
-
-    # Create ntp_factory.conf
-    if [ ! -f $NTPFACTORY ]; then
-        cp $NTP $NTPFACTORY
-    fi
+    NTP=/etc/chrony.conf
+    NTPFACTORY=/etc/chrony_factory.conf
 
     # Initial startup or reset
     if [ ! -f $CFG ]; then
@@ -56,7 +42,6 @@ start() {
          rm -f $ZID
          rm -f $NDB
          touch /root/zsipos_rootreset
-         cp $NTPFACTORY $NTP
          # make sure passwd has a date > 0
          date | grep 1970 && date +%d%m%Y -s "11112011"
     fi
@@ -127,12 +112,20 @@ iface eth1 inet static
     netmask $LOCALNET
 EOF
 
-    # ntpd
+    # ntp daemon
     if [ -n "$NTPSERVER" ]; then
         cat >$NTP <<EOF
 server $NTPSERVER
 EOF
-        fgrep -v server $NTPFACTORY | cat >>$NTP
+        fgrep -v server $NTPFACTORY | fgrep -v bindaddress >>$NTP
+        cat >>$NTP <<EOF
+bindaddress $LOCALPROXY
+EOF
+    else
+        fgrep -v bindaddress $NTPFACTORY >$NTP
+        cat >>$NTP <<EOF
+bindaddress $LOCALPROXY
+EOF
     fi
 
     # resolv.conf (mit und ohne) DHCP, wenn DNSSERVER gegeben
