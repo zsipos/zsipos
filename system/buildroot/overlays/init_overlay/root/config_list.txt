@@ -1,4 +1,5 @@
 /root/nohup.out
+/root/testversion
 /root/zsipos.cfg
 /root/zsipos.zid
 /root/zsipos.log
