@@ -581,13 +581,15 @@ static void handle_rem_pico_socket_send(rem_arg_t *arg)
 	rem_pico_socket_send_res_t *r = &res->u.rem_pico_socket_send_res;
 	struct pico_socket         *s;
 
-	SLOCK();
+	if (a->lock)
+		SLOCK();
 
 	s = (struct pico_socket *)a->s;
 	r->retval = pico_socket_send(s, &a->buf[0], a->len);
 	res->hdr.pico_err = pico_err;
 
-	SUNLOCK();
+	if (a->lock)
+		SUNLOCK();
 }
 
 static void handle_rem_pico_socket_recvfrom(rem_arg_t *arg)
