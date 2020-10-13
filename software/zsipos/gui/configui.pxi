@@ -24,7 +24,7 @@ Copyright (C) 2020 Esther Bergter
 #
 # Author: Esther Bergter
 #
-# Version 1.0
+# Version 1.1
 
 debuginfo = True
 
@@ -72,14 +72,29 @@ cdef str update_file = 'update.txt'
 cdef str updatetar_path = 'packages/'
 cdef str testversion_path = 'testversion'
 cdef str copylist_path = '/tmp/alternate_partition/root/config_list.txt'
+cdef str local_archive_path = 'archive'
+cdef str current_archive = local_archive_path
+cdef str alternate_archive_path = '/tmp/alternate_partition/root/archive'
+cdef str empty_label = 'archive                                                            '
 cdef str str_hexdigest_matches = 'hexdigest matches, ok\n'
 cdef str str_hexdigest_ignored = 'hexdigest ignored, ok\n'
-cdef str str_hexdigest_wrong = 'hexdigest does not match, not ok'
+#cdef str str_hexdigest_wrong = 'hexdigest does not match, not ok'
 cdef str str_hexdigest_canceled = 'no hexdigest given, not ok\n'
 cdef str str_update_started = 'Update started ...\n'
 cdef str str_update_canceled = 'Update canceled\n'
 cdef str str_update_failed = 'Update failed\n'
 cdef str str_update_completed = 'Update completed\n'
+cdef str str_download_started = 'Download started ...\n'
+cdef str str_download_canceled = 'Download canceled\n'
+cdef str str_download_failed = 'Download failed\n'
+cdef str str_download_completed = 'Download done.\n'
+cdef str str_unpack_started = 'Unpacking ...\n'
+cdef str str_unpack_canceled = 'Unpack canceled\n'
+cdef str str_unpack_failed = 'Unpack failed\n'
+cdef str str_unpack_completed = 'Unpack done.\n'
+cdef str str_copy_config = 'copying configuration, please wait\n'
+cdef str str_copy_config_done = 'copy configuration done.\n'
+
 cdef str str_update_reboot_information = '\nNOTE: If reboot should fail, press display until it turns black. Device returns to current version.'
 cdef str help_ip_config = """
 Setup your network configuration.
@@ -104,7 +119,6 @@ SIP Proxy:
 
 The name / Address and port of your SIP proxy
 
-ADdanubsurdlongwordohnePunktundKomma/nurmit/Slash/undsoweiterundsoweiter
 ICE Storage:
 
 The URL of your ICE helper
@@ -183,6 +197,9 @@ cdef int alternate_versioncounter = 0
 
 cdef bool hexdigest_matches = False
 cdef bool user_hit_cancel_button = False
+cdef bool UpdateFailed = False
+cdef bool UpdateHalted = False
+cdef bool stable = False            # configui not initialized yet
 
 # keep consistent with consts.py Logging
 logconsts = [ consts.LOGEXT, consts.LOGLOC, consts.LOGFULLMESSAGE, 
@@ -361,6 +378,7 @@ cdef void on_btn_logsettings(Fl_Widget* widget, void *data) with gil:
     configui.winLogSettings.show()
 
 cdef void on_btn_addfile(Fl_Widget* widget, void *cfdata) with gil:
+    """ add/remove nohup.out, zsipos.log """
     myitem = <Fl_Button*>cfdata
     myfile = get_label(myitem)
     if get_value(myitem):
@@ -371,24 +389,25 @@ cdef void on_btn_addfile(Fl_Widget* widget, void *cfdata) with gil:
         remove_file(myfile)
 
 cdef void on_browser_archive_click(Fl_Widget* widget, void *data) with gil:
+    """ add/remove files from archive """
     global sendfiles
     
     #log.info("on_browser_archive_click: sendfiles %s" %(sendfiles))
     size = configui.browse_archive.size()
     for index in range(1, size+1):
         filename = configui.browse_archive.text(index)
-        relfile = os.path.join("archive", filename)
+        relfile = os.path.join(current_archive, filename)
         if configui.browse_archive.selected(index):
             if relfile in sendfiles:
                 log.info("on_browser_archive_click: remove %s" %(filename,))
                 remove_file(relfile)
-                configui.browse_archive.select(index,0)
+                configui.browse_archive.select(index,0) # deselect
             else:
                 log.info("on_browser_archive_click: add %s" %(filename,))
                 add_file(relfile)
         else:
             if relfile in sendfiles: 
-                configui.browse_archive.select(index,1)
+                configui.browse_archive.select(index,1) # select
 
 cdef void on_btn_upload(Fl_Widget* widget, void *data) with gil:
     add_stdfiles()
@@ -407,6 +426,32 @@ cdef void on_btn_upload(Fl_Widget* widget, void *data) with gil:
         do_send()
     else:
         warn('no files selected')
+
+cdef void on_btn_alternate_archive(Fl_Widget* widget, void *data) with gil:
+    """ switch between local and alternate archive """
+    global current_archive
+
+    if get_value(configui.btn_alternate_archive) == 0:   # lokales archiv
+        current_archive=local_archive_path
+        configui.browse_archive.copy_label(empty_label) # erase longer value
+    else:                                                # alternatives archiv
+        if mount_alternate(False): # kein output
+            if not os.path.exists(alternate_archive_path):
+                os.mkdir(alternate_archive_path)
+            current_archive=alternate_archive_path
+            configui.browse_archive.copy_label(alternate_archive_path)
+        else:
+            current_archive=local_archive_path
+            configui.browse_archive.copy_label(empty_label) # erase longer value
+    configui.browse_archive.load(current_archive)
+    configui.browse_archive.remove(1) # hide ../
+    # now mark all selected files
+    size = configui.browse_archive.size()
+    for index in range(1, size+1):
+        filename = configui.browse_archive.text(index)
+        relfile = os.path.join(current_archive, filename)
+        if relfile in sendfiles:
+            configui.browse_archive.select(index,1)
 
 # callback Config Groups
 # Experts
@@ -505,6 +550,8 @@ cdef void on_btn_boot_version(Fl_Widget* widget, void *data) with gil:
         cfdict['BOOT_CURRENT'] = False
 
 cdef void on_btn_update_info(Fl_Widget* widget, void *data) with gil:
+    if config_has_changed():
+        do_save_cfg()
     update_update_text()
     configui.winUpdateInfo.show()
     
@@ -687,10 +734,13 @@ cdef void on_btn_updatesure_cancel(Fl_Widget* widget, void *data) with gil:
 
 cdef void on_btn_updatesure_ok(Fl_Widget* widget, void *data) with gil:
     global user_hit_cancel_button
-    
+    global UpdateHalted
+
     user_hit_cancel_button = False
+    UpdateHalted = False
+    UpdateFailed = False
     configui.winUpdateSure.hide()
-    configui.btn_updateprogress_back.hide()
+    configui.btn_updateprogress_reboot.deactivate()
     configui.btn_updateprogress_cancel.activate()
     configui.winUpdateProgress.show()
     configui.winUpdateProgress.wait_for_expose()
@@ -699,16 +749,18 @@ cdef void on_btn_updatesure_ok(Fl_Widget* widget, void *data) with gil:
 # winUpdateProgress
 cdef void on_btn_updateprogress_cancel(Fl_Widget* widget, void *data) with gil:
     global user_hit_cancel_button
-    # debug("user hit cancel")
-    user_hit_cancel_button = True
-    configui.btn_updateprogress_back.show()
-    configui.btn_updateprogress_cancel.deactivate()
+    debug("user hit cancel")
+    if UpdateFailed or UpdateHalted:
+        configui.winUpdateProgress.hide()
+    else:
+        user_hit_cancel_button = True
+        configui.btn_updateprogress_cancel.deactivate()
     
-cdef void on_btn_updateprogress_back(Fl_Widget* widget, void *data) with gil:
-    configui.winUpdateProgress.hide()
-
 cdef void on_btn_updateprogress_reboot(Fl_Widget* widget, void *data) with gil:
-    configui.winUpdateProgress.hide()
+    do_restart('reboot')
+
+#cdef void on_btn_updateprogress_back(Fl_Widget* widget, void *data) with gil:
+#    configui.winUpdateProgress.hide()
 
 # winEditHex
 cdef void on_btn_hex_ignore(Fl_Widget* widget, void *data) with gil:
@@ -721,8 +773,10 @@ cdef void on_btn_hex_ignore(Fl_Widget* widget, void *data) with gil:
 
 cdef void on_btn_hex_cancel(Fl_Widget* widget, void *data) with gil:
     global hexdigest_matches
+    global UpdateFailed
     
     hexdigest_matches = False
+    UpdateFailed = True
     configui.winEditHex.hide()
     to_updateprogress(str_hexdigest_canceled)
     to_updateprogress(str_update_failed)
@@ -942,6 +996,34 @@ def check_mandatory_value(myopt):
         params = addresspar[myopt]
         return "%s missing. " % (params['title'], )
 
+def check_update(ret):
+    """ return true if update can continue, else false """
+    global UpdateHalted
+    global UpdateFailed
+
+    Fl.check()
+    if UpdateHalted:
+        debug("check_update found UpdateHalted")
+        return False
+    if UpdateFailed:
+        debug("check_update found UpdateFailed")
+        return False
+    elif user_hit_cancel_button:
+        debug("check_update found user_hit_cancel_button")
+        to_updateprogress(str_update_canceled)
+        UpdateHalted = True
+        configui.winUpdateProgress.hide()
+        return False
+    elif not ret:
+        debug("check_update found ret not ok")
+        to_updateprogress(str_update_failed)
+        UpdateFailed = True
+        configui.btn_updateprogress_cancel.activate()
+        return False
+    else:
+        debug("check_update ok")
+        return True
+
 def cfg_cleanup():
     if cfdict[consts.EXTUSEDHCP]:
         #cfdict[consts.EXTPHONEADDR] = "" # NEIN! brauche ich
@@ -1123,8 +1205,8 @@ def config_valid(name):
 
 def copy_configs():
     """ copy files in config-list to alternate filesystem """
-    to_updateprogress("copying configuration, please wait\n")
     if os.path.exists(copylist_path):
+        to_updateprogress(str_copy_config)
         with open(copylist_path, 'r') as f:
             for l in f.readlines():
                 source = l.strip()
@@ -1132,11 +1214,12 @@ def copy_configs():
                     for fn in glob.glob(source):
                         copy_file(fn)
                 else:
-                    copy_file(source)       
+                    copy_file(source)
+        to_updateprogress(str_copy_config_done)
         return True
     else:
-        log.error("copy_configs: %s not found" % (copylist_path,))
-        #to_updateprogress("copy_configs: %s not found\n" % (copylist_path,))
+        #log.error("copy_configs: %s not found" % (copylist_path,))
+        err_to_updateprogress("copy_configs: %s not found\n" % (copylist_path,))
         return False
         
 def copy_file(source):
@@ -1253,7 +1336,6 @@ def do_back_fl_choice():
             do_save_cfg()
         if choice > 1:
             do_restart(res)
-
     else:
         configui.window.hide()
 '''
@@ -1323,11 +1405,167 @@ def do_save_cfg():
     write_versioncount()
     os.sync()
 
+import io
+
+LOGSEND_GZIP    = False
+LOGSEND_CHUNKED = False
+
+def do_send_http(url, files):
+    
+    def to_upload_progress(s):
+        helpTextBuffer.append(s)
+        configui.winHelp.flush()
+    
+    def update_percent(percent):
+        nonlocal mypos, lastpos, last_percent
+        
+        if (percent > last_percent):
+            if (percent > 100):
+                percent = 100
+            last_percent = percent
+            helpTextBuffer.replace(mypos, lastpos, "%d%% " % (percent,))
+            lastpos = helpTextBuffer.length()
+            configui.winHelp.flush()
+            
+    def safe_del(name):
+        if os.path.exists(name):
+            os.remove(name)
+
+    try:    
+        configui.txt_helpDisplay.copy_label("upload")
+        helpTextBuffer.text("uploading logfiles started...\n")
+        configui.btn_help_back.hide()                                                     
+        configui.winHelp.show()
+        logpack_name = 'logpack.tgz'
+        chunk_size = 1024 * 8
+        last_percent = -1
+        total_size = 0
+        for i in files:
+            total_size += 512 #file header
+            file_size = os.path.getsize(i)
+            blocks = file_size // 512
+            if file_size % 512: #pad last block
+                blocks += 1 
+            total_size += blocks * 512
+        total_size += 1024 #end blocks
+        mypos = helpTextBuffer.length()
+        lastpos = mypos+1
+        proc_tar = subprocess.Popen(["tar",  "cf",  "-"] + list(files), stdout=subprocess.PIPE)
+        if LOGSEND_GZIP: 
+            
+            class MyFile():
+                """local helper class for progress display"""
+                
+                def __init__(self, name):
+                    self.total_size = os.path.getsize(name)
+                    self.done = 0
+                    self.f = open(name, "rb")
+                    
+                def read(self, l=-1):
+                    b = self.f.read(l)
+                    self.done += len(b)
+                    update_percent(100 * self.done // self.total_size)
+                    return b
+                
+                def seek(self, offset, whence=io.SEEK_SET):
+                    return self.f.seek(offset, whence)
+                
+                def tell(self):
+                    return self.f.tell()
+                
+                def close(self):
+                    self.f.close()
+                    self.f = None
+        
+            to_upload_progress("preparing: ")
+            proc_gzip = subprocess.Popen(["gzip -1 -c >" + logpack_name], stdin=subprocess.PIPE, shell=True)
+            for block in iter(lambda: proc_tar.stdout.buffer.read(chunk_size), b""):
+                proc_gzip.stdin.write(block)
+                processed += len(block)
+                update_percent(100 * processed // total_size)
+            proc_tar.wait()
+            proc_gzip.stdin.close()
+            proc_gzip.wait()
+            update_percent(100)
+            to_upload_progress("done.\n")
+            data = MyFile(logpack_name)
+            
+        else: # !LOGSEND_GZIP
+            
+            if LOGSEND_CHUNKED:
+                
+                def do_read():
+                    """local helper function for progress display"""
+                    nonlocal processed
+                    block = proc_tar.stdout.read(chunk_size)
+                    if block == b"":
+                        proc_tar.wait()
+                    processed += len(block)
+                    update_percent(100 * processed // total_size)
+                    return block
+                
+                processed = 0                
+                data = iter(lambda: do_read(), b"")
+            
+            else: # !LOGSEND_CHUNKED
+                
+                class MyIter:                    
+                    """local ierator class with len function for progess display"""
+                    
+                    def __init__(self):
+                        self.done = 0
+                    
+                    def __iter__(self):
+                        return self
+                    
+                    def __next__(self):
+                        block = proc_tar.stdout.read(chunk_size)
+                        if block == b"":
+                            proc_tar.wait()
+                            raise StopIteration
+                        self.done += len(block)
+                        update_percent(100 * self.done // total_size)
+                        return block
+                    
+                    def __len__(self):
+                        return total_size
+                            
+                data = MyIter()
+                
+        to_upload_progress("uploading: ")
+        mypos = helpTextBuffer.length()
+        lastpos = mypos+1
+        last_percent = -1
+        headers = {'content-type': 'application/octet-stream'}
+        reply=requests.post(url, data=data, headers=headers)
+        log.debug(reply.text)
+        update_percent(100)
+        clearsendfiles()
+        to_upload_progress("done.\nall selected logfiles uploaded.")
+                
+    except Exception as e:
+        to_upload_progress("\n\n**upload error**\n\n")
+        to_upload_progress("(" + str(e) +")")
+        raise
+     
+    finally:
+        configui.btn_help_back.show()      
+        safe_del("_zsipos.log")
+        safe_del("_nohup.out")                                             
+        safe_del("Manifest.txt")
+        safe_del(logpack_name)
+
 def do_send():
+    user = cfdict[consts.UPLOADUSER]
+    if user in ['http', 'https']:
+        url = user + "://" + cfdict[consts.UPLOADSERVER] + ":" + str(cfdict[consts.UPLOADPORT])
+        url += "/cgi-bin/recvlog.py"
+        do_send_http(url, sendfiles)
+        return
     myfiles = ' '.join(sendfiles)
     #debug('do_send')
     #debug(myfiles)
-    # StrictHostKeyChecking=yes: dont ask but fail if not in knwown_hostst
+    # StrictHostKeyChecking=yes: dont ask but fail if not in known_hosts
     cpcmd = "tar -cf - %s |  /usr/bin/ssh -T %s@%s -p %s -o StrictHostKeyChecking=yes" % (
             myfiles, cfdict[consts.UPLOADUSER], cfdict[consts.UPLOADSERVER], str(cfdict[consts.UPLOADPORT]))
     log.info(cpcmd)
@@ -1358,52 +1596,45 @@ def do_send():
 
 def do_update1():
     ''' download tar, calc checksum '''
-    updateProgressBuffer.text("Update started ...\n")
-    configui.winUpdateProgress.flush()
-    ret = download_update()
-    if not ret or user_hit_cancel_button:
-        stop_update()
-    else:    
-        if is_testversion():
-            configui.btn_hex_back.show()
-        else:
-            configui.btn_hex_back.hide()
-        configui.input_hex.value("")
-        configui.winEditHex.show()
+    try:
+        updateProgressBuffer.text(str_update_started)
+        configui.winUpdateProgress.flush()
+        ret = download_update()
+        if check_update(ret):
+            if is_testversion():
+                configui.btn_hex_back.show()
+            else:
+                configui.btn_hex_back.hide()
+            configui.input_hex.value("")
+            configui.winEditHex.show()
+    except:
+        logerrorexception()
+        update_failed()
         
 def do_update2():
     ''' mkfs, unpack tar, ... ''' 
-    if not user_hit_cancel_button and hexdigest_matches:
-        ret = untar_update()
-        debug("do_update2: untar_update() returned %s" % ("True" if ret else "False")) 
-        #to_updateprogress("unpack update %s\n" % ("Ok" if ret else "failed"))
-    else:
-        ret = False
-    if not user_hit_cancel_button and ret:
-        ret = copy_configs()
-        debug("do_update2: copy_configs() returned %s" % ("True" if ret else "False")) 
-        #to_updateprogress("copy configs %s\n" % ("Ok" if ret else "failed"))
-    else:
-        ret = False
-    if not user_hit_cancel_button and ret:
-        ret = write_alternateversion()
-        debug("do_update2: write_alternateversion() returned %s" % ("True" if ret else "False")) 
-        #to_updateprogress("write alternate versioninfo %s\n" % ("Ok" if ret else "failed"))
-    else:
-        ret = False
-    if issel4():
-        umount_alternate(False) # True -> updateprogress
-    if ret:
-        to_updateprogress(str_update_completed)
-        to_updateprogress(str_update_reboot_information)
-        configui.btn_updateprogress_reboot.activate()
-    else:
-        if user_hit_cancel_button:
-            to_updateprogress(str_update_canceled)
-        else:
-            to_updateprogress(str_update_failed)
-        configui.btn_updateprogress_back.show()
-        configui.btn_updateprogress_cancel.deactivate()
+    global UpdateHalted
+
+    try:
+        if check_update(hexdigest_matches):
+            ret = untar_update()
+            debug("do_update2: untar_update() returned %s" % ("True" if ret else "False")) 
+        if check_update(ret):
+            ret = copy_configs()
+            debug("do_update2: copy_configs() returned %s" % ("True" if ret else "False")) 
+        if check_update(ret):
+            ret = write_alternateversion()
+            debug("do_update2: write_alternateversion() returned %s" % ("True" if ret else "False")) 
+        if issel4():
+            umount_alternate(False) # True -> updateprogress
+        if check_update(ret):
+            to_updateprogress(str_update_completed)
+            to_updateprogress(str_update_reboot_information)
+            UpdateHalted = True     # update finished
+            configui.btn_updateprogress_reboot.activate()
+    except:
+        logerrorexception()
+        update_failed()
     
 def download_update():
     ''' download update to fixed path '''
@@ -1422,18 +1653,17 @@ def download_update():
             os.mkdir(updatetar_path)
         dest = os.path.join(updatetar_path, str_updateFilename)
     else:
-        to_updateprogress("download filename not found\n")
+        err_to_updateprogress("download filename not found\n")
         return False
-    
+
     try:
         with open(dest, "wb") as f: # wb for binary data
-            log.info("downloading %s to %s\n" % (link, dest))
-            to_updateprogress("downloading: ")
+            to_updateprogress(str_download_started)
+            log.info("downloading %s to %s" % (link, dest))
             response = requests.get(link, stream=True)
             status_code = int(response.status_code)
             if status_code < 200 or status_code > 229:
-                log.error("download %s failed, status %d" % (link, status_code))
-                to_updateprogress("download %s failed, status %d\n" % (link, status_code))
+                err_to_updateprogress("download %s failed, status %d\n" % (link, status_code))
                 return False
             sha256 = hashlib.sha256()
             total = response.headers.get('content-length')
@@ -1450,7 +1680,7 @@ def download_update():
                 for data in response.iter_content(chunk_size=chunk_size): # sel4ip max chunk
                     Fl.check()
                     if user_hit_cancel_button:
-                        debug("download_update canceled")
+                        debug("download_update_canceled")
                         break
                     dl += len(data)
                     f.write(data)
@@ -1462,18 +1692,36 @@ def download_update():
                         lastpos = updateProgressBuffer.length()
                         olddone = done
             if user_hit_cancel_button:
-                to_updateprogress(str_update_canceled)
-            else:
+                to_updateprogress("\n%s" % (str_download_canceled,))
+                return False
+            elif check_update(True):
                 str_update_hexdigest = sha256.hexdigest()
                 debug(str_update_hexdigest)
-                to_updateprogress("download done.\n")
-    except Exception as ex:
-        template = "An exception of type {0} occurred. Arguments:\n{1!r}"
-        message = template.format(type(ex).__name__, ex.args)
-        to_updateprogress(message)
-        log.error(message)
+                to_updateprogress(str_download_completed)
+                return True
+            else:
+                return False
+    except:
+        logerrorexception()
+        err_to_updateprogress(str_download_failed)
         return False
-    return True
+# download_update
+
+def err_to_updateprogress(mytext):
+    """ append to progress buffer and to log.error """
+    if mytext.endswith('\n'):
+        log.error(mytext[:-1])
+    else:
+        log.error(mytext)
+    if stable:
+        updateProgressBuffer.append(mytext)
+        Display = configui.txt_updateprogress
+        #debug("to_updateprogress: buffer_lenght %d" % (updateProgressBuffer.length(),))
+        lines = Display.count_lines(1, updateProgressBuffer.length(), False)
+        debug("Display.count_lines %d" % (lines, ))
+        Display.scroll(lines, 0)
+        configui.winUpdateProgress.flush()
+        configui.winUpdateProgress.show()
 
 def expand_hexbuf(s):
     blocks = int((len(s) + 3)/4)
@@ -1932,6 +2180,21 @@ def keyboard_show(key_state):
 
 #keyboard_show
 
+def logerrorcaused_by(e):
+    if hasattr(e, "caused_by"):
+        log.error("CAUSED BY: %s", e.caused_by[1], exc_info = e.caused_by)
+        logerrorcaused_by(e.caused_by[1])
+
+def logerrorexception():
+    global UpdateFailed
+    global UpdateHalted
+
+    info = sys.exc_info()
+    err_to_updateprogress("EXCEPTION: %s\n" % (info[1]))
+    UpdateFailed = True
+    UpdateHalted = True
+    logerrorcaused_by(info[1])
+
 def make_Manifest():
     mversion = '0.1'
     file = open('Manifest.txt', 'w')
@@ -1961,31 +2224,31 @@ def mkfs(devname):
         debug("mkfs skipped (not on sel4)")
         return True
     if len(devname) < 4:
-        log.error("mkfs: invalid devname %s" % (devname,))
+        err_to_updateprogress("mkfs: invalid devname %s\n" % (devname,))
         return False
-    to_updateprogress("preparing filesystem, please wait\n")
     return mysystemcall(["mkfs.ext4", devname], False) # True -> updateprogress
         
 def mount_alternate(wantprogress):
     ''' mount the other partition '''
+    if os.path.exists(alternate_partition):
+        if os.path.ismount(alternate_partition):
+            if wantprogress:
+                to_updateprogress("alternate partition already mounted, ok\n")
+            else:
+                log.info("alternate partition already mounted, ok")
+            return True
+    else:
+        os.mkdir(alternate_partition)
     if not issel4():
-        debug("mount_alternate skipped (not on sel4)")
+        debug("mount skipped (not on sel4)")
         return True
     if len(str_altmount) < 4:
         log.error("mount_alternate: invalid device %s" % (str_altmount,))
         if wantprogress:
-            to_updateprogress("mount_alternate failed")
+            err_to_updateprogress("mount_alternate failed\n")
+        else:
+            log.error("mount_alternate failed\n")
         return False
-    if os.path.exists(alternate_partition):
-        if os.path.ismount(alternate_partition):
-            if wantprogress:
-                to_updateprogress("alternate partition already mounted, ok")
-            return True
-    else:
-        os.mkdir(alternate_partition)
-    #if wantprogress:
-    #    to_updateprogress("mount %s %s\n" % (str_altmount, alternate_partition))
-    #os.system("mount %s %s" % (str_altmount, alternate_partition))
     return mysystemcall(["mount", str_altmount, alternate_partition], wantprogress)
 
 def mysystemcall(args, wantprogress):
@@ -2003,12 +2266,13 @@ def mysystemcall(args, wantprogress):
                 out = output
             else:
                 out = "%s completed" % (args[0],)
-            log.info(out)
         else:
             out = output
         if wantprogress:
             out += "\n"
             to_updateprogress(out)
+        else:
+            log.info(out)
     if exception_occurred:
         return False
     else:
@@ -2367,10 +2631,6 @@ def split_url_path(input):
     return ("","","","")
 # split_url_path
 
-def stop_update():
-    configui.btn_updateprogress_back.show()
-    to_updateprogress(str_update_canceled)
-
 def storenewpw(pw):
     """ copy input to newpw """
     global newpw
@@ -2390,13 +2650,20 @@ def to_bool(myint):
         return True
 
 def to_updateprogress(mytext):
-    updateProgressBuffer.append(mytext)
-    Display = configui.txt_updateprogress
-    #debug("to_updateprogress: buffer_lenght %d" % (updateProgressBuffer.length(),))
-    lines = Display.count_lines(1, updateProgressBuffer.length(), False)
-    Display.scroll(lines, 0)
-    configui.winUpdateProgress.show()
-    configui.winUpdateProgress.flush()
+    """ append to progress buffer and to log.info """
+    global updateProgressBuffer
+    if mytext.endswith('\n'):
+        log.info(mytext[:-1])
+    else:
+        log.info(mytext)
+    if stable:
+        updateProgressBuffer.append(mytext)
+        Display = configui.txt_updateprogress
+        #debug("to_updateprogress: buffer_lenght %d" % (updateProgressBuffer.length(),))
+        lines = Display.count_lines(1, updateProgressBuffer.length(), False)
+        Display.scroll(lines, 0)
+        configui.winUpdateProgress.flush()
+        configui.winUpdateProgress.show()
 
 def umount_alternate(wantprogress):
     ''' unmount the other partition '''
@@ -2407,6 +2674,8 @@ def umount_alternate(wantprogress):
             return mysystemcall(["umount", alternate_partition], wantprogress)
     if wantprogress:
         to_updateprogress("alternate partition was not mounted, ok\n")
+    else:
+        log.info("alternate partition was not mounted, ok")
     return True
 
 
@@ -2419,61 +2688,73 @@ def untar_with_progress(filename):
     cdef int  mypos
     cdef int  lastpos
     
+    to_updateprogress(str_unpack_started)
     chunk_size = 1024 * 64
     total = os.path.getsize(filename)
     processed = 0
     last_percent = -1
     mypos = updateProgressBuffer.length()
     lastpos = mypos+1
-    proc = subprocess.Popen("gzip -d -c | tar xf -", shell=True, stdin=subprocess.PIPE)
-    with open(filename, "rb") as f:
-        for chunk in iter(lambda: f.read(chunk_size), b""):
-            Fl.check()
-            if user_hit_cancel_button:
-                proc.stdin.close()
-                proc.wait()
-                return -1
-            proc.stdin.write(chunk)
-            processed += len(chunk)
-            percent = 100 * processed // total
-            if (percent > last_percent):
-                updateProgressBuffer.replace(mypos, lastpos, "%d%% " % (percent,))
-                configui.winUpdateProgress.flush()
-                lastpos = updateProgressBuffer.length()
-                last_percent = percent
-    proc.stdin.close()
-    return proc.wait()
+    try:
+        proc = subprocess.Popen("gzip -d -c | tar xf -", shell=True, stdin=subprocess.PIPE)
+        with open(filename, "rb") as f:
+            for chunk in iter(lambda: f.read(chunk_size), b""):
+                Fl.check()
+                if user_hit_cancel_button:
+                    proc.stdin.close()
+                    proc.wait()
+                    to_updateprogress(str_unpack_canceled)
+                    return False
+                proc.stdin.write(chunk)
+                processed += len(chunk)
+                percent = 100 * processed // total
+                if (percent > last_percent):
+                    updateProgressBuffer.replace(mypos, lastpos, "%d%% " % (percent,))
+                    configui.winUpdateProgress.flush()
+                    lastpos = updateProgressBuffer.length()
+                    last_percent = percent
+        proc.stdin.close()
+        ret = proc.wait()
+        if ret == 0:
+            to_updateprogress(str_unpack_completed)
+            return True
+        else:
+            err_to_updateprogress(str_unpack_failed)
+            return False
+    except:
+        logerrorexception()
+        err_to_updateprogress(str_unpack_failed)
+        return False
 
 def untar_update():
     """ expand update to alternate partition """
-    Fl.check()
-    if user_hit_cancel_button:
-        return False
-    mkfs(str_altmount) # start with clean filesystem
-    Fl.check()
-    if user_hit_cancel_button:
-        return False
-    mount_alternate(False) # True -> updateprogress
-    Fl.check()
-    if user_hit_cancel_button:
-        return False
-    localpath=os.getcwd()
-    fn = os.path.join(localpath, updatetar_path, str_updateFilename)
-    os.chdir(alternate_partition)
-    to_updateprogress("unpacking files: ")
-    log.info("untar update..")
-    ret = untar_with_progress(fn)
-    os.chdir(localpath)
-    debug("untar returned %d" % (ret,))
-    if ret == 0:
-        to_updateprogress("unpack done.\n")
-        log.info("untar finished, OK")
-        return True
-    else:
-        to_updateprogress("untar failed, ret=%d\n" % (ret,))
-        log.info("untar failed, ret=%d" % (ret,))
-        return False
-           
+    if check_update(True):
+        configui.btn_updateprogress_cancel.deactivate()
+        to_updateprogress("preparing filesystem, please wait\n")
+        ret = mkfs(str_altmount) # start with clean filesystem
+        if ret:
+            to_updateprogress("filesystem done.\n")
+        configui.btn_updateprogress_cancel.activate()
+    if check_update(ret):
+        ret = mount_alternate(False) # True -> updateprogress
+    if check_update(ret):
+        localpath=os.getcwd()
+        fn = os.path.join(localpath, updatetar_path, str_updateFilename)
+        os.chdir(alternate_partition)
+        ret = untar_with_progress(fn)
+        os.chdir(localpath)
+        debug("unpack returned %d" % (ret,))
+        return ret
+
+def update_failed():
+    """ show failure, user must press cancel """
+    global UpdateFailed
+
+    UpdateFailed = True
+    UpdateHalted = True
+    to_updateprogress(str_update_failed)
+    configui.btn_updateprogress_cancel.activate()
+
 def update_init():
     """ read all info concerning version and alternate partition """
     get_partition()
@@ -2643,6 +2924,7 @@ def write_alternateversion():
     configui.out_alternate_version.value(str_updateVersion)
     configui.btn_boot_current.value(0)
     configui.btn_boot_alternate.value(1)
+    log.info("write alternate version, ok")
     return True
 
 def write_editwindow(params):
@@ -2942,11 +3224,11 @@ def configui_init(infstr):
     ui.btn_nohup.callback(on_btn_addfile, <void*>ui.btn_nohup)
     ui.btn_zsiposlog.callback(on_btn_addfile, <void*>ui.btn_zsiposlog)
     #ui.browse_archive.filter("[a-zA-Z0-9]*")
-    ui.browse_archive.load("archive")
+    ui.browse_archive.load(current_archive)
     ui.browse_archive.remove(1) # hide ../
     ui.browse_archive.callback(on_browser_archive_click, NULL)
     ui.btn_upload.callback(on_btn_upload, NULL)
-
+    ui.btn_alternate_archive.callback(on_btn_alternate_archive, NULL)
     # Group Experts
     ui.btn_local_proxy.callback(on_btn_edit_address, <void*>consts.LOCPROXYADDR)
     ui.btn_ping_local_proxy.callback(on_btn_ping, <void*>consts.LOCPROXYADDR)
@@ -3015,11 +3297,12 @@ def configui_init(infstr):
     ui.btn_updatesure_cancel.callback(on_btn_updatesure_cancel, NULL)
     # WinUpdateProgress
     updateProgressBuffer = new Fl_Text_Buffer()
+    updateProgressBuffer.text("")
     ui.txt_updateprogress.buffer(updateProgressBuffer)
     ui.txt_updateprogress.wrap_mode(3, 0) # 3=WRAP_AT_BOUNDS
     ui.txt_updateprogress.scrollbar_width(20)
     ui.btn_updateprogress_cancel.callback(on_btn_updateprogress_cancel, NULL)
-    ui.btn_updateprogress_back.callback(on_btn_updateprogress_back, NULL)
+    #ui.btn_updateprogress_back.callback(on_btn_updateprogress_back, NULL)
     ui.btn_updateprogress_reboot.callback(on_btn_restart, <void*>'reboot')
     # WinEditHex
     ui.btn_hex_back.callback(on_btn_hex_ignore, NULL)
@@ -3028,7 +3311,7 @@ def configui_init(infstr):
     ui.btn_hex_warn.callback(on_btn_hex_warn, NULL)
     # Keyboard callbacks
     keyboardhex_init()
-
+    stable = True
     log.info("... finished")
 # configui_init
 
@@ -3081,6 +3364,7 @@ cdef extern from "gui.cxx":
         Fl_Check_Button*    btn_zsiposlog
         Fl_File_Browser*    browse_archive
         Fl_Button*          btn_upload
+        Fl_Round_Button*     btn_alternate_archive
         # LogSettings
         Fl_Double_Window*   winLogSettings
         Fl_Button*          btn_logsettings_back
@@ -3281,7 +3565,7 @@ cdef extern from "gui.cxx":
         # Update Progress
         Fl_Double_Window*   winUpdateProgress
         Fl_Text_Display*    txt_updateprogress
-        Fl_Button*          btn_updateprogress_back
+        #Fl_Button*          btn_updateprogress_back
         Fl_Button*          btn_updateprogress_cancel
         Fl_Button*          btn_updateprogress_reboot
         #Fl_Box*             box_updateprogress_reboot_warn

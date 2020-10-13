@@ -123,7 +123,7 @@ class CONFIGUI {open
       } {
         Fl_Group group_ip {
           label {IP Config} open
-          xywh {0 75 480 245} align 129 hide
+          xywh {0 75 490 245} align 129 hide
         } {
           Fl_Group group_btn_dhcp {open
             xywh {13 80 199 40} box BORDER_BOX align 129
@@ -171,7 +171,7 @@ class CONFIGUI {open
               xywh {165 175 255 30} box DOWN_FRAME
             }
             Fl_Box framep3 {
-              xywh {165 225 250 30} box DOWN_FRAME
+              xywh {165 225 255 30} box DOWN_FRAME
             }
             Fl_Button btn_ping_gateway {
               label ping
@@ -275,11 +275,11 @@ class CONFIGUI {open
           }
           Fl_Check_Button btn_nohup {
             label {nohup.out}
-            xywh {274 182 100 15} down_box DOWN_BOX
+            xywh {275 245 100 15} down_box DOWN_BOX
           }
           Fl_Check_Button btn_zsiposlog {
             label {zsipos.log}
-            xywh {369 182 100 15} down_box DOWN_BOX
+            xywh {370 245 100 15} down_box DOWN_BOX
           }
           Fl_File_Browser browse_archive {
             label archive
@@ -287,11 +287,15 @@ class CONFIGUI {open
           }
           Fl_Button btn_upload {
             label {Send (takes minutes)}
-            xywh {275 280 189 25} labelsize 18
+            xywh {271 280 206 25} labelsize 18
           }
           Fl_Progress upload {
             label upload
             xywh {286 304 106 21} align 277 hide
+          }
+          Fl_Round_Button btn_alternate_archive {
+            label {Alternate Archive}
+            xywh {280 185 162 15} down_box ROUND_DOWN_BOX labelsize 18
           }
         }
         Fl_Group group_experts {
@@ -445,7 +449,7 @@ class CONFIGUI {open
           }
           Fl_Button btn_ping_update_url {
             label ping
-            xywh {420 195 50 30}
+            xywh {425 195 50 30}
           }
           Fl_Box frameu1 {
             xywh {150 195 273 30} box DOWN_FRAME
@@ -981,8 +985,8 @@ class CONFIGUI {open
         image {icons/left.png} xywh {10 12 40 37} box FLAT_BOX labelsize 10
       }
       Fl_Text_Display txt_updateinfo {
-        label {Update Info} selected
-        xywh {75 79 335 199} type Multiline color 29 labelsize 18 align 1 textsize 16
+        label {Update Info}
+        xywh {75 79 335 199} color 29 labelsize 18 textsize 16
       }
       Fl_Button btn_updateinfo_ok {
         label {Update Now}
@@ -1018,7 +1022,7 @@ class CONFIGUI {open
       }
       Fl_Button btn_updateprogress_back {
         label Back
-        image {icons/left.png} xywh {0 2 40 37} box FLAT_BOX labelsize 10
+        image {icons/left.png} xywh {0 2 40 37} box FLAT_BOX labelsize 10 hide
       }
       Fl_Button btn_updateprogress_cancel {
         label Cancel
@@ -1058,84 +1062,84 @@ class CONFIGUI {open
           xywh {30 90 390 60} labelcolor 1 hide
         }
         Fl_Group keyboardgroup_hex_func {open
-          xywh {263 56 203 57}
+          xywh {270 258 203 57}
         } {
           Fl_Button key_hex_del {
-            image {icons/del.png} xywh {408 65 50 40} labelcolor 8
+            image {icons/del.png} xywh {415 267 50 40} labelcolor 8
           }
           Fl_Button key_hex_back {
-            image {icons/pos_left.png} xywh {278 65 40 40}
+            image {icons/pos_left.png} xywh {285 267 40 40}
           }
           Fl_Button key_hex_forward {
-            image {icons/pos_right.png} xywh {333 65 40 40}
+            image {icons/pos_right.png} xywh {340 267 40 40}
           }
         }
         Fl_Group keyboardgroup_hex {open
-          xywh {252 114 218 208} color 7 labelcolor 7 align 17
+          xywh {225 63 258 207} color 7 labelcolor 7 align 17
         } {
+          Fl_Button key_h0 {
+            label 0
+            xywh {229 219 40 40}
+          }
           Fl_Button key_h1 {
             label 1
-            xywh {272 120 40 40}
+            xywh {229 169 40 40}
           }
           Fl_Button key_h2 {
             label 2
-            xywh {322 120 40 40}
+            xywh {279 169 40 40}
           }
           Fl_Button key_h3 {
             label 3
-            xywh {372 120 40 40}
+            xywh {329 169 40 40}
           }
           Fl_Button key_h4 {
             label 4
-            xywh {422 120 40 40}
+            xywh {229 119 40 40}
           }
           Fl_Button key_h5 {
             label 5
-            xywh {272 170 40 40}
+            xywh {279 119 40 40}
           }
           Fl_Button key_h6 {
             label 6
-            xywh {322 170 40 40}
+            xywh {329 119 40 40}
           }
           Fl_Button key_h7 {
             label 7
-            xywh {372 170 40 40}
+            xywh {229 69 40 40}
           }
           Fl_Button key_h8 {
             label 8
-            xywh {422 170 40 40}
+            xywh {279 69 40 40}
           }
           Fl_Button key_h9 {
             label 9
-            xywh {272 220 40 40}
-          }
-          Fl_Button key_h0 {
-            label 0
-            xywh {422 270 40 40}
+            xywh {329 69 40 40}
           }
           Fl_Button key_hA {
             label A
-            xywh {322 220 40 40}
+            xywh {385 69 40 40}
           }
           Fl_Button key_hB {
             label B
-            xywh {372 220 40 40}
+            xywh {435 69 40 40}
           }
           Fl_Button key_hC {
             label C
-            xywh {422 220 40 40}
+            xywh {385 119 40 40}
           }
           Fl_Button key_hD {
             label D
-            xywh {272 270 40 40}
+            xywh {435 119 40 40}
           }
           Fl_Button key_hE {
             label E
-            xywh {322 270 40 40}
+            xywh {385 169 40 40}
           }
           Fl_Button key_hF {
             label F
-            xywh {372 270 40 40}
+            xywh {435 169 40 40}
           }
         }
       }

@@ -73,5 +73,8 @@ cp "$ZTOP/kernel/build_$BITS/bbl/bbl.bin" "$DESTDIR"/boot.bin
 cd $ZTOP
 python scripts/zsipos-sha.py >"$DESTDIR/sha256.txt"
 
+cp "$ZTOP/version/update.text" "$DESTDIR"
+
+
 umask $oldumask
 

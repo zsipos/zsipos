@@ -1,0 +1,5 @@
+update.txt
+-------------------
+Filename: rootfs.tar.gz
+Version: zsipos-1.2.10 13 Oct 2020
+Reason: alternate archive, bugfix
