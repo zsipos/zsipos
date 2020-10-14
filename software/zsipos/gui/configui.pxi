@@ -840,21 +840,26 @@ cdef void on_hexforward(Fl_Widget* widget, void *cfdata) with gil:
 editcache = []
 
 # Python Functions (alphabetical)
-def add_file(char *filename):
+def add_file(filename):
     global sendfiles;
 
     if os.path.isfile(filename):
         if filename not in sendfiles:
             sendfiles.add(filename)
     log.info("add_file: sendfiles %s" %(sendfiles))
+    
+def add_file_snapshot(filename):
+    newname = '_' + filename
+    shutil.copy2(filename, newname)
+    sendfiles.add(newname)
 
 def add_stdfiles():
     global sendfiles;
     sendfiles.add('Manifest.txt')
     if get_value(configui.btn_nohup):
-        sendfiles.add('nohup.out')
+        add_file_snapshot('nohup.out')
     if get_value(configui.btn_zsiposlog):
-        sendfiles.add('zsipos.log')
+        add_file_snapshot('zsipos.log')
 
 def address_cache(params):
     """ save editvals to cache """
