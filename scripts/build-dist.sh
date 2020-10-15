@@ -70,10 +70,11 @@ gzip -f -9 "$DESTDIR/rootfs.tar"
 
 cp "$ZTOP/kernel/build_$BITS/bbl/bbl.bin" "$DESTDIR"/boot.bin
 
+cp "$ZTOP/version/update.txt" "$DESTDIR"
+
+# calc the checksum
 cd $ZTOP
 python scripts/zsipos-sha.py >"$DESTDIR/sha256.txt"
-
-cp "$ZTOP/version/update.txt" "$DESTDIR"
 
 
 umask $oldumask
