@@ -7,8 +7,11 @@
 # display    start nxdisplay
 #
 
+. /etc/init.d/zsiposfunc
+
+cp /var/log/messages $STARTLOG
+
 PIDFILE=/var/run/nxdisplay.pid
-FIFO=/tmp/zsiposfifo
 
 calibrate() {
     if [ ! -f /etc/pointercal ]; then
@@ -33,10 +36,6 @@ running() {
     fi
 }
 
-display() {
-    echo $@ >$FIFO
-}
-
 start() {
     echo -n "Starting display: "
     RUNNING=$(running)
@@ -49,7 +48,7 @@ start() {
         while test ! -p $FIFO
             do sleep 1
         done
-        display "starting display"
+        display "starting display ..."
     fi
     echo OK
 }

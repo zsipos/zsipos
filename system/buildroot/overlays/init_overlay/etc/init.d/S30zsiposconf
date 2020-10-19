@@ -8,11 +8,7 @@
 #               Load kernel modules
 #
 
-FIFO=/tmp/zsiposfifo
-
-display() {
-    echo $@ >$FIFO
-}
+. /etc/init.d/zsiposfunc
 
 start() {
     echo -n "Starting zsiposconf: "
@@ -25,7 +21,7 @@ start() {
     fi
 
 
-    display "init zsipos"
+    display "init zsipos configuration ..."
 
     CFG=/root/zsipos.cfg
     CFGBAK=/root/zsipos.cfg.bak
@@ -148,18 +144,22 @@ EOF
 		else
 			DNSOUT="/etc/resolv.conf"
 		fi
+		DHCPDISP=" (DHCP) "
 		IF0CMD1="/bin/sel4iptool eth0 dhcp >$DNSOUT"
 		IF0CMD2="#"
 	else
+		DHCPDISP=""
 		IF0CMD1="ifconfig eth0 $ETH0 netmask $NETMASK"
 		IF0CMD2="route add default gw $GATEWAY"
 	fi
 	cat >/etc/init.d/S40network <<EOF
 #!/bin/sh
 # This file is auto-generated. Please do not edit.
+. /etc/init.d/zsiposfunc
 case "\$1" in
 start)
        	echo "Starting network: "
+	display "starting network $DHCPDISP..."
 	$IF0CMD1
 	$IF0CMD2
 	ifconfig eth1 $LOCALPROXY netmask $LOCALNET up
@@ -184,15 +184,6 @@ EOF
 	chmod ugo+xr /etc/init.d/S40network
     fi
 
-
-    # load kernel modules
-    #modprobe ocaes
-    #modprobe swsha1
-    # old platform
-    #modprobe spi-oc-big
-    #modprobe enc28j60
-    #sleep 1
-    #ethtool -s eth1 duplex full # msglvl 0xc8ff
     echo OK
 }
 

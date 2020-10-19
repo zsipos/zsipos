@@ -1,0 +1,34 @@
+#!/bin/sh
+
+# SPDX-FileCopyrightText: buildroot
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+#
+# Start chrony
+
+[ -r /etc/default/chrony ] && . /etc/default/chrony
+
+. /etc/init.d/zsiposfunc
+
+case "$1" in
+  start)
+	printf "Starting chrony: "
+	display "starting chrony ..."
+	chronyd $CHRONY_ARGS && echo "OK" || echo "FAIL"
+	;;
+  stop)
+	printf "Stopping chrony: "
+	killall chronyd && echo "OK" || echo "FAIL"
+	;;
+  restart|reload)
+	"$0" stop
+	sleep 1
+	"$0" start
+	;;
+  *)
+	echo "Usage: $0 {start|stop|restart}"
+	exit 1
+esac
+
+exit $?

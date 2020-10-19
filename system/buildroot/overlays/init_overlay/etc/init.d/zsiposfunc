@@ -1,0 +1,8 @@
+FIFO=/tmp/zsiposfifo
+STARTLOG=/root/start.log
+
+display() {
+	echo "$@" >/tmp/zsiposfifo
+	echo "$@" >>$STARTLOG
+}
+
