@@ -12,8 +12,12 @@
 
 start() {
     echo -n "Starting zsiposconf: "
-    if [ ! -p $FIFO ]; then
-        mkfifo $FIFO
+    V=/version.txt
+    if [ -f $V ]
+    then
+        v=`cat $V`
+        p=`cat /proc/device-tree/chosen/zsipos,partition`
+        display "$v on partition $p"
     fi
     if [ ! -f /root/zsipos_factory.cfg ]; then
         echo "/root/zsipos_factory.cfg missing"
