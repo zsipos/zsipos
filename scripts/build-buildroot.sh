@@ -12,10 +12,7 @@ then
 	exit
 fi
 
-if [ ! -f .config ]
-then
-	cp ../config .config
-fi
+cp ../config .config
 
 if [ "$1"x == "config"x ]
 then

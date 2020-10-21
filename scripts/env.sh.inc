@@ -37,7 +37,7 @@ then
 	export ZTC_BUILDROOT="$ZTOP/system/buildroot/buildroot"
 	export ZTC_ROOT="$ZTC_BUILDROOT/output/host"
 	export ZTC_PREFIX="riscv64-linux"
-	export ZTC_SYSROOT="$ZTC_ROOT/usr/riscv64-buildroot-linux-gnu/sysroot"
+	export ZTC_SYSROOT="$ZTC_ROOT/usr/riscv64-buildroot-linux-musl/sysroot"
 else
 	export ZTC_ROOT="$ZTOP/toolchain/riscv64"
 	export ZTC_PREFIX="riscv64-unknown-linux-gnu"
