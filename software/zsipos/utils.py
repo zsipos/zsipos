@@ -83,14 +83,24 @@ def loadmodule(name):
     modules[name] = modules[fullname]
     
 def getGitMagic():
-    try: 
-        with open("/sys/devices/platform/ff000000.zsiposver/zsiposver", 'r') as f:
-            for l in f.readlines():
-                n, v = l.split(':')
-                gitversions[n] = long(v, 16)
-    except:
-        gitversions['FPGA-GIT'] = 0
-        gitversions['KERNEL-GIT'] = 0
+    if issel4():
+        with open('/proc/device-tree/chosen/zsipos,boot-version', 'r') as f:
+            v = f.read().strip()
+            if v == 'unknown':
+                gitversions['FPGA-GIT'] = 0
+            else:
+                gitversions['FPGA-GIT'] = int(v)
+        with open('/proc/version', 'r') as f:
+            gitversions['KERNEL-GIT'] = int(f.read().split(' ')[2].split('-')[2][1:], 16)
+    else:
+        try: 
+            with open('/sys/devices/platform/ff000000.zsiposver/zsiposver', 'r') as f:
+                for l in f.readlines():
+                    n, v = l.split(':')
+                    gitversions[n] = int(v, 16)
+        except:
+            gitversions['FPGA-GIT'] = 0
+            gitversions['KERNEL-GIT'] = 0
     res = 0
     for n, v in gitversions.items():
         if not n in ['FPGA-GIT', 'KERNEL-GIT']: 
