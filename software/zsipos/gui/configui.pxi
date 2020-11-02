@@ -26,7 +26,7 @@ Copyright (C) 2020 Esther Bergter
 #
 # Version 1.1
 
-debuginfo = True
+debuginfo = False
 
 # python modules
 import crypt
@@ -61,7 +61,6 @@ cdef str constopt   # consts-Option, die gerade bearbeitet wird
 
 cdef str already_current = 'you already have the current version'
 cdef str section = 'gmitm'
-cdef str str_ip_config = 'Ip Config'
 cdef str alternate_partition='/tmp/alternate_partition'
 cdef str versioncounter_path = '/versioncount'
 cdef str versiontext_path = '/version.txt'
@@ -96,6 +95,8 @@ cdef str str_copy_config = 'copying configuration, please wait\n'
 cdef str str_copy_config_done = 'copy configuration done.\n'
 
 cdef str str_update_reboot_information = '\nNOTE: If reboot should fail, press display until it turns black. Device returns to current version.'
+
+cdef str str_ip_config = 'Ip Config'
 cdef str help_ip_config = """
 Setup your network configuration.
 
@@ -138,6 +139,9 @@ NTP Server:   time server
 name
 """
 
+cdef str str_logs = 'Logs'
+# no log help
+
 cdef str str_experts = 'Experts'
 cdef str help_experts = """
 These settings should only be changed if you are aware of what you are doing! For normal operation please use the defaults.
@@ -154,6 +158,9 @@ gitversions:
 
 Shows the short git commit hashes of the components, that is the software version.
 """
+
+cdef str str_passwd = 'Passwd'
+# no help
 
 cdef str str_reset = 'Reset'
 cdef str help_reset ="""
@@ -179,27 +186,36 @@ Factory Reset:
 
 Delete trust information, reset zsipos.cfg, reset network configuration, reset root password, reboot the system.
 """
+
+cdef str str_sysinfo = 'SysInfo'
+# no help
+
+cdef str str_update = 'Update'
+# no help
+
+############################
+
 cdef str oldpw = ''
 cdef str newpw = ''
 
 cdef str str_gitversions = ''
-cdef str str_save_and_reconfig = 'Save and Reconfigure'
-cdef str str_save_and_restart = 'Save and Restart'
 cdef str str_altmount = ''
 cdef str str_updateVersion = ''       # aus update.txt
 cdef str str_updateFilename = ''      # aus update.txt
 cdef str str_update_hexdigest = ''    # checksum des downloads
 cdef sendfiles = set()
 
-cdef int partition_number = 0 
-cdef int current_versioncounter = 0
-cdef int alternate_versioncounter = 0
+partition_number = 0 
+current_versioncounter = 0
+alternate_versioncounter = 0
 
-cdef bool hexdigest_matches = False
-cdef bool user_hit_cancel_button = False
-cdef bool UpdateFailed = False
-cdef bool UpdateHalted = False
-cdef bool stable = False            # configui not initialized yet
+hexdigest_matches = False
+user_hit_cancel_button = False
+UpdateFailed = False
+UpdateHalted = False
+stable = False            # configui not initialized yet
+
+update_binary = None
 
 # keep consistent with consts.py Logging
 logconsts = [ consts.LOGEXT, consts.LOGLOC, consts.LOGFULLMESSAGE, 
@@ -224,6 +240,7 @@ cdef void on_config_enter(Fl_Widget* widget, void *data) with gil:
     update_overview()
     configui.window.activate()
     configui.tab_config.value(configui.group_ip)
+    configui.btn_back.show()
     configui.btn_back.take_focus()
     configui.window.show()
 
@@ -321,7 +338,7 @@ cdef void on_tab_group(Fl_Widget *widget, void *data) with gil:
 
     label = get_label(get_value(ui.tab_config))
     #debug("on_tab_group %s" %(label, ))
-    if str(label) == str_experts:
+    if str(label) == str_logs:
         clearsendfiles()
     if str(label) in [str_ip_config, str_server, str_experts, str_reset]:
         show_help = True
@@ -379,6 +396,7 @@ cdef void on_btn_logsettings(Fl_Widget* widget, void *data) with gil:
 
 cdef void on_btn_addfile(Fl_Widget* widget, void *cfdata) with gil:
     """ add/remove nohup.out, zsipos.log """
+    pass
     myitem = <Fl_Button*>cfdata
     myfile = get_label(myitem)
     if get_value(myitem):
@@ -410,7 +428,9 @@ cdef void on_browser_archive_click(Fl_Widget* widget, void *data) with gil:
                 configui.browse_archive.select(index,1) # select
 
 cdef void on_btn_upload(Fl_Widget* widget, void *data) with gil:
-    add_stdfiles()
+    helpTextBuffer.text("") # clear buffer
+    if not add_stdfiles():
+        return
     if len(sendfiles) > 1: # more files than Manifest.txt
         if not config_valid(consts.UPLOADID):
             if (not config_valid(consts.UPLOADUSER) or
@@ -435,7 +455,7 @@ cdef void on_btn_alternate_archive(Fl_Widget* widget, void *data) with gil:
         current_archive=local_archive_path
         configui.browse_archive.copy_label(empty_label) # erase longer value
     else:                                                # alternatives archiv
-        if mount_alternate(False): # kein output
+        if checkmount_alternate(True): # mount alternate erfolgreich
             if not os.path.exists(alternate_archive_path):
                 os.mkdir(alternate_archive_path)
             current_archive=alternate_archive_path
@@ -494,8 +514,13 @@ cdef void on_btn_restart(Fl_Widget* widget, void *data) with gil:
     restart_type = <str>data
     #debug(restart_type) 
     if config_has_changed():
-        #debug("on_btn_restart found config_has_changed")
-        do_back()
+        cfg_cleanup()
+        inf = "config has changed, %s requested" % (restart_type,)
+        configui.box_restart.copy_label(inf)
+        lbl_text = "Save and %s" % (restart_type.capitalize(),)
+        configui.btn_save_and_restart.copy_label(lbl_text)
+        configui.btn_save_and_restart.show()
+        configui.winSave.show()
     else:
         do_restart(restart_type)
 
@@ -550,8 +575,6 @@ cdef void on_btn_boot_version(Fl_Widget* widget, void *data) with gil:
         cfdict['BOOT_CURRENT'] = False
 
 cdef void on_btn_update_info(Fl_Widget* widget, void *data) with gil:
-    if config_has_changed():
-        do_save_cfg()
     update_update_text()
     configui.winUpdateInfo.show()
     
@@ -563,21 +586,24 @@ cdef void on_btn_save_and_restart(Fl_Widget* widget, void *data) with gil:
 
     do_save_cfg()
     configui.winSave.hide()
-    configui.window.hide()
-    do_restart(get_label(configui.btn_save_and_restart))
+    # label e.g. 'save and restart'
+    lbl = get_label(configui.btn_save_and_restart).split(' ')[-1].lower()
+    if lbl == 'update':
+        configui.winUpdateInfo.hide()
+        configui.winUpdateSure.show()
+    else:
+        do_restart(lbl)
 
 
 cdef void on_btn_save_ok(Fl_Widget* widget, void *data) with gil:
     #debug("on_btn_save")
     do_save_cfg()
     configui.winSave.hide()
-    configui.window.hide()
 
 
 cdef void on_btn_save_cancel(Fl_Widget* widget, void *data) with gil:
 
     configui.winSave.hide()
-    configui.window.hide()
 
 # WinHelp
 cdef void on_btn_help_back(Fl_Widget* widget, void *data) with gil:
@@ -725,8 +751,18 @@ cdef void on_btn_updateinfo_back(Fl_Widget* widget, void *data) with gil:
     configui.winUpdateInfo.hide()
 
 cdef void on_btn_updateinfo_ok(Fl_Widget* widget, void *data) with gil:
-    configui.winUpdateInfo.hide()
-    configui.winUpdateSure.show()
+    if config_has_changed():
+        restart_type = 'update'
+        cfg_cleanup()
+        inf = "config has changed, %s requested" % (restart_type,)
+        configui.box_restart.copy_label(inf)
+        lbl_text = "Save and %s" % (restart_type.capitalize(),)
+        configui.btn_save_and_restart.copy_label(lbl_text)
+        configui.btn_save_and_restart.show()
+        configui.winSave.show()
+    else:
+        configui.winUpdateInfo.hide()
+        configui.winUpdateSure.show()
     
 # winUpdateSure
 cdef void on_btn_updatesure_cancel(Fl_Widget* widget, void *data) with gil:
@@ -735,7 +771,8 @@ cdef void on_btn_updatesure_cancel(Fl_Widget* widget, void *data) with gil:
 cdef void on_btn_updatesure_ok(Fl_Widget* widget, void *data) with gil:
     global user_hit_cancel_button
     global UpdateHalted
-
+    global UpdateFailed
+    
     user_hit_cancel_button = False
     UpdateHalted = False
     UpdateFailed = False
@@ -750,6 +787,7 @@ cdef void on_btn_updatesure_ok(Fl_Widget* widget, void *data) with gil:
 cdef void on_btn_updateprogress_cancel(Fl_Widget* widget, void *data) with gil:
     global user_hit_cancel_button
     debug("user hit cancel")
+    checkmount_alternate(False)
     if UpdateFailed or UpdateHalted:
         configui.winUpdateProgress.hide()
     else:
@@ -757,6 +795,8 @@ cdef void on_btn_updateprogress_cancel(Fl_Widget* widget, void *data) with gil:
         configui.btn_updateprogress_cancel.deactivate()
     
 cdef void on_btn_updateprogress_reboot(Fl_Widget* widget, void *data) with gil:
+    checkmount_alternate(True)
+    write_alternateversion_count()
     do_restart('reboot')
 
 #cdef void on_btn_updateprogress_back(Fl_Widget* widget, void *data) with gil:
@@ -850,16 +890,24 @@ def add_file(filename):
     
 def add_file_snapshot(filename):
     newname = '_' + filename
-    shutil.copy2(filename, newname)
-    sendfiles.add(newname)
+    try:
+        shutil.copy2(filename, newname)
+    except:
+        logerrorexception('help')
+        return False
+    else:
+        sendfiles.add(newname)
+        return True
 
 def add_stdfiles():
-    global sendfiles;
+    global sendfiles
+    ret = True
     sendfiles.add('Manifest.txt')
     if get_value(configui.btn_nohup):
-        add_file_snapshot('nohup.out')
-    if get_value(configui.btn_zsiposlog):
-        add_file_snapshot('zsipos.log')
+        ret = add_file_snapshot('nohup.out')
+    if ret and get_value(configui.btn_zsiposlog):
+        ret = add_file_snapshot('zsipos.log')
+    return ret
 
 def address_cache(params):
     """ save editvals to cache """
@@ -1001,6 +1049,36 @@ def check_mandatory_value(myopt):
         params = addresspar[myopt]
         return "%s missing. " % (params['title'], )
 
+def checkmount_alternate(type):
+    """ mount alternate partition if type=True, else unmount it """
+    if os.path.exists(alternate_partition):
+        if os.path.ismount(alternate_partition):
+            if type == True:
+                log.info("alternate partition already mounted, ok")
+                return True
+            else:
+                return mysystemcall(["umount", alternate_partition], False)
+        else:
+            if type == False:
+                log.info("alternate partition not mounted, ok")
+                return True
+            # else mount later
+    else:
+        if type == True:
+            os.mkdir(alternate_partition)
+        else:
+            log.info("no alternate partition, ok")
+            return True
+    # reached only if type==True
+    if not issel4():
+        debug("mount skipped (not on sel4)")
+        return True
+    if len(str_altmount) < 4:
+        log.error("mount_alternate: invalid device %s" % (str_altmount,))
+        log.error("mount_alternate failed\n")
+        return False
+    return mysystemcall(["mount", str_altmount, alternate_partition], False)
+
 def check_update(ret):
     """ return true if update can continue, else false """
     global UpdateHalted
@@ -1008,19 +1086,19 @@ def check_update(ret):
 
     Fl.check()
     if UpdateHalted:
-        debug("check_update found UpdateHalted")
+        log.info("check_update found UpdateHalted")
         return False
     if UpdateFailed:
-        debug("check_update found UpdateFailed")
+        log.info("check_update found UpdateFailed")
         return False
     elif user_hit_cancel_button:
-        debug("check_update found user_hit_cancel_button")
+        log.info("check_update found user_hit_cancel_button")
         to_updateprogress(str_update_canceled)
         UpdateHalted = True
         configui.winUpdateProgress.hide()
         return False
     elif not ret:
-        debug("check_update found ret not ok")
+        log.info("check_update found ret not ok")
         to_updateprogress(str_update_failed)
         UpdateFailed = True
         configui.btn_updateprogress_cancel.activate()
@@ -1211,17 +1289,21 @@ def config_valid(name):
 def copy_configs():
     """ copy files in config-list to alternate filesystem """
     if os.path.exists(copylist_path):
-        to_updateprogress(str_copy_config)
-        with open(copylist_path, 'r') as f:
-            for l in f.readlines():
-                source = l.strip()
-                if '*' in source:
-                    for fn in glob.glob(source):
-                        copy_file(fn)
-                else:
-                    copy_file(source)
-        to_updateprogress(str_copy_config_done)
-        return True
+        if checkmount_alternate(True):
+            to_updateprogress(str_copy_config)
+            with open(copylist_path, 'r') as f:
+                for l in f.readlines():
+                    source = l.strip()
+                    if '*' in source:
+                        for fn in glob.glob(source):
+                            copy_file(fn)
+                    else:
+                        copy_file(source)
+            to_updateprogress(str_copy_config_done)
+            return True
+        else:
+            err_to_updateprogress('copy_configs: mount alternate failed')
+            return False
     else:
         #log.error("copy_configs: %s not found" % (copylist_path,))
         err_to_updateprogress("copy_configs: %s not found\n" % (copylist_path,))
@@ -1239,7 +1321,10 @@ def copy_file(source):
         try:
             shutil.copy2(source,dest,follow_symlinks=False)
         except PermissionError:
+            if issel4():
+                logerrorexception('progress')
             log.error("cannot copy(%s,%s), permission denied" % (source, dest))
+        except:
             if issel4():
                 raise
     
@@ -1309,6 +1394,7 @@ def do_back():
             configui.box_restart.copy_label(inf)
             configui.btn_save_and_restart.copy_label(res)
             configui.btn_save_and_restart.show()
+        configui.window.hide()
         configui.winSave.show()
     else:
         configui.window.hide()
@@ -1380,7 +1466,7 @@ def do_restart(restart_type):
             console.info("reboot...")
             log.info("reboot system")
             os.system('reboot')
-        elif restart_type == str_save_and_reconfig:
+        elif restart_type == 'reconfig':
             console.info("reconfigure...")
             log.info("reconfig system")
             #os.system('/etc/init.d/rcK && /etc/init.d/rcS')
@@ -1409,6 +1495,7 @@ def do_save_cfg():
     cfg_restore_externalPhoneAddress()
     write_versioncount()
     os.sync()
+    config_to_dict() # refresh memory in case not restarted
 
 import io
 
@@ -1546,11 +1633,10 @@ def do_send_http(url, files):
         log.debug(reply.text)
         update_percent(100)
         clearsendfiles()
-        to_upload_progress("done.\nall selected logfiles uploaded.")
+        to_upload_progress("done.\nall selected logfiles uploaded.\n")
                 
-    except Exception as e:
-        to_upload_progress("\n\n**upload error**\n\n")
-        to_upload_progress("(" + str(e) +")")
+    except:
+        logerrorexception('help')
         raise
      
     finally:
@@ -1601,9 +1687,9 @@ def do_send():
 
 def do_update1():
     ''' download tar, calc checksum '''
+    updateProgressBuffer.text(str_update_started)
+    configui.winUpdateProgress.flush()
     try:
-        updateProgressBuffer.text(str_update_started)
-        configui.winUpdateProgress.flush()
         ret = download_update()
         if check_update(ret):
             if is_testversion():
@@ -1613,7 +1699,7 @@ def do_update1():
             configui.input_hex.value("")
             configui.winEditHex.show()
     except:
-        logerrorexception()
+        logerrorexception('progress')
         update_failed()
         
 def do_update2():
@@ -1628,17 +1714,16 @@ def do_update2():
             ret = copy_configs()
             debug("do_update2: copy_configs() returned %s" % ("True" if ret else "False")) 
         if check_update(ret):
-            ret = write_alternateversion()
-            debug("do_update2: write_alternateversion() returned %s" % ("True" if ret else "False")) 
-        if issel4():
-            umount_alternate(False) # True -> updateprogress
+            ret = write_alternateversion_text()
+            debug("do_update2: write_alternateversion_text() returned %s" % ("True" if ret else "False")) 
+        # kein umount! muss versioncount noch schreiben
         if check_update(ret):
             to_updateprogress(str_update_completed)
             to_updateprogress(str_update_reboot_information)
             UpdateHalted = True     # update finished
             configui.btn_updateprogress_reboot.activate()
     except:
-        logerrorexception()
+        logerrorexception('progress')
         update_failed()
     
 def download_update():
@@ -1671,6 +1756,7 @@ def download_update():
                 err_to_updateprogress("download %s failed, status %d\n" % (link, status_code))
                 return False
             sha256 = hashlib.sha256()
+            sha256.update(update_binary) # add update.txt
             total = response.headers.get('content-length')
             if total is None: # no content-length header
                 f.write(response.content)
@@ -1707,26 +1793,44 @@ def download_update():
             else:
                 return False
     except:
-        logerrorexception()
+        logerrorexception('progress')
         err_to_updateprogress(str_download_failed)
         return False
 # download_update
 
 def err_to_updateprogress(mytext):
     """ append to progress buffer and to log.error """
+    err_to_win(mytext, 'progress')
+
+def err_to_win(mytext, mywin):
+    """ append to buffer and to log.error """
     if mytext.endswith('\n'):
         log.error(mytext[:-1])
     else:
         log.error(mytext)
     if stable:
-        updateProgressBuffer.append(mytext)
-        Display = configui.txt_updateprogress
+        if mywin == 'help':
+            buf = helpTextBuffer
+            disp = configui.txt_helpDisplay
+            win = configui.winHelp
+        elif mywin == 'info':
+            buf = updateInfoBuffer
+            disp = configui.txt_updateinfo
+            win = configui.winUpdateInfo
+        elif mywin == 'progress':
+            buf = updateProgressBuffer
+            disp = configui.txt_updateprogress
+            win = configui.winUpdateProgress
+        else:
+            log.error("err_to_win: unknown window %s" % (mywin, ))
+            return
+        buf.append(mytext)
         #debug("to_updateprogress: buffer_lenght %d" % (updateProgressBuffer.length(),))
-        lines = Display.count_lines(1, updateProgressBuffer.length(), False)
-        debug("Display.count_lines %d" % (lines, ))
-        Display.scroll(lines, 0)
-        configui.winUpdateProgress.flush()
-        configui.winUpdateProgress.show()
+        lines = disp.count_lines(1, buf.length(), False)
+        debug("disp.count_lines %d" % (lines, ))
+        disp.scroll(lines, 0)
+        win.flush()
+        win.show()
 
 def expand_hexbuf(s):
     blocks = int((len(s) + 3)/4)
@@ -1775,13 +1879,18 @@ def get_choice(txt, restext):
     return ret
 '''
 
+'''
 def get_http_file(url):
-    ''' read http file and return content '''
-    #with urllib.request.urlopen(url) as f:
-    #    html = f.read().decode('utf-8')
+    """ read http file and return content """
     response = requests.get(url)
-    html = response.content.decode('utf-8')
+    html = response.decode('utf-8')
     return html
+'''
+
+def get_http_file_binary(url):
+    ''' read http file and return content '''
+    response = requests.get(url)
+    return response.content
 
 def get_versioncounter():
     ''' read current and alternate versioncounter '''
@@ -1796,15 +1905,26 @@ def get_versioncounter():
             current_versioncounter = int(str_counter)
     except:
         current_versioncounter = 1
-    try:
-        with open(altversfilename(versioncounter_path), 'r') as f:
-            for l in f.readlines():
-                str_counter = l.strip()
-                break
-            alternate_versioncounter = int(str_counter)
-    except:
+    if checkmount_alternate(True):
+        try:
+            with open(altversfilename(versioncounter_path), 'r') as f:
+                for l in f.readlines():
+                    str_counter = l.strip()
+                    break
+                alternate_versioncounter = int(str_counter)
+        except:
+            log.error("cannot read %s" % (altversfilename(versioncounter_path), ))
+            alternate_versioncounter = 0
+    else:
         alternate_versioncounter = 0
     log.info("current versioncounter: %d, alternate versioncounter %d" %(current_versioncounter, alternate_versioncounter))
+
+    if current_versioncounter > alternate_versioncounter:
+        configui.btn_boot_current.value(1)
+        configui.btn_boot_alternate.value(0)
+    else:
+        configui.btn_boot_current.value(0)
+        configui.btn_boot_alternate.value(1)
         
 def get_partition():
     ''' read partition number from device-tree '''
@@ -2190,14 +2310,16 @@ def logerrorcaused_by(e):
         log.error("CAUSED BY: %s", e.caused_by[1], exc_info = e.caused_by)
         logerrorcaused_by(e.caused_by[1])
 
-def logerrorexception():
+def logerrorexception(mywin):
     global UpdateFailed
     global UpdateHalted
 
     info = sys.exc_info()
-    err_to_updateprogress("EXCEPTION: %s\n" % (info[1]))
+    err_to_win("EXCEPTION: %s\n" % (info[1]), mywin)
+        
     UpdateFailed = True
     UpdateHalted = True
+    debug("UpdateFailed, UpdateHalted")
     logerrorcaused_by(info[1])
 
 def make_Manifest():
@@ -2227,34 +2349,19 @@ def make_Manifest():
 def mkfs(devname):
     if not issel4():
         debug("mkfs skipped (not on sel4)")
-        return True
+        if os.path.exists(alternate_partition):
+            debug("clean alternate")
+            return mysystemcall(["rm", "-rf", alternate_partition], False)
+        else:
+            return True
     if len(devname) < 4:
         err_to_updateprogress("mkfs: invalid devname %s\n" % (devname,))
         return False
-    return mysystemcall(["mkfs.ext4", devname], False) # True -> updateprogress
-        
-def mount_alternate(wantprogress):
-    ''' mount the other partition '''
-    if os.path.exists(alternate_partition):
-        if os.path.ismount(alternate_partition):
-            if wantprogress:
-                to_updateprogress("alternate partition already mounted, ok\n")
-            else:
-                log.info("alternate partition already mounted, ok")
-            return True
+    if checkmount_alternate(False): # umount
+        return mysystemcall(["mkfs.ext4", devname], False) # True -> updateprogress
     else:
-        os.mkdir(alternate_partition)
-    if not issel4():
-        debug("mount skipped (not on sel4)")
-        return True
-    if len(str_altmount) < 4:
-        log.error("mount_alternate: invalid device %s" % (str_altmount,))
-        if wantprogress:
-            err_to_updateprogress("mount_alternate failed\n")
-        else:
-            log.error("mount_alternate failed\n")
+        log.error("mkfs: cannot umount alternate partition")
         return False
-    return mysystemcall(["mount", str_altmount, alternate_partition], wantprogress)
 
 def mysystemcall(args, wantprogress):
     """ systemcall per subprocess, output to log and updateprogress """
@@ -2290,10 +2397,10 @@ def need_restart():
     if consts.EXTUSEDHCP in olddict:
         if str(olddict[consts.EXTUSEDHCP]) != str(cfdict[consts.EXTUSEDHCP]):
             log.info(consts.EXTUSEDHCP + " changed")
-            return str_save_and_reconfig
+            return 'reconfig'
     elif consts.EXTUSEDHCP in cfdict and cfdict[consts.EXTUSEDHCP]:
         log.info(consts.EXTUSEDHCP + " activated")
-        return str_save_and_reconfig
+        return 'reconfig'
     # reconfig in addresspar
     for key in addresspar:
         param = addresspar[key]
@@ -2306,7 +2413,7 @@ def need_restart():
                         continue
                 if o in cfdict and (o not in olddict or olddict[o] != cfdict[o]):
                     log.info('option %s=%s needs reconfig' % (o, cfdict[o]))
-                    return str_save_and_reconfig
+                    return 'reconfig'
     # restart in addresspar
     for key in addresspar:
         param = addresspar[key]
@@ -2315,30 +2422,30 @@ def need_restart():
             for o in options:
                 if o in cfdict and (o not in olddict or olddict[o] != cfdict[o]):
                     log.info('option %s=%s needs restart' % (o, cfdict[o] or ''))
-                    return str_save_and_restart
+                    return 'restart'
     # Port changes
     if consts.EXTPHONEPORT in olddict:
         if olddict[consts.EXTPHONEPORT] != cfdict[consts.EXTPHONEPORT]:
             log.info(consts.EXTPHONEPORT + " changed")
-            return str_save_and_restart
+            return 'restart'
     elif consts.LOCPROXYPORT in olddict:
         if olddict[consts.LOCPROXYPORT] != cfdict[consts.LOCPROXYPORT]:
             log.info(consts.LOCPROXYPORT + " changed")
-            return str_save_and_restart
+            return 'restart'
     # Logsettings
     for key in logconsts:
         if key in cfdict:
             if key in olddict:
                 if olddict[key] != cfdict[key]:
                     log.info(key + " changed")
-                    return str_save_and_restart
+                    return 'restart'
             else:
                 log.info(key * " added")
-                return str_save_and_restart
+                return 'restart'
         else:
             if key in olddict:
                 log.info(key + " deleted")
-                return str_save_and_restart
+                return 'restart'
                 
     log.info("restart not needed")
     return None
@@ -2670,20 +2777,6 @@ def to_updateprogress(mytext):
         configui.winUpdateProgress.flush()
         configui.winUpdateProgress.show()
 
-def umount_alternate(wantprogress):
-    ''' unmount the other partition '''
-    if os.path.exists(alternate_partition):
-        if os.path.ismount(alternate_partition):
-            #if wantprogress:
-            #    to_updateprogress("umount %s\n" % (alternate_partition,))
-            return mysystemcall(["umount", alternate_partition], wantprogress)
-    if wantprogress:
-        to_updateprogress("alternate partition was not mounted, ok\n")
-    else:
-        log.info("alternate partition was not mounted, ok")
-    return True
-
-
 def untar_with_progress(filename):
     cdef int  chunk_size
     cdef long total
@@ -2727,7 +2820,7 @@ def untar_with_progress(filename):
             err_to_updateprogress(str_unpack_failed)
             return False
     except:
-        logerrorexception()
+        logerrorexception('progress')
         err_to_updateprogress(str_unpack_failed)
         return False
 
@@ -2741,7 +2834,7 @@ def untar_update():
             to_updateprogress("filesystem done.\n")
         configui.btn_updateprogress_cancel.activate()
     if check_update(ret):
-        ret = mount_alternate(False) # True -> updateprogress
+        ret = checkmount_alternate(True) # mount alternate
     if check_update(ret):
         localpath=os.getcwd()
         fn = os.path.join(localpath, updatetar_path, str_updateFilename)
@@ -2764,12 +2857,10 @@ def update_init():
     """ read all info concerning version and alternate partition """
     get_partition()
     get_alternate_mountname()
-    if issel4():
-        mount_alternate(False) # False -> no updateprogress
+    checkmount_alternate(True)  # mount, accept failure
     get_versioncounter()
     version_init()
-    if issel4():
-        umount_alternate(False) # False -> no updateprogress
+    checkmount_alternate(False) # umount, accept failure
 
 def update_overview():
     ''' Fills in the overview fields '''
@@ -2866,21 +2957,24 @@ def update_overview():
 
 def update_update_text():
     global version
+    global update_binary
     
     fn = os.path.join(cfdict[consts.UPDATEURI], update_file)
     try:
-        update_text = get_http_file(fn)
+        update_binary = get_http_file_binary(fn)
     except:
+        logerrorexception('info')
         update_text = "cannot read %s\n" % (fn, )
         log.error("cannot read %s" % (fn, ))
         updateInfoBuffer.text(update_text)
         configui.btn_updateinfo_ok.deactivate()
     else:
         #debug("update_text " + update_text)
+        update_text = update_binary.decode('utf-8')
         parse_update(update_text)
         currver = get_value(configui.out_current_version)
         log.info("updateVersion: %s, current version %s" % (str_updateVersion, currver))
-        if len(currver) > 0 and str_updateVersion == currver:
+        if len(currver) > 0 and str_updateVersion == currver and not is_testversion():
             log.info("Version is current, ok")
             updateInfoBuffer.text(already_current)
             configui.btn_updateinfo_ok.deactivate()
@@ -2897,40 +2991,51 @@ def version_init():
                 break
     except:
         configui.out_current_version.value('unknown current version')     
-    try: 
-        with open(altversfilename(versiontext_path), 'r') as f:
-            for l in f.readlines():
-                configui.out_alternate_version.value(l.strip())
-                break
-    except:
-        configui.out_alternate_version.value('unknown alternate version')
-    if current_versioncounter > alternate_versioncounter:
-        configui.btn_boot_current.value(1)
-        configui.btn_boot_alternate.value(0)
+    if checkmount_alternate(True):
+        try:
+            with open(altversfilename(versiontext_path), 'r') as f:
+                for l in f.readlines():
+                    configui.out_alternate_version.value(l.strip())
+                    break
+        except:
+            configui.out_alternate_version.value('unknown alternate version')
     else:
-        configui.btn_boot_current.value(0)
-        configui.btn_boot_alternate.value(1)
+        configui.out_alternate_version.value('no alternate version')
 # version_init
     
 def warn(warnmessage):
     configui.btn_warn.copy_label(warnmessage)
     configui.btn_warn.labelcolor(88)
     configui.tab_config.hide()
+    configui.btn_back.hide()
     configui.btn_warn.show()
 
-def write_alternateversion():
+def write_alternateversion_text():
     """ write alternate versioncount and version.txt """
-    fn = altversfilename(versioncounter_path)
-    with open(fn, "w")as f:
-       print(current_versioncounter +1, file=f)
-    fn2 = altversfilename(versiontext_path)
-    with open(fn2, "w") as f2:
-       print(str_updateVersion, file=f2)
-    configui.out_alternate_version.value(str_updateVersion)
-    configui.btn_boot_current.value(0)
-    configui.btn_boot_alternate.value(1)
-    log.info("write alternate version, ok")
-    return True
+    if checkmount_alternate(True):
+        fn = altversfilename(versiontext_path)
+        with open(fn, "w") as f:
+           print(str_updateVersion, file=f)
+        configui.out_alternate_version.value(str_updateVersion)
+        log.info("write alternate version text, ok")
+        return True
+    else:
+        err_to_updateprogress("write alternate version text failed.\n")
+        return False
+
+def write_alternateversion_count():
+    """ write alternate versioncount and version.txt """
+    if checkmount_alternate(True):
+        fn = altversfilename(versioncounter_path)
+        with open(fn, "w")as f:
+           print(current_versioncounter +1, file=f)
+        configui.btn_boot_current.value(0)
+        configui.btn_boot_alternate.value(1)
+        log.info("write alternate version count, ok")
+        return True
+    else:
+        err_to_updateprogress("write alternate version count failed.\n")
+        return False
 
 def write_editwindow(params):
     global editcache
@@ -2987,15 +3092,17 @@ def write_versioncount():
             except:
                     log.error("update versioncounter failed")    
         else:
-            alternate_versioncounter = current_versioncounter +1
-            try:
-                with open(altversfilename(versioncounter_path), 'w') as f:
-                    f.write(str(alternate_versioncounter))
-                    log.info("alternate versioncounter updated")  
-            except:
+            if checkmount_alternate(True):
+                alternate_versioncounter = current_versioncounter +1
+                try:
+                    with open(altversfilename(versioncounter_path), 'w') as f:
+                        f.write(str(alternate_versioncounter))
+                        log.info("alternate versioncounter updated")
+                except:
                     log.error("update alternate versioncounter failed")
+            else:
+                log.error("write_versioncount: cannot update alternate versioncounter")
 
- 
 ''' 
 defines for Edit Address
 addresspar needs functions declared above
@@ -3226,8 +3333,8 @@ def configui_init(infstr):
     ui.btn_logsettings.callback(on_btn_logsettings, NULL)
     ui.btn_upload_server.callback(on_btn_edit_address, <void*>consts.UPLOADSERVER)
     ui.btn_ping_upload_server.callback(on_btn_ping, <void*>consts.UPLOADSERVER)
-    ui.btn_nohup.callback(on_btn_addfile, <void*>ui.btn_nohup)
-    ui.btn_zsiposlog.callback(on_btn_addfile, <void*>ui.btn_zsiposlog)
+    #ui.btn_nohup.callback(on_btn_addfile, <void*>ui.btn_nohup)
+    #ui.btn_zsiposlog.callback(on_btn_addfile, <void*>ui.btn_zsiposlog)
     #ui.browse_archive.filter("[a-zA-Z0-9]*")
     ui.browse_archive.load(current_archive)
     ui.browse_archive.remove(1) # hide ../
@@ -3242,8 +3349,8 @@ def configui_init(infstr):
     # Group Password
     ui.btn_root_pw.callback(on_btn_root_pw, NULL)
     # Group Reset
-    ui.btn_restart.callback(on_btn_restart, <void*>str_save_and_restart)
-    ui.btn_reconfig.callback(on_btn_restart, <void*>str_save_and_reconfig)
+    ui.btn_restart.callback(on_btn_restart, <void*>'restart')
+    ui.btn_reconfig.callback(on_btn_restart, <void*>'reconfig')
     ui.btn_reboot.callback(on_btn_restart, <void*>'reboot')
     ui.btn_shutdown.callback(on_btn_restart, <void*>'shutdown')
     ui.btn_nxcal.callback(on_btn_nxcal, NULL)
@@ -3308,7 +3415,7 @@ def configui_init(infstr):
     ui.txt_updateprogress.scrollbar_width(20)
     ui.btn_updateprogress_cancel.callback(on_btn_updateprogress_cancel, NULL)
     #ui.btn_updateprogress_back.callback(on_btn_updateprogress_back, NULL)
-    ui.btn_updateprogress_reboot.callback(on_btn_restart, <void*>'reboot')
+    ui.btn_updateprogress_reboot.callback(on_btn_updateprogress_reboot, NULL)
     # WinEditHex
     ui.btn_hex_back.callback(on_btn_hex_ignore, NULL)
     ui.btn_hex_cancel.callback(on_btn_hex_cancel, NULL)

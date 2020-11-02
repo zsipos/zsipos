@@ -1,5 +1,5 @@
 update.txt
 -------------------
 Filename: rootfs.tar.gz
-Version: zsipos-1.3.4 29 Oct 2020
-Reason: fix linux deadlock if bind() fails
+Version: zsipos-1.3.5 2 Nov 2020
+Reason: update fixes, picotcp timer leak fixed
