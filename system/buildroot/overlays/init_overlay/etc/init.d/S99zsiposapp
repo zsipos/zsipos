@@ -60,7 +60,6 @@ start() {
         display "nameserver is $NAMESERVER"
     else
         display "ERROR: nameserver not found"
-        return
     fi
     echo -n "Starting zsiposapp: "
     RUNNING=$(running runzsipos)
