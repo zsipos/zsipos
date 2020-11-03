@@ -64,6 +64,8 @@ def setExternalPhoneAddress():
             return
     try:
         extphoneadr = get_ip_address("eth0")
+        if extphoneadr == "0.0.0.0":
+            raise ZsiposCfgException("DHCP error")
     except:
         raise ZsiposCfgException("ip address eth0 not found")
     config.set(consts.SECTION, consts.EXTPHONEADDR, extphoneadr)
