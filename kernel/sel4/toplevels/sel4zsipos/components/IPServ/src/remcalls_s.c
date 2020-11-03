@@ -335,6 +335,7 @@ static void handle_rem_dhcp(rem_arg_t *arg)
 	rem_dhcp_res_t     *r = &res->u.rem_dhcp_res;
 	struct pico_device *dev;
 	int                 ret;
+	uint64_t            start_time = PICO_TIME_MS();
 
 	do_pico_stack_lock();
 
@@ -367,8 +368,14 @@ static void handle_rem_dhcp(rem_arg_t *arg)
 		return;
 	}
 
-	while (!dhcp_finished)
+	while (!dhcp_finished) {
+		if (PICO_TIME_MS() - start_time > 30000) {
+			// timeout after 30 sec
+			dhcp_code = PICO_DHCP_ERROR;
+			break;
+		}
 		seL4_Yield();
+	}
 
 	if (dhcp_code == PICO_DHCP_SUCCESS) {
 		void *cli = pico_dhcp_get_identifier(dhcp_xid);
