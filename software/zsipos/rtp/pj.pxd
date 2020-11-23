@@ -728,6 +728,7 @@ cdef extern from "pjnath.h":
     cdef void*          pj_ice_strans_get_user_data(pj_ice_strans* ice_st) nogil
     cdef pj_status_t    pj_ice_strans_init_ice(pj_ice_strans* ice_st, pj_ice_sess_role role, const pj_str_t* local_ufrag, const pj_str_t* local_passwd) nogil    
     cdef pj_status_t    pj_ice_strans_sendto(pj_ice_strans* ice_st, unsigned comp_id, const void* data, pj_size_t data_len, const pj_sockaddr_t* dst_addr, int dst_addr_len) nogil
+    cdef pj_status_t    pj_ice_strans_sendto2(pj_ice_strans* ice_st, unsigned comp_id, const void* data, pj_size_t data_len, const pj_sockaddr_t* dst_addr, int dst_addr_len) nogil
     cdef pj_status_t    pj_ice_strans_start_ice(pj_ice_strans* ice_st, const pj_str_t* rem_ufrag, const pj_str_t* rem_passwd, unsigned rcand_cnt, const pj_ice_sess_cand rcand[]) nogil
     cdef void           pj_ice_strans_stun_cfg_default(pj_ice_strans_stun_cfg* cfg) nogil
     cdef void           pj_ice_strans_turn_cfg_default(pj_ice_strans_turn_cfg* cfg) nogil

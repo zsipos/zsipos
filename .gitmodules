@@ -44,7 +44,7 @@
 	url = https://github.com/zsipos/microwindows
 [submodule "software/pjproject"]
 	path = software/pjproject
-	url = https://github.com/zsipos/pjproject
+	url = https://github.com/pjsip/pjproject
 [submodule "software/zrtpcpp"]
 	path = software/zrtpcpp
 	url = https://github.com/zsipos/ZRTPCPP

@@ -189,7 +189,7 @@ cdef class PJICEStream:
     
     cdef pj_status_t sendData(self, unsigned compid, pj_uint8_t* databuf, pj_size_t datalen) nogil:
         cdef pj_status_t status
-        status = pj_ice_strans_sendto(self.ice_st, compid, databuf, datalen, 
+        status = pj_ice_strans_sendto2(self.ice_st, compid, databuf, datalen, 
                                       <pj_sockaddr_t*>&self.remote_addr[compid-1], 
                                       pj_sockaddr_get_len(<pj_sockaddr_t*>&self.remote_addr[compid-1]))
         if status == PJ_EPENDING:
