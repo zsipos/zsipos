@@ -64,7 +64,7 @@
 
 [submodule "kernel/sel4/projects/musllibc"]
 	path = kernel/sel4/projects/musllibc
-	url = https://github.com/zsipos/musllibc
+	url = https://github.com/seL4/musllibc
 [submodule "kernel/sel4/tools/nanopb"]
 	path = kernel/sel4/tools/nanopb
 	url = https://github.com/nanopb/nanopb
@@ -76,16 +76,16 @@
 	url = https://github.com/zsipos/seL4
 [submodule "kernel/sel4/projects/seL4_libs"]
 	path = kernel/sel4/projects/seL4_libs
-	url = https://github.com/zsipos/seL4_libs
+	url = https://github.com/seL4/seL4_libs
 [submodule "kernel/sel4/tools/seL4"]
 	path = kernel/sel4/tools/seL4
 	url = https://github.com/zsipos/seL4_tools
 [submodule "kernel/sel4/projects/seL4_projects_libs"]
 	path = kernel/sel4/projects/seL4_projects_libs
-	url = https://github.com/zsipos/seL4_projects_libs
+	url = https://github.com/seL4/seL4_projects_libs
 [submodule "kernel/sel4/projects/sel4runtime"]
 	path = kernel/sel4/projects/sel4runtime
-	url = https://github.com/zsipos/sel4runtime
+	url = https://github.com/seL4/sel4runtime
 [submodule "kernel/sel4/projects/util_libs"]
 	path = kernel/sel4/projects/util_libs
 	url = https://github.com/zsipos/util_libs
