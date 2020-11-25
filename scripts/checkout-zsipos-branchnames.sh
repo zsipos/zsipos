@@ -45,29 +45,13 @@ git checkout master-zsipos
 cd "$ZTOP/./kernel/sel4/tools/seL4"
 git checkout master-zsipos
 
-#./kernel/sel4/projects/seL4_libs
-cd "$ZTOP/./kernel/sel4/projects/seL4_libs"
-git checkout master
-
-#./kernel/sel4/projects/seL4_projects_libs
-cd "$ZTOP/./kernel/sel4/projects/seL4_projects_libs"
-git checkout master
-
 #./kernel/sel4/projects/picotcp
 cd "$ZTOP/./kernel/sel4/projects/picotcp"
 git checkout master-zsipos
 
-#./kernel/sel4/projects/musllibc
-cd "$ZTOP/./kernel/sel4/projects/musllibc"
-git checkout sel4
-
 #./kernel/sel4/projects/util_libs
 cd "$ZTOP/./kernel/sel4/projects/util_libs"
 git checkout master-zsipos
-
-#./kernel/sel4/projects/sel4runtime
-cd "$ZTOP/./kernel/sel4/projects/sel4runtime"
-git checkout master
 
 #./kernel/sel4/kernel
 cd "$ZTOP/./kernel/sel4/kernel"
