@@ -2,4 +2,4 @@ update.txt
 -------------------
 Filename: rootfs.tar.gz
 Version: zsipos-1.3.8 26 Nov 2020
-Reason: update seL4 12.0 (riscv formal verification)
+Reason: fix dhcp 

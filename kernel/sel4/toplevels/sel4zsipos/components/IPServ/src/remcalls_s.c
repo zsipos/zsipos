@@ -371,21 +371,24 @@ static void handle_rem_dhcp(rem_arg_t *arg)
 	while (!dhcp_finished) {
 		if (PICO_TIME_MS() - start_time > 30000) {
 			// timeout after 30 sec
+			printf("dhcp: timeout\n");
 			dhcp_code = PICO_DHCP_ERROR;
 			break;
 		}
 		seL4_Yield();
 	}
 
+	r->nameserver_count = 0;
+
 	if (dhcp_code == PICO_DHCP_SUCCESS) {
 		void *cli = pico_dhcp_get_identifier(dhcp_xid);
 		int   count = 0;
 
-		for(;;) {
+		for(;count < SEL4IP_MAX_NAMESERVERS;) {
 			struct pico_ip4 addr;
 
 			addr = pico_dhcp_get_nameserver(cli, count);
-			if (addr.addr <= 0)
+			if (addr.addr == 0xFFFFFFFF)
 				break;
 			r->nameserver_addrs[count].ip4 = addr;
 			r->nameserver_count = ++count;
