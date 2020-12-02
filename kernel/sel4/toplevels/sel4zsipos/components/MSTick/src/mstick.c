@@ -38,7 +38,7 @@ void irq_handle(void)
 {
 	int error;
 
-	static int count = 0;
+	static unsigned int count = 0;
 
 	if (count++ & 1)
 		tick1_emit();
