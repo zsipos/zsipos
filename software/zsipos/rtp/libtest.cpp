@@ -10,6 +10,7 @@
 #include <cryptcommon/aescpp.h>
 #include <srtp/CryptoContext.h>
 #include <srtp/SrtpHandler.h>
+#include <srtp/crypto/hmac.h>
 #include <openssl/hmac.h>
 #include <openssl/sha.h>
 #include <crypto/hmac256.h>
@@ -61,7 +62,7 @@ int main(int argc, char **argv)
 	HMAC_CTX *ctx;
 	uint8_t v1, v2;
 
-    init_crypt_engine();
+    //init_crypt_engine();
 
 #if 0
 	prs(zrtpPacketHeader_t);
@@ -128,29 +129,18 @@ int main(int argc, char **argv)
     printf(" -- %s\n", hmac256_ok);
 #endif
 
-#if 0
+#if 1
+    void *v;
     memset(data, 0, sizeof(data));
     nl = 3;
-    printf("sha1 test:\n");
-    time(&start);
-    SHA1(data, nl, hmac256_res);
-    for (i = 0; i < 20; i++)
-    	printf("%02x", hmac256_res[i]);
-    printf("\n");
-	printf("%d\n", (int)(time(0) - start));
 	printf("hmac-sha1 test:\n");
-	void *v;
 	memset(hmac256_res, 0, 20);
 	hmac256_len = 0;
-	const uint8_t *_data[] = { data, NULL };
-	uint32_t _data_length[] = { (uint32_t)nl, 0 };
     time(&start);
-	v = initializeSha1HmacContext(&ctx, (uint8_t*)"abc", 3);
-	hmacSha1Ctx(v, _data, _data_length, hmac256_res, (int32_t*)&hmac256_len);
-	for (i = 0; i < hmac256_len; i++)
-		printf("%02x", hmac256_res[i]);
-	printf("\n");
-	hmacSha1Ctx(v, _data, _data_length, hmac256_res, (int32_t*)&hmac256_len);
+    v = createSha1HmacContext(key, sizeof(key));
+    std::vector<const uint8_t*> dd = { data, 0 };
+    std::vector<uint64_t>  dl = { sizeof(data), 0 };
+    hmacSha1Ctx(v, dd, dl, hmac256_res, &hmac256_len);
 	for (i = 0; i < hmac256_len; i++)
 		printf("%02x", hmac256_res[i]);
 	printf("\n");
@@ -158,7 +148,7 @@ int main(int argc, char **argv)
 
 #endif
 
-#if 1
+#if 0
 	printf("uint8_t zsipos_a2u[] = {");
 	for (i = 0; i < 256; i++)
 		printf("0x%02x,", pjmedia_linear2ulaw(pjmedia_alaw2linear(i)));
