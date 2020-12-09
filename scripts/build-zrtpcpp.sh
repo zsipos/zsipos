@@ -41,8 +41,9 @@ build_for_processor()
 	then
 		create_zsipos_cmake_toolchain >cmake.toolchain
 		CMAKEOPTS+=" -DCMAKE_TOOLCHAIN_FILE=cmake.toolchain -DCRYPTO_STANDALONE=true"
-		CFLAGS+=" -DZSIPOS_HW_SHA1"
-		CXXFLAGS+=" -DZSIPOS_HW_SHA1"
+		ADD=" -DZSIPOS_HW_AES -DZSIPOS_HW_SHA1"
+		CFLAGS+="$ADD"
+		CXXFLAGS+="$ADD"
 	fi
 	cmake $CMAKEOPTS -DCMAKE_C_FLAGS="$CFLAGS" -DCMAKE_CXX_FLAGS="$CXXFLAGS" ../../zrtpcpp
 #	if [ "$1" == "zsipos" ]

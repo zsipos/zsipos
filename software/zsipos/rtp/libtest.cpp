@@ -91,8 +91,9 @@ int main(int argc, char **argv)
 	prs(RelayAckPacket_t);
 
 	printf("protect/unprotect test\n");
+	memset(&key, 0, sizeof(key));
+	memset(&salt, 0, sizeof(salt));
 	parse(protect_str, data, &l);
-	debugout("input:", data, l);
 
 	CryptoContext *c =
         new CryptoContext(0,                                       // SSRC (used for lookup)
@@ -114,8 +115,9 @@ int main(int argc, char **argv)
 	}
 	c->deriveSrtpKeys(0);
 
+	debugout("input    :", data, l);
 	SrtpHandler::protect(c, data, l, &nl);
-	debugout("protect:", data, nl);
+	debugout("protect  :", data, nl);
 	SrtpHandler::unprotect(c, data, nl, &l, NULL);
 	debugout("unprotect:", data, l);
 
@@ -180,6 +182,17 @@ int main(int argc, char **argv)
 		}
 		if (v1 == 255) break;
 	}
+#endif
+
+#if 1
+	unsigned char aes_k[16] = {'1'};
+	unsigned char aes_i[16] = {'x'};
+	unsigned char aes_o[16];
+	aes_encrypt_ctx aesctx;
+
+	aes_encrypt_key128(aes_k, &aesctx);
+	aes_encrypt(aes_i, aes_o, &aesctx);
+	debugout("aes128: ", aes_o, sizeof(aes_o));
 #endif
 
     return 0;
