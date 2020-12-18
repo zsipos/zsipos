@@ -1506,7 +1506,8 @@ def do_send_http(url, files):
     
     def to_upload_progress(s):
         helpTextBuffer.append(s)
-        configui.winHelp.flush()
+        Fl.check()
+        
     
     def update_percent(percent):
         nonlocal mypos, lastpos, last_percent
@@ -1517,7 +1518,7 @@ def do_send_http(url, files):
             last_percent = percent
             helpTextBuffer.replace(mypos, lastpos, "%d%% " % (percent,))
             lastpos = helpTextBuffer.length()
-            configui.winHelp.flush()
+        Fl.check()
             
     def safe_del(name):
         if os.path.exists(name):
