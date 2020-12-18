@@ -15,9 +15,9 @@
 
 
 /* implement clk_get_time() */
-static int msticks = 0;
+static pico_time msticks = 0;
 
-int clk_get_time(void) {
+pico_time clk_get_time(void) {
 	return msticks*TICKMUL;
 }
 
