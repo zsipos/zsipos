@@ -38,6 +38,7 @@ def receive_with_len(f, length):
 		block = sys.stdin.buffer.read(min(length - done, blocksize))
 		if len(block) == 0:
 			sys.stderr.write("EOF while reading data\n")
+			break
 		f.write(block)
 		done += len(block)
 		total_len = done
