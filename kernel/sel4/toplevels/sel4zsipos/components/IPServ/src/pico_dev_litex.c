@@ -11,14 +11,14 @@
 #include <litex.h>
 
 #define LITEX_COUNTER_RESET			1000
-#define LITEX_COUNTER_READER_READY	5
+#define LITEX_COUNTER_READER_READY	100
 
 static volatile void *macadr;
 static volatile void *phyadr;
 static volatile void *rxbadr;
 static volatile void *txbadr;
 
-static int tx_slot;
+static int tx_slot = 0;
 
 static struct pico_device *litex;
 
@@ -104,14 +104,20 @@ static int pico_litex_poll(struct pico_device *dev, int loop_score)
 }
 #endif
 
+static volatile int pendingout = 0;
+
 void pico_litex_handle_irq()
 {
 	unsigned char reg;
+	int           error;
 
 	reg = litex_csr_readb(macadr + LITEX_ETHMAC_SRAM_READER_EV_PENDING_REG);
 	if (reg) {
 		// packet transmitted.
 		litex_csr_writeb(1, macadr + LITEX_ETHMAC_SRAM_READER_EV_PENDING_REG);
+		error = pendingout_lock();
+		pendingout--;
+		error = pendingout_unlock();
 	}
 	reg = litex_csr_readb(macadr + LITEX_ETHMAC_SRAM_WRITER_EV_PENDING_REG);
 	if (reg) {
@@ -122,12 +128,29 @@ void pico_litex_handle_irq()
 
 static int pico_litex_send(struct pico_device *dev, void *buf, int len)
 {
-	int i, timeout = 1;
+	int error;
+	int r;
 
     IGNORE_PARAMETER(dev);
 
 	if (len > LITEX_ETHMAC_SLOT_SIZE) {
-		printf("WARNING: pico_dev_ltex: packet too big. dropped.\n");
+		printf("WARNING: pico_dev_litex: packet too big. dropped.\n");
+		return 0;
+	}
+
+	for(r = 0; (r < LITEX_COUNTER_READER_READY) && (pendingout == LITEX_ETHMAC_TX_SLOTS); r++)
+		seL4_Yield();
+	if (r == LITEX_COUNTER_READER_READY) {
+		printf("pendingout wait limit\n", 0);
+		printf("packet dropped.\n");
+		return 0;
+	}
+
+	for(r = 0; (r < LITEX_COUNTER_READER_READY) && !(litex_csr_readb(macadr + LITEX_ETHMAC_SRAM_READER_READY_REG)); r++)
+		seL4_Yield();
+	if (r == LITEX_COUNTER_READER_READY) {
+		printf("reader ready wait limit\n", 0);
+		printf("packet dropped.\n");
 		return 0;
 	}
 
@@ -135,20 +158,9 @@ static int pico_litex_send(struct pico_device *dev, void *buf, int len)
 	litex_csr_writeb(tx_slot, macadr + LITEX_ETHMAC_SRAM_READER_SLOT_REG);
 	litex_csr_writew(len, macadr + LITEX_ETHMAC_SRAM_READER_LENGTH_REG);
 
-	for (i = 0; i < LITEX_COUNTER_READER_READY; i++) {
-		unsigned char val;
-
-		val = litex_csr_readb(macadr + LITEX_ETHMAC_SRAM_READER_READY_REG);
-		if (val) {
-			timeout = 0;
-			break;
-		}
-		seL4_Yield();
-	}
-	if (timeout) {
-		printf("WARNING: pico_dev_litex: tx slow. packet dropped.\n");
-		return 0;
-	}
+	error = pendingout_lock();
+	pendingout++;
+	error = pendingout_unlock();
 
 	litex_csr_writeb(1, macadr + LITEX_ETHMAC_SRAM_READER_START_REG);
 

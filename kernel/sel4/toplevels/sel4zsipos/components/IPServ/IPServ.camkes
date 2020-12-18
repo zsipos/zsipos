@@ -40,6 +40,7 @@ component IPServ {
 	
 	has mutex pico_stack;
 	has mutex ringbuf;
+	has mutex pendingout;
 	
 	has mutex            master_request;
 	has binary_semaphore request_confirmed;
