@@ -11,7 +11,7 @@
 #include <litex.h>
 
 #define LITEX_COUNTER_RESET			1000
-#define LITEX_COUNTER_READER_READY	100
+#define LITEX_COUNTER_READER_READY	10
 
 static volatile void *macadr;
 static volatile void *phyadr;
