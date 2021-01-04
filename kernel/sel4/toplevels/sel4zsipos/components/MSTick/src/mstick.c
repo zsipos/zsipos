@@ -40,13 +40,13 @@ void irq_handle(void)
 
 	static unsigned int count = 0;
 
+	// clear hardware irq
+	litex_csr_writeb(1, (volatile void *)reg + LITEX_TIMER1_EV_PENDING_REG);
+
 	if (count++ & 1)
 		tick1_emit();
 	else
 		tick2_emit();
-
-	// clear hardware irq
-	litex_csr_writeb(1, (volatile void *)reg + LITEX_TIMER1_EV_PENDING_REG);
 
 	// sel4 acknowledge irq
 	error = irq_acknowledge();

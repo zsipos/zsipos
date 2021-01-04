@@ -13,13 +13,21 @@
 
 #include "pico_dev_litex.h"
 
+int mstick = 0;
 
-/* implement clk_get_time() */
-static pico_time msticks = 0;
-
-pico_time clk_get_time(void) {
-	return msticks*TICKMUL;
+#if 0
+int clk_get_time(void) {
+	return mstick * TICKMUL;
 }
+#else
+int clk_get_time(void)
+{
+	unsigned long retval;
+
+	asm volatile ("csrr %0, 0xc01" : "=r"(retval)); // read CSR_TIME
+	return retval/750;
+}
+#endif
 
 int run(void)
 {
@@ -46,13 +54,10 @@ int run(void)
     	int i;
 
     	tick_wait();
-    	msticks++;
-
-    	for (i = 0; i < 1; i++) {
-			error = pico_stack_lock();
-			pico_stack_tick();
-			error = pico_stack_unlock();
-    	}
+    	mstick++;
+		error = pico_stack_lock();
+		pico_stack_tick();
+		error = pico_stack_unlock();
     }
 
 	return 0;
