@@ -456,6 +456,18 @@ static void handle_rem_ping(rem_arg_t *arg)
 		seL4_Yield();
 }
 
+/* timer */
+
+extern int clk_get_time();
+
+static void handle_rem_timer(rem_arg_t *arg)
+{
+	rem_res_t      *res = (rem_res_t*)arg;
+	rem_timer_res_t *r = &res->u.rem_timer_res;
+
+	r->val = clk_get_time();
+}
+
 /**/
 
 static void handle_rem_pico_socket_shutdown(rem_arg_t *arg)
@@ -733,6 +745,9 @@ void handle_remcall(void *buffer)
 		break;
 	case f_rem_ping:
 		handle_rem_ping(arg);
+		break;
+	case f_rem_timer:
+		handle_rem_timer(arg);
 		break;
 	case f_rem_pico_socket_shutdown:
 		handle_rem_pico_socket_shutdown(arg);

@@ -146,6 +146,20 @@ void ping(char *device, char *address, char *count)
 	printf("%d packets transmitted, %d received, %d%% packet loss\n", arg.ping.count, received, (arg.ping.count - received) * 100 / arg.ping.count);
 }
 
+void do_timer(char *device)
+{
+	struct sel4ioctl arg;
+	unsigned long t1, t2;
+	int m = 10;
+
+	do_ioctl(device, SIOCSEL4IPTIMER, &arg);
+	t1 = arg.timer.val;
+	sleep(m);
+	do_ioctl(device, SIOCSEL4IPTIMER, &arg);
+	t2 = arg.timer.val;
+	printf("delta/s=%lu\n", (t2-t1)/m);
+}
+
 int main(int argc, char **argv)
 {
 	if (argc < 3)
@@ -159,6 +173,8 @@ int main(int argc, char **argv)
 		if ((argc != 4) && (argc != 5))
 			usage_fail();
 		ping(argv[1], argv[3], argc == 5 ? argv[4] : NULL);
+	} else if (strcmp(argv[2], "timer") == 0) {
+		do_timer(argv[1]);
 	} else {
 		usage_fail();
 	}
