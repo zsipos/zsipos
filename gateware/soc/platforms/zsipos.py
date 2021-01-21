@@ -165,3 +165,8 @@ class Platform(XilinxPlatform):
 
     def create_programmer(self):
         return VivadoProgrammer(flash_part="s25fl256sxxxxxx0-spi-x1_x2_x4")
+
+    def do_finalize(self, fragment):
+        XilinxPlatform.do_finalize(self, fragment)
+        self.add_period_constraint(self.lookup_request("clk100", loose=True), 1e9/100e6)
+

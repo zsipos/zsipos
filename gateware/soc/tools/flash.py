@@ -68,7 +68,7 @@ quit
     _run_vivado(programmer.vivado_path, programmer.vivado_ver, cmds)
 
 def load_flash(builder, regions, device=0):
-    mcs_file = os.path.join(builder.output_dir, "gateware", "top.mcs")
+    mcs_file = os.path.join(builder.output_dir, "gateware", "flash.mcs")
     flash_size = builder.soc.flash_size // 1024 // 1024
     programmer = builder.soc.platform.create_programmer()
     for offset, item in regions.items():
@@ -80,7 +80,7 @@ def load_flash(builder, regions, device=0):
         _flash_file(programmer, flash_size, offset, item[1], bin_file, mcs_file, device)
 
 def build_flash(builder, regions, device=0):
-    mcs_file = os.path.join(builder.output_dir, "gateware", "rom.mcs")
+    mcs_file = os.path.join(builder.output_dir, "gateware", "zsipos.mcs")
     flash_size = builder.soc.flash_size // 1024 // 1024
     programmer = builder.soc.platform.create_programmer()
     cmds = 'write_cfgmem -format mcs -interface {iface} -size {flash_size} -file "{mcs_file}" -force'

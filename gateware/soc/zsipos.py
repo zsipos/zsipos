@@ -6,6 +6,8 @@ import argparse
 
 from os import getenv
 
+from migen import *
+
 from litex.soc.cores.clock import *
 from litex.soc.cores.gpio import GPIOIn, GPIOOut
 from litex.soc.cores.spi_flash import SpiFlash
@@ -42,32 +44,33 @@ class _CRG(Module):
         self.clock_domains.cd_sys = ClockDomain()
         self.clock_domains.cd_sys4x = ClockDomain(reset_less=True)
         self.clock_domains.cd_sys4x_dqs = ClockDomain(reset_less=True)
-        self.clock_domains.cd_clk200 = ClockDomain()
+        self.clock_domains.cd_idelay = ClockDomain()
 
         # # #
 
-        self.cd_sys.clk.attr.add("keep")
-        self.cd_sys4x.clk.attr.add("keep")
-        self.cd_sys4x_dqs.clk.attr.add("keep")
+        #self.cd_sys.clk.attr.add("keep")
+        #self.cd_sys4x.clk.attr.add("keep")
+        #self.cd_sys4x_dqs.clk.attr.add("keep")
 
         self.submodules.pll = pll = S7MMCM(speedgrade=-2)
 
-        self.comb += pll.reset.eq(clock_reset)
+        self.rst = Signal()
+        self.comb += pll.reset.eq(clock_reset | self.rst)
 
         pll.register_clkin(platform.request("clk100"), 100e6)
         pll.create_clkout(self.cd_sys, sys_clk_freq)
         pll.create_clkout(self.cd_sys4x, 4*sys_clk_freq)
         pll.create_clkout(self.cd_sys4x_dqs, 4*sys_clk_freq, phase=90)
-        pll.create_clkout(self.cd_clk200, 200e6)
+        pll.create_clkout(self.cd_idelay, 200e6)
 
-        self.submodules.idelayctrl = S7IDELAYCTRL(self.cd_clk200)
+        self.submodules.idelayctrl = S7IDELAYCTRL(self.cd_idelay)
 
 # BaseSoC ------------------------------------------------------------------------------------------
 
 class BaseSoC(SoCSDRAM):
     def __init__(self, sys_clk_freq=int(75e6), **kwargs):
         platform = zsipos.Platform()
-        SoCSDRAM.__init__(self, platform, clk_freq=sys_clk_freq, **kwargs)
+        SoCSDRAM.__init__(self, platform, clk_freq=sys_clk_freq, csr_alignment=64, **kwargs)
 
         # clock_reset is top level reset
         clock_reset = Signal()
@@ -83,7 +86,10 @@ class BaseSoC(SoCSDRAM):
             print("using settings for te0710 only")
 
         # sdram
-        self.submodules.ddrphy = s7ddrphy.A7DDRPHY(platform.request("ddram"), sys_clk_freq=sys_clk_freq)
+        self.submodules.ddrphy = s7ddrphy.A7DDRPHY(platform.request("ddram"),
+                                                   memtype="DDR3",
+                                                   nphases=4,
+                                                   sys_clk_freq=sys_clk_freq)
         self.add_csr("ddrphy")
         sdram_module = IM4G08D3FABG125(sys_clk_freq, "1:4")
         self.register_sdram(self.ddrphy,

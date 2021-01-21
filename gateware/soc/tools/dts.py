@@ -2,7 +2,7 @@
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import json
-from litex.soc.integration import cpu_interface
+from litex.soc.integration.export import get_csr_json
 
 class DTSHelper():
 
@@ -15,7 +15,7 @@ class DTSHelper():
             csr_regions    = soc.get_csr_regions()
             memory_regions = soc.get_memory_regions()
             constants      = soc.get_constants()
-        self.json = json.loads(cpu_interface.get_csr_json(csr_regions, constants, memory_regions))
+        self.json = json.loads(get_csr_json(csr_regions, constants, memory_regions))
         self.json.update({"csr_sizes": {}})
         for name, base in self.json["csr_bases"].items():
             size = 0

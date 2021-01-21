@@ -27,9 +27,9 @@ umask 0022
 build-board.sh --nobuild --buildrom
 
 # copy fpga image
-cp "$ZTOP/gateware/soc/build_$BOARD/gateware/top.bit" "$DESTDIR"
-cp "$ZTOP/gateware/soc/build_$BOARD/gateware/top.bin" "$DESTDIR"/fpga-netboot.bin
-cp "$ZTOP/gateware/soc/build_$BOARD/gateware/rom.mcs" "$DESTDIR"/fpga-romboot.mcs
+cp "$ZTOP/gateware/soc/build_$BOARD/gateware/zsipos.bit" "$DESTDIR"
+cp "$ZTOP/gateware/soc/build_$BOARD/gateware/zsipos.bin" "$DESTDIR"/fpga-netboot.bin
+cp "$ZTOP/gateware/soc/build_$BOARD/gateware/zsipos.mcs" "$DESTDIR"/fpga-romboot.mcs
 
 if false 
 then

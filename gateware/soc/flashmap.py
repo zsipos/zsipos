@@ -7,7 +7,7 @@ ZTOP = os.environ["ZTOP"]
 
 FLASH_BITSTREAM_OFFSET = 0x0
 FLASH_BITSTREAM_IMAGE = os.path.join(
-    ZTOP, "gateware", "soc", "build" + "_" + os.environ["BOARD"], "gateware", "top.bit")
+    ZTOP, "gateware", "soc", "build" + "_" + os.environ["BOARD"], "gateware", "zsipos.bit")
 
 FLASH_BOOTROM_OFFSET = 0x400000
 FLASH_BOOTROM_IMAGE = os.path.join(
