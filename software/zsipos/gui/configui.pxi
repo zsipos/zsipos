@@ -24,7 +24,7 @@ Copyright (C) 2020 Esther Bergter
 #
 # Author: Esther Bergter
 #
-# Version 1.1
+# Version 1.2
 
 debuginfo = False
 
@@ -93,6 +93,7 @@ cdef str str_unpack_failed = 'Unpack failed\n'
 cdef str str_unpack_completed = 'Unpack done.\n'
 cdef str str_copy_config = 'copying configuration, please wait\n'
 cdef str str_copy_config_done = 'copy configuration done.\n'
+cdef str str_sshd_first_start ='This is the first start of sshd. It will take around 5 minutes to generate server keys. Please stay patient.'
 
 cdef str str_update_reboot_information = '\nNOTE: If reboot should fail, press display until it turns black. Device returns to current version.'
 
@@ -433,9 +434,7 @@ cdef void on_btn_upload(Fl_Widget* widget, void *data) with gil:
         return
     if len(sendfiles) > 1: # more files than Manifest.txt
         if not config_valid(consts.UPLOADID):
-            if (not config_valid(consts.UPLOADUSER) or
-                not config_valid(consts.UPLOADSERVER) or
-                not config_valid(consts.UPLOADPORT)): # () for line continuation
+            if not config_valid(consts.UPLOADURI):
                 warn('Upload information missing')
                 return;
             else:
@@ -497,8 +496,11 @@ cdef void on_btn_sshd(Fl_Widget* widget, void *data) with gil:
             log.info('sshd requested stop')
     else:
         if issel4():
+            if not os.path.isfile('/etc/ssh/ssh_host_rsa_key'):
+                info(str_sshd_first_start)
             os.system('/etc/init.d/sshd start')
         else:
+            info("TestModus")
             log.info('sshd requested start')
 
 
@@ -968,7 +970,7 @@ def address_save(params):
     else:
         clen = 1
 
-    for estep in xrange(0, params['steps']):
+    for estep in xrange(0, len(options)):
         #debug("estep %d" % (estep, ))
         #debug("options: " + str(options))
         if options[estep] is not None:
@@ -1144,6 +1146,8 @@ def clearsendfiles():
     size = configui.browse_archive.size()
     for index in range(1, size+1):
         configui.browse_archive.select(index,0)
+    configui.btn_nohup.value(0)
+    configui.btn_zsiposlog.value(0)
 
 def collapse_hexbuf(whitestring):
     return "".join(whitestring.split())
@@ -1199,13 +1203,22 @@ def concat_host_port(host, port):
 
 def concat_url(scheme, ip, port):
     #debug("scheme %s, ip %s, port %s" % (scheme, ip, port))
-    if is_valid_hostname(ip) or is_valid_ipv4_address(ip):
-        concat = "%s://%s:%s" %(scheme, ip, port)
-    elif is_valid_ipv6_address(ip):
-        concat = "%s://[%s]:%s" % (scheme, ip, port)
+    if port is None or len(port) == 0:
+        if is_valid_hostname(ip) or is_valid_ipv4_address(ip):
+            concat = "%s://%s" %(scheme, ip)
+        elif is_valid_ipv6_address(ip):
+            concat = "%s://[%s]" % (scheme, ip)
+        else:
+            log.error("concat_url failed")
+            concat = None
     else:
-        log.error("concat_url failed")
-        concat = None
+        if is_valid_hostname(ip) or is_valid_ipv4_address(ip):
+            concat = "%s://%s:%s" %(scheme, ip, port)
+        elif is_valid_ipv6_address(ip):
+            concat = "%s://[%s]:%s" % (scheme, ip, port)
+        else:
+            log.error("concat_url failed")
+            concat = None
     return concat
 # concat_url
 
@@ -1217,7 +1230,7 @@ def concat_url_path(scheme, ip, port, path):
         elif is_valid_ipv6_address(ip):
             concat = "%s://[%s]%s" % (scheme, ip, path)
         else:
-            log.error("concat_url failed")
+            log.error("concat_url_path failed")
             concat = None
     else:
         if is_valid_hostname(ip) or is_valid_ipv4_address(ip):
@@ -1225,7 +1238,7 @@ def concat_url_path(scheme, ip, port, path):
         elif is_valid_ipv6_address(ip):
             concat = "%s://[%s]:%s%s" % (scheme, ip, port, path)
         else:
-            log.error("concat_url failed")
+            log.error("concat_url_path failed")
             concat = None
             
     return concat
@@ -1261,24 +1274,20 @@ def config_to_dict():
         elif value == 'False':
             olddict[key] = False
 
-    cfdict = dict(olddict) # make a copy
 
     # AutoDns
-    if consts.EXTUSEDHCP in cfdict and cfdict[consts.EXTUSEDHCP]:
-        if consts.DNSSERVER in cfdict and len(cfdict[consts.DNSSERVER]):
-            cfdict['AutoDns'] = False
+    if consts.EXTUSEDHCP in olddict and olddict[consts.EXTUSEDHCP]:
+        if consts.DNSSERVER in olddict and len(olddict[consts.DNSSERVER]):
             olddict['AutoDns'] = False
         else:
-            cfdict['AutoDns'] = True
             olddict['AutoDns'] = True
     # Boot Version
     if current_versioncounter > alternate_versioncounter:
-        cfdict['BOOT_CURRENT'] = True
         olddict['BOOT_CURRENT'] = True
     else:
-        cfdict['BOOT_CURRENT'] = False
         olddict['BOOT_CURRENT'] = False
 
+    cfdict = dict(olddict) # make a copy
     #debug_dict("config_to_dict")
 # config_to_dict
 
@@ -1348,7 +1357,7 @@ def debug_dict(string, mydict=None):
     debug(string)
     if mydict is None:
         mydict = cfdict
-    for key in sorted(mydict.iterkeys()):
+    for key in sorted(mydict.keys()):
         s = '{}: {}'.format(key, mydict[key])
         debug(s)
     debug("end of cfdict..............................")
@@ -1446,7 +1455,7 @@ def do_ping(host, ifnr):
         if issel4():
             out += subprocess.check_output(["sel4iptool", "eth"+str(ifnr), "ping", host, "2"], stderr=subprocess.STDOUT, encoding="utf8")
         else:
-            out += subprocess.check_output(["ping", "-c", "2", host], stderr=subprocess.STDOUT, encoding="utf8")
+            out += subprocess.check_output(["/usr/bin/env", "ping", "-c", "2", host], stderr=subprocess.STDOUT, encoding="utf8")
     except CalledProcessError as e:
         if len(e.output):
             out += e.output
@@ -1648,42 +1657,9 @@ def do_send_http(url, files):
         safe_del(logpack_name)
 
 def do_send():
-    user = cfdict[consts.UPLOADUSER]
-    if user in ['http', 'https']:
-        url = user + "://" + cfdict[consts.UPLOADSERVER] + ":" + str(cfdict[consts.UPLOADPORT])
-        url += "/cgi-bin/recvlog.py"
-        do_send_http(url, sendfiles)
-        return
-    myfiles = ' '.join(sendfiles)
-    #debug('do_send')
-    #debug(myfiles)
-    # StrictHostKeyChecking=yes: dont ask but fail if not in known_hosts
-    cpcmd = "tar -cf - %s |  /usr/bin/ssh -T %s@%s -p %s -o StrictHostKeyChecking=yes" % (
-            myfiles, cfdict[consts.UPLOADUSER], cfdict[consts.UPLOADSERVER], str(cfdict[consts.UPLOADPORT]))
-    log.info(cpcmd)
-    configui.txt_helpDisplay.copy_label("upload")
-    out = "uploading files\n  %s\n" % ('\n  '.join(sendfiles))
-    helpTextBuffer.text(out)
-    configui.winHelp.show() 
-    configui.winHelp.wait_for_expose()
-
-    try:
-        exception_occurred = 0
-        output = subprocess.check_output(cpcmd, stderr=subprocess.STDOUT, shell= True, encoding="utf8")
-    except CalledProcessError as e:
-        exception_occurred = 1
-        output = e.output
-    finally:
-        log.info("send subprocess returned, exc_o= %d, output %s" %(exception_occurred, output ))
-        if not exception_occurred:
-            if output and len(output):
-                out += output
-            else:
-                out += "send completed"
-            clearsendfiles()
-        else:
-            out += output
-        helpTextBuffer.text(out)
+    url = cfdict[consts.UPLOADURI] + "/cgi-bin/recvlog.py"
+    do_send_http(url, sendfiles)
+    return
 #do_send
 
 def do_update1():
@@ -1972,6 +1948,8 @@ def init_addresspar_editvals():
     for key in addresspar:
         debug(key)
         read_all_vals(addresspar[key])
+    if is_testversion():
+        addresspar[consts.UPLOADURI]['forcehttp'] = None
     #debug(addresspar)
 
 def init_cache(params):
@@ -2490,7 +2468,7 @@ def parse_update(update):
     
 def read_all_vals(params):
     #debug(params['title'])
-    for estep in xrange(0, params['steps']):
+    for estep in xrange(0, len(params['options'])):
         params['estep'] = estep
         read_val(params)
 
@@ -2635,14 +2613,15 @@ def show_ifconfig():
 def show_upload(str1, str2, str3, str4):
     #debug("show_upload %s %s %s %s" %(str1,str2, str3, str4))
     if str1 is not None:
-        ret = "%s%s%s:%s;id=%s" % (str3, ":", str1, str2, str4) # '@' terminates output
+        url = concat_url(str1, str2, str3) if concat_url(str1, str2, str3) else ""
+        ret = "%s;id=%s" % (url, str4) # '@' terminates output
     else:
         ret = "  "
     #debug("show_upload ret=%s" %(ret))
     return ret
 
 def show_turn(str1, str2, str3, str4):
-    #debug('show_turn')
+    #debug("show_turn %s %s %s %s" %(str1,str2, str3, str4))
     if str1 is not None:
         ip_port = concat_host_port(str1, str2) if concat_host_port(str1, str2) else ""
         return ("%s;u=%s;p=%s" % (ip_port, str3, str4))
@@ -2706,9 +2685,9 @@ def split_host_port(input):
 '''
 def split_url(input):
     #debug("split_url " + input)
-    re_host = re.compile('(http[s]?)://((\w+[\.]?)+):(\d+)')
-    re_v6 = re.compile('(http[s]?)://\[([^\]]*)\]:(\d+)')
-    re_v4 = re.compile('(http[s]?)://(\d[^:]*):(\d+)')
+    re_host = re.compile('(http[s]?)://((\w+[\.]?)+):?(\d+)?')
+    re_v6 = re.compile('(http[s]?)://\[([^\]]*)\]:?(\d+)?')
+    re_v4 = re.compile('(http[s]?)://(\d[^:]*):?(\d+)?')
     result = re_host.search(input)
     if not result:
         #debug(v6)
@@ -2720,12 +2699,15 @@ def split_url(input):
     if result is not None:
         if result.lastindex > 2:
             return result.group(1, 2, result.lastindex)
+        elif result.lastindex == 2:
+            return result.group(1,2)
+
     log.error("split_url failed: " + input)
     return ("","","")
 # split_url
 
 def split_url_path(input):
-    debug("split_url_path " + input)
+    #debug("split_url_path " + input)
     re_host = re.compile('(http[s]?)://((\w+[\.]?)+)(:(\d+))?(/.*)')
     re_v6 = re.compile('(http[s]?)://\[([^\]]*)\](:(\d+))?(/.*)')
     re_v4 = re.compile('(http[s]?)://(\d[^:]*)(:(\d+))?(/.*)')
@@ -2943,9 +2925,9 @@ def update_overview():
     ui.btn_subnet_mask.copy_label(newval)
     ui.btn_subnet_mask.value(" " + params['title'])
     #
-    params = addresspar[consts.UPLOADSERVER]
+    params = addresspar[consts.UPLOADURI]
     newval = show_value(params)
-    #debug('update_overview uploadserver: <%s>' % (newval))
+    #debug('update_overview UPLOADURI: <{}>'.format(newval))
     ui.btn_upload_server.copy_label(newval)
     ui.btn_upload_server.value(" " + params['title'])
     #
@@ -3051,10 +3033,21 @@ def write_editwindow(params):
         #debug('write_window is_url, estep %d' %(estep,))
         if estep == 0:
             #debug('show https')
-            
-            if True: # ADI: force http
-                configui.btn_https.value(0)
-                configui.btn_https.hide()
+            if 'forcehttp' in params:
+                if params['forcehttp'] == 'http':
+                    configui.btn_https.value(0)
+                    configui.btn_https.hide()
+                elif params['forcehttp'] == 'https':
+                    configui.btn_https.value(1)
+                    configui.btn_https.hide()
+                else:
+                    if params['forcehttp'] is not None:
+                        log.error("{}: forcehttp {} invalid, ignored").format(lname, params['forcehttp'])
+                    if editvals[estep] == 'http':
+                        configui.btn_https.value(0)
+                    else:
+                        configui.btn_https.value(1)
+                    configui.btn_https.show()
             else:
                 if editvals[estep] == 'http':
                     configui.btn_https.value(0)
@@ -3228,26 +3221,29 @@ addresspar = {
                 'warnings' : stdwarnings,
                 'mandatory' : True,
                 'steps': 2 },
-              consts.UPLOADSERVER: {
+              consts.UPLOADURI: {
                 'title': "Upload Server",
-                'heads': stdheads + ["User", "UploadId"],
-                'options': [consts.UPLOADSERVER, consts.UPLOADPORT, consts.UPLOADUSER, consts.UPLOADID],
-                'keyboard': ['abc', '123', 'abc', 'abc'],
+                'heads': stdheads + ["UploadId"],
+                'concatfunction': concat_url,
+                'options': [consts.UPLOADURI, None, None, consts.UPLOADID],
+                'keyboard': ['abc', '123', 'abc'],
                 'restart_on_change': None,
                 'showfunction': show_upload,
-                'testfunctions': stdtests + [None, None],
-                'warnings' : stdwarnings + [None, None],
-                'steps': 4 },
+                'splitfunction': split_url,
+                'splitparams': ["scheme", ] + stdsplitparams,
+                'testfunctions': [is_valid_host, is_valid_or_empty_port, None],
+                'warnings' : stdwarnings + [None],
+                'forcehttp' : 'https',
+                'steps': 3 },
               consts.UPLOADID: {
                 'title': "Upload Id",
                 'heads': ["UploadId"],
                 'options': [consts.UPLOADID],
                 'keyboard': ['abc'],
                 'restart_on_change': None,
-                'showfunction': show_upload,
                 'testfunctions':  [None],
                 'warnings' : [None],
-                'update' : [consts.UPLOADSERVER],
+                'update' : [consts.UPLOADURI],
                 'steps': 1 },
               consts.UPDATEURI: {
                 'title': "Update Server",
@@ -3332,8 +3328,8 @@ def configui_init(infstr):
     ui.btn_ping_ntp.callback(on_btn_ping, <void*>consts.NTPSERVER)
     #Group Logs
     ui.btn_logsettings.callback(on_btn_logsettings, NULL)
-    ui.btn_upload_server.callback(on_btn_edit_address, <void*>consts.UPLOADSERVER)
-    ui.btn_ping_upload_server.callback(on_btn_ping, <void*>consts.UPLOADSERVER)
+    ui.btn_upload_server.callback(on_btn_edit_address, <void*>consts.UPLOADURI)
+    ui.btn_ping_upload_server.callback(on_btn_ping, <void*>consts.UPLOADURI)
     #ui.btn_nohup.callback(on_btn_addfile, <void*>ui.btn_nohup)
     #ui.btn_zsiposlog.callback(on_btn_addfile, <void*>ui.btn_zsiposlog)
     #ui.browse_archive.filter("[a-zA-Z0-9]*")
@@ -3477,7 +3473,7 @@ cdef extern from "gui.cxx":
         Fl_Check_Button*    btn_zsiposlog
         Fl_File_Browser*    browse_archive
         Fl_Button*          btn_upload
-        Fl_Round_Button*     btn_alternate_archive
+        Fl_Round_Button*    btn_alternate_archive
         # LogSettings
         Fl_Double_Window*   winLogSettings
         Fl_Button*          btn_logsettings_back
