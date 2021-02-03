@@ -6,6 +6,7 @@
 #
 # zsiposconf    Configure network, ntp
 #               Load kernel modules
+#               enforce password reset at startup
 #
 
 . /etc/init.d/zsiposfunc
@@ -41,7 +42,7 @@ start() {
          # Factory reset
          rm -f $ZID
          rm -f $NDB
-         touch /root/zsipos_rootreset
+         touch /root/pw_reset
          # make sure passwd has a date > 0
          date | grep 1970 && date +%d%m%Y -s "11112011"
     fi

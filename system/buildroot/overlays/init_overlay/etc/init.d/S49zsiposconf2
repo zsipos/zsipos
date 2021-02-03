@@ -12,13 +12,6 @@
 . /etc/init.d/zsiposfunc
 
 start() {
-    if [ -f /root/zsipos_rootreset ]; then
-        passwd -a md5 <<EOF
-zsipos2018
-zsipos2018
-EOF
-        rm /root/zsipos_rootreset
-    fi
     display "checking network status ..."
     MYIP=`ifconfig eth0 | grep 'inet addr' | cut -d: -f2 | cut -d ' ' -f 1`
     display "network is up, my IP Address is $MYIP"

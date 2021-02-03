@@ -59,6 +59,8 @@ cdef Fl_Text_Buffer* updateProgressBuffer
 
 cdef str constopt   # consts-Option, die gerade bearbeitet wird
 
+cdef str pw_reset = 'pw_reset'
+cdef str sshd_initd = '/etc/init.d/S50sshd'
 cdef str already_current = 'you already have the current version'
 cdef str section = 'gmitm'
 cdef str alternate_partition='/tmp/alternate_partition'
@@ -215,6 +217,8 @@ user_hit_cancel_button = False
 UpdateFailed = False
 UpdateHalted = False
 stable = False            # configui not initialized yet
+config_initialized = False # config_init not run yet
+root_pw_is_set = False    # force pw_reset
 
 update_binary = None
 
@@ -224,7 +228,6 @@ logconsts = [ consts.LOGEXT, consts.LOGLOC, consts.LOGFULLMESSAGE,
   consts.LOGSIPTIMING, consts.LOGTIMERS, consts.SIPDELAY, consts.LOGZRTPCB,
   consts.LOGZSESSIONCB, consts.LOGICE, consts.LOGDTMF, consts.PJLOGLEVEL ]
 
-
 """ Callbacks """
 
 # application MAINUI
@@ -232,13 +235,7 @@ cdef void on_config_enter(Fl_Widget* widget, void *data) with gil:
     global sendfiles
 
     #debug("on config enter")
-    # working copy of config
-    config_to_dict()
-    clearsendfiles()
-    # initial screen values
-    init_addresspar_editvals()
-    init_noneditvals()
-    update_overview()
+    config_init()
     configui.window.activate()
     configui.tab_config.value(configui.group_ip)
     configui.btn_back.show()
@@ -478,12 +475,14 @@ cdef void on_btn_autosshd(Fl_Widget* widget, void *data) with gil:
     #debug(os.uname())
     if get_value(configui.btn_autosshd) == 1:
         if issel4():
-            os.system('ln -s /etc/init.d/sshd /etc/init.d/S50sshd')
+            if not os.path.exists(sshd_initd):
+                os.symlink('/etc/init.d/sshd', sshd_initd)
         else:
             log.info('autosshd requested on')
     else:
         if issel4():
-            os.system('rm /etc/init.d/S50sshd')
+            if os.path.exists(sshd_initd):
+                os.remove(sshd_initd)
         else:
             log.info('autosshd requested off')
 
@@ -1170,9 +1169,9 @@ def compare_hexdigest():
 def comparepw(pw):
     """ compare and save password"""
     global newpw
+    global root_pw_is_set
 
-    #debug(newpw)
-    #debug(pw)
+    debug("comparepw: {} {}".format(newpw, pw))
     if newpw == pw:
         try:
             (ret,errstr) = save_root_pw(newpw)
@@ -1182,6 +1181,7 @@ def comparepw(pw):
             log.error("change password failed")
             return False
         if ret == 0:
+            root_pw_is_set = True
             return True
         else:
             addresspar['rootpw']['warnings'][2] = errstr
@@ -1243,6 +1243,20 @@ def concat_url_path(scheme, ip, port, path):
             
     return concat
 # concat_url_path
+
+def config_init():
+    global config_initialized
+
+    if config_initialized:
+        return
+    # working copy of config
+    config_to_dict()
+    clearsendfiles()
+    # initial screen values
+    init_addresspar_editvals()
+    init_noneditvals()
+    update_overview()
+    config_initialized = True
 
 def config_has_changed():
     """ True if cfdict differs from olddict """
@@ -1657,8 +1671,7 @@ def do_send_http(url, files):
         safe_del(logpack_name)
 
 def do_send():
-    url = cfdict[consts.UPLOADURI] + "/cgi-bin/recvlog.py"
-    do_send_http(url, sendfiles)
+    do_send_http(cfdict[consts.UPLOADURI], sendfiles)
     return
 #do_send
 
@@ -1996,10 +2009,18 @@ def init_noneditvals():
     else:
         ui.btn_sshd.value(0)
         log.info("init: sshd not running")
-    if os.path.isfile("/etc/init.d/S50sshd"):
-        ui.btn_autosshd.value(1)
+    if is_testversion():
+        if os.path.exists(sshd_initd):
+            ui.btn_autosshd.value(1)
+        else:
+            ui.btn_autosshd.value(0)
     else:
+        """ no sshd autostart """
+        if issel4() and os.path.exists(sshd_initd):
+            os.remove(sshd_initd)
+            log.info("init: sshd autostart removed")
         ui.btn_autosshd.value(0)
+        ui.btn_autosshd.hide()
 
 def is_last_step(params):
     estep = params['estep']
@@ -2433,12 +2454,24 @@ def need_restart():
 def oldpwtest(testpw):
     try:
         oldorig = spwd.getspnam('root')
+    except PermissionError:
+        if issel4():
+            info = sys.exc_info()
+            addresspar['rootpw']['warnings'][0] = "%s\nare you root?" % (info[1], )
+            return False
+        else:
+            log.info("not on sel4, cannot read /etc/shadow, ok")
+            return True
     except KeyError:
         info = sys.exc_info()
         addresspar['rootpw']['warnings'][0] = "%s\nare you root?" % (info[1], )
         return False
+    if len(oldorig.sp_pwd) == 0:
+        log.info("oldpwtest: root password is empty, ok")
+        return True
     #debug(testpw)
     if crypt.crypt(testpw, oldorig.sp_pwd) == oldorig.sp_pwd:
+        log.info("oldpwtest: root password ok")
         #debug('oldpw ok')
         return True
     else:
@@ -2521,18 +2554,21 @@ def remove_file(char *filename):
         sendfiles.remove(filename)
 
 def save_root_pw(newpw):
-
-    cmd = ['/usr/bin/passwd', 'root']
-    PIPE=subprocess.PIPE
-    p = subprocess.Popen(cmd, stdin=PIPE, stderr=PIPE, stdout=PIPE, encoding="utf8")
-    input = u'%(p)s\n%(p)s\n' % { 'p': newpw }
-    (out,err) = p.communicate(input)
-    if p.returncode == 0:
-        out = out.strip()
-        return (p.returncode, str(out))
+    if issel4():
+        cmd = ['/usr/bin/passwd', 'root']
+        PIPE=subprocess.PIPE
+        p = subprocess.Popen(cmd, stdin=PIPE, stderr=PIPE, stdout=PIPE, encoding="utf8")
+        input = u'%(p)s\n%(p)s\n' % { 'p': newpw }
+        (out,err) = p.communicate(input)
+        if p.returncode == 0:
+            out = out.strip()
+            return (p.returncode, str(out))
+        else:
+            err = err.strip()
+            return (p.returncode, str(err))
     else:
-        err = err.strip()
-        return (p.returncode, str(err))
+        log.info("save_root_pw requested")
+        return(0,"")
 
 def restore_hexedit(hexbuf, collapsed_pos):
     newvalue = expand_hexbuf(hexbuf)
@@ -2610,11 +2646,11 @@ def show_ifconfig():
     configui.txt_helpDisplay.copy_label("ifconfig")
     configui.winHelp.show()
 
-def show_upload(str1, str2, str3, str4):
-    #debug("show_upload %s %s %s %s" %(str1,str2, str3, str4))
+def show_upload(str1, str2, str3, str4, str5):
+    #debug("show_upload %s %s %s %s %s" %(str1,str2, str3, str4, str5))
     if str1 is not None:
-        url = concat_url(str1, str2, str3) if concat_url(str1, str2, str3) else ""
-        ret = "%s;id=%s" % (url, str4) # '@' terminates output
+        url = concat_url_path(str1, str2, str3, str4) if concat_url_path(str1, str2, str3, str4) else ""
+        ret = "%s;id=%s" % (url, str5) # '@' terminates output
     else:
         ret = "  "
     #debug("show_upload ret=%s" %(ret))
@@ -2729,6 +2765,8 @@ def split_url_path(input):
 def storenewpw(pw):
     """ copy input to newpw """
     global newpw
+    if len(pw) < 6:
+        return False
     newpw = pw
     return True
 
@@ -3223,18 +3261,18 @@ addresspar = {
                 'steps': 2 },
               consts.UPLOADURI: {
                 'title': "Upload Server",
-                'heads': stdheads + ["UploadId"],
-                'concatfunction': concat_url,
-                'options': [consts.UPLOADURI, None, None, consts.UPLOADID],
-                'keyboard': ['abc', '123', 'abc'],
+                'heads': stdheads + ["Path", "UploadId"],
+                'concatfunction': concat_url_path,
+                'options': [consts.UPLOADURI, None, None, None, consts.UPLOADID],
+                'keyboard': ['abc', '123', 'abc', 'abc'],
                 'restart_on_change': None,
                 'showfunction': show_upload,
-                'splitfunction': split_url,
-                'splitparams': ["scheme", ] + stdsplitparams,
-                'testfunctions': [is_valid_host, is_valid_or_empty_port, None],
-                'warnings' : stdwarnings + [None],
+                'splitfunction': split_url_path,
+                'splitparams': ["scheme", ] + stdsplitparams + ["path",],
+                'testfunctions': [is_valid_host, is_valid_or_empty_port, None, None],
+                'warnings' : stdwarnings + [None, None],
                 'forcehttp' : 'https',
-                'steps': 3 },
+                'steps': 4 },
               consts.UPLOADID: {
                 'title': "Upload Id",
                 'heads': ["UploadId"],
@@ -3265,8 +3303,17 @@ addresspar = {
                 'keyboard': ['abc', 'abc', 'abc'],
                 'restart_on_change': None,
                 'testfunctions': [oldpwtest, storenewpw, comparepw],
-                'warnings': ['Password is wrong.', 'None', 'Passwords do not match.'],
-                'steps': 3 }
+                'warnings': ['Password is wrong.', 'Minimum password length is 6', 'Passwords do not match.'],
+                'steps': 3 },
+              'initrootpw': {
+                'title': "Change root password",
+                'heads': ["new_password", "repeat new password"],
+                'options': ['newpw', 'newpw2'],
+                'keyboard': ['abc', 'abc', 'abc'],
+                'restart_on_change': None,
+                'testfunctions': [storenewpw, comparepw],
+                'warnings': ['Minimum password length is 6', 'Passwords do not match.'],
+                'steps': 2 }
              }
 
 # needs all above
@@ -3284,6 +3331,9 @@ def configui_init(infstr):
     global updateInfoBuffer
     global updateProgressBuffer
     global stable
+
+    if stable:
+        return
 
     log = logging.getLogger("zsipos.config")
     log.info ("configui_init...")
@@ -3714,3 +3764,19 @@ cdef extern from "gui.cxx":
         Fl_Button*          key_hF
 
         CONFIGUI() nogil
+
+#enforce root password change on first startup
+if os.path.exists(pw_reset):
+    configui_init("")
+    config_init()
+    #configui.window.activate()
+    #configui.tab_config.value(configui.group_passwd)
+    configui.btn_address_cancel.hide()
+    on_btn_edit_address(NULL, <void*>"initrootpw")
+    #configui.window.show()
+    while True:
+        Fl.check()
+        if root_pw_is_set:
+           log.info("new password set")
+           os.remove(pw_reset)
+           break
