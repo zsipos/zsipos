@@ -194,8 +194,9 @@ def newFixConnection(sdp, raddr, raddrctrl):
             a_new.append(i)
     pt = rtp_map_by_name.get('telephone-event/8000')
     if not pt:
-        a_new.append('rtpmap:' + pt + ' telephone-event/8000')
+        log.warning("no telephone-event found")
         pt = '101'
+        a_new.append('rtpmap:' + pt + ' telephone-event/8000')
     if not pt in fmtp_map:
         a_new.append('fmtp:' + pt + ' 0-15')
     if not pt in used_codecs:
