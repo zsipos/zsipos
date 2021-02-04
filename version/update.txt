@@ -2,4 +2,4 @@ update.txt
 -------------------
 Filename: rootfs.tar.gz
 Version: zsipos-1.3.12 4 Jan 2021
-Reason: fix tcp hangup in logfile upload
+Reason: ros security review fixes, fix connection to no dtmf phone, new logfile upload
