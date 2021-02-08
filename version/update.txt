@@ -1,5 +1,5 @@
 update.txt
 -------------------
 Filename: rootfs.tar.gz
-Version: zsipos-1.3.12 4 Jan 2021
-Reason: ros security review fixes, fix connection to no dtmf phone, new logfile upload
+Version: zsipos-1.3.14 5 Feb 2021
+Reason: gcc hardening flags, ros security review fixes, fix connection to pots phone, new logfile upload

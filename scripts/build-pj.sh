@@ -48,12 +48,15 @@ build_for_processor()
 	CFG="$CFGCOMMON"
 	if [ "$1" == "zsipos" ]
 	then
+		HARDENING="$CFLAGS_HARDENING_ZSIPOS $LDFLAGS_HARDENING_ZSIPOS"
 		CFG+="--host=$ZTC_PREFIX"
+	else
+		HARDENING="$CFLAGS_HARDENING_HOST $LDFLAGS_HARDENING_HOST"
 	fi
 	mv config.sub config.sub_bak
 	cp "$ZTOP/scripts/config.sub" .
 	export TARGET_NAME="$1"
-	CFLAGS="-fpic $TC_DBGFLAGS" CXXFLAGS="-fpic $TC_DBGFLAGS" ./configure $CFG
+	CFLAGS="-fpic $TC_DBGFLAGS $HARDENING" CXXFLAGS="-fpic $TC_DBGFLAGS $HARDENING" ./configure $CFG
 	mv config.sub_bak config.sub
 	make_site_config
 	make $J

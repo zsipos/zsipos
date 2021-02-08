@@ -22,21 +22,22 @@ build_for_processor()
 		export X_LIBRARIES="--x-libraries=\"$ZTOP/software/microwindows/src/lib\""
 		export X_EXTRA_LIBS="-lnano-X -lfreetype -lts -lz"
 		export XFT="disable"
+		export HARDENING="$CFLAGS_HARDENING_ZSIPOS $LDFLAGS_HARDENING_ZSIPOS"
 	else
 		unset LIBS
 		unset HOST
 		unset X_INCLUDES
 		unset X_LIBRARIES
+		unset HARDENING
 		export X_EXTRA_LIBS="-lfreetype"
 		export XFT="enable"
+		export HARDENING="$CFLAGS_HARDENING_HOST $LDFLAGS_HARDENING_HOST"
 	fi
-	export CFLAGS="-fpic"
+	export CFLAGS="-fpic $HARDENING"
 	export CXXFLAGS="$CFLAGS"
 	pushd fltk
 	[ -f ./configure ] || ./autogen.sh
 	./configure \
-		CFLAGS="-fpic" \
-		CXXFLAGS="-fpic" \
 		$HOST \
 		$X_INCLUDES \
 		$X_LIBRARIES \

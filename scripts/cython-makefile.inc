@@ -13,7 +13,7 @@ CYTHON           = cython
 CYTHON_FLAGS    += -3 --cplus --fast-fail -I. -X c_string_type=unicode,c_string_encoding=utf8
 CYTHON_INCLUDES += $(wildcard *.pxd) $(wildcard *.pxi)
 
-CFLAGS_COMMON  += -fpic -pthread -std=c++11 $(TC_DBGFLAGS) 
+CFLAGS_COMMON  += -fpic -pthread -std=c++11 $(TC_DBGFLAGS)
 LDFLAGS_COMMON += -fpic -pthread -Wl,--as-needed -Wl,--no-undefined
 LIBS_COMMON    += -luuid -lz -lssl -lcrypto 
 
@@ -26,8 +26,10 @@ clean::
 MODULE_ZSIPOS    = zsipos/$(MODULE).so
 CC_ZSIPOS        = $(ZTC_CXX)
 CFLAGS_ZSIPOS    += \
+	$(CFLAGS_HARDENING_ZSIPOS) \
 	-I$(ZTC_SYSROOT)/usr/include \
 	-I$(ZTC_SYSROOT)/usr/include/python3.8
+LDFLAGS_ZSIPOS   += $(LDFLAGS_HARDENING_ZSIPOS)
 LIBS_ZSIPOS      += -lpython3.8
 
 all:: $(MODULE_ZSIPOS)
@@ -49,10 +51,11 @@ zsipos/$(MODULE).so: zsipos/$(MODULE).o
 #
 # host
 #
-MODULE_HOST = host/$(MODULE).so
-CC_HOST     = g++
-CFLAGS_HOST += -I/usr/include/python$(HOST_PYTHON_VERSION)
-LIBS_HOST   += -lpython$(HOST_PYTHON_VERSION)m
+MODULE_HOST  = host/$(MODULE).so
+CC_HOST      = g++
+CFLAGS_HOST  += $(CFLAGS_HARDENING_HOST) -I/usr/include/python$(HOST_PYTHON_VERSION)
+LDFLAGS_HOST += $(LDFLAGS_HARDENING_HOST)
+LIBS_HOST    += -lpython$(HOST_PYTHON_VERSION)m
 
 all:: $(MODULE_HOST)
 

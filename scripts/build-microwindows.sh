@@ -13,7 +13,7 @@ build_for_processor()
 	else
 		m=
 	fi
-	make -k $m CONFIG=$CONFIG
+	make -k $m VERBOSE=y CONFIG=$CONFIG CFLAGS="-fpic $CFLAGS_HARDENING_ZSIPOS $LDFLAGS_HARDENING_ZSIPOS"
 	cd lib
 	rm -f libX11.a
 	ln -s `pwd`/libNX11.a libX11.a

@@ -24,6 +24,9 @@ export CPU_VARIANT=linux+dualcore
 
 export ZTC_TYPE="buildroot" # "native"
 
+# use gcc hardening flags
+FORTIFY=1
+
 #
 # end of config choices
 #
@@ -59,6 +62,19 @@ export PATH="$PATH:$RISCV/bin"
 export CROSS_COMPILE="$ZTC_PREFIX-"
 
 export TC_DBGFLAGS=-g
+
+if [ "$FORTIFY" == "1" ]
+then
+	export CFLAGS_HARDENING_ZSIPOS="-fstack-protector-all -fstack-clash-protection -D_FORTIFY_SOURCE=2"
+	export LDFLAGS_HARDENING_ZSIPOS="-Wl,-z,noexecstack -Wl,-z,relro,-z,now"
+	export CFLAGS_HARDENING_HOST="-fstack-protector-all -D_FORTIFY_SOURCE=2"
+	export LDFLAGS_HARDENING_HOST="-Wl,-z,noexecstack -Wl,-z,relro,-z,now"
+else
+	export CFLAGS_HARDENING_ZSIPOS=""
+	export LDFLAGS_HARDENING_ZSIPOS=""
+	export CFLAGS_HARDENING_HOST=""
+	export LDFLAGS_HARDENING_HOST=""
+fi
 
 #
 # misc
