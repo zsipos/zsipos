@@ -33,10 +33,10 @@ build_for_processor()
 		export XFT="enable"
 		export HARDENING="$CFLAGS_HARDENING_HOST $LDFLAGS_HARDENING_HOST"
 	fi
-	export CFLAGS="-fpic $HARDENING"
-	export CXXFLAGS="$CFLAGS"
 	pushd fltk
 	[ -f ./configure ] || ./autogen.sh
+	export CFLAGS="-fpic $HARDENING"
+	export CXXFLAGS="$CFLAGS"
 	./configure \
 		$HOST \
 		$X_INCLUDES \
@@ -58,4 +58,11 @@ build_for_processor()
 
 build_for_processor zsipos $1 
 build_for_processor host   $1 
+
+pwd
+
+if [ x"$1" == x"clean" ]
+then
+	rm -f fltk/configure
+fi
 
