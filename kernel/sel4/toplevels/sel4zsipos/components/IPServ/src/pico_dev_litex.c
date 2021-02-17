@@ -3,12 +3,11 @@
 
 #include <camkes.h>
 
-#include <pico_device.h>
-#include <pico_stack.h>
-
-#include "pico_dev_litex.h"
+#include <picotcp.h>
 
 #include <litex.h>
+
+#include "pico_dev_litex.h"
 
 #define LITEX_COUNTER_RESET			1000
 #define LITEX_COUNTER_READER_READY	10
@@ -236,7 +235,7 @@ struct pico_device *pico_litex_create(unsigned char *mac)
     rxbadr = eth_reg2;
     txbadr = eth_reg3;
 
-    if (pico_device_init(litex, ifname, mac) || !pico_litex_init()) {
+    if (pico_device_init(stack, litex, ifname, mac) || !pico_litex_init()) {
         dbg("litex init failed.\n");
         pico_device_destroy(litex);
         return NULL;

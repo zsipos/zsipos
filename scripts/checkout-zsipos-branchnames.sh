@@ -45,12 +45,12 @@ git checkout master-zsipos
 cd "$ZTOP/./kernel/sel4/tools/seL4"
 git checkout master-zsipos
 
-#./kernel/sel4/projects/picotcp
-cd "$ZTOP/./kernel/sel4/projects/picotcp"
-git checkout master-zsipos
-
 #./kernel/sel4/projects/util_libs
 cd "$ZTOP/./kernel/sel4/projects/util_libs"
+git checkout master-zsipos
+
+#./kernel/sel4/projects/libpicotcpng/picotcp
+cd "$ZTOP/./kernel/sel4/projects/libpicotcpng/picotcp"
 git checkout master-zsipos
 
 #./kernel/sel4/kernel

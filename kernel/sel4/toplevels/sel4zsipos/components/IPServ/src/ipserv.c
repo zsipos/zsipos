@@ -4,30 +4,40 @@
 #include <stdio.h>
 #include <camkes.h>
 
-#include <pico_stack.h>
+#include <picotcp.h>
 #include <pico_ipv4.h>
-#include <pico_icmp4.h>
 #include <pico_dev_loop.h>
 
 #include "sel4zsipos_config.h"
-
+#include "mt64.h"
 #include "pico_dev_litex.h"
 
-int mstick = 0;
-
-#if 0
-int clk_get_time(void) {
-	return mstick * TICKMUL;
-}
-#else
-int clk_get_time(void)
+static inline unsigned long read_csr_time()
 {
 	unsigned long retval;
-
 	asm volatile ("csrr %0, 0xc01" : "=r"(retval)); // read CSR_TIME
-	return retval/750;
+	return retval;
 }
-#endif
+
+int clk_get_time(void)
+{
+	return read_csr_time()/750;
+}
+
+uint32_t pico_rand(void)
+{
+	static int seeded = 0;
+	uint64_t val;
+
+	if (!seeded) {
+		init_genrand64(read_csr_time());
+		seeded = 1;
+	}
+	val = genrand64_int64();
+	return ((val >> 32) & 0xffffffff) ^ (val & 0xffffffff);
+}
+
+struct pico_stack *stack = NULL;
 
 int run(void)
 {
@@ -35,10 +45,13 @@ int run(void)
     struct pico_ip4 ipaddr, netmask;
     struct pico_device *devl;
 
-    pico_stack_init();
-
+    if(pico_stack_init(&stack) < 0) {
+        printf("can not initialize pico stack!\n");
+        return -1;
+    }
+    
     if (loopback) {
-		devl = pico_loop_create();
+		devl = pico_loop_create(stack);
 		if (!devl) {
 			dbg("can't create loop device!\n");
 			return -1;
@@ -46,7 +59,7 @@ int run(void)
 
 		pico_string_to_ipv4("127.0.0.1", &ipaddr.addr);
 		pico_string_to_ipv4("255.0.0.0", &netmask.addr);
-		pico_ipv4_link_add(devl, ipaddr, netmask);
+		pico_ipv4_link_add(stack, devl, ipaddr, netmask);
     }
 
     for (;;)
@@ -54,9 +67,8 @@ int run(void)
     	int i;
 
     	tick_wait();
-    	mstick++;
 		error = pico_stack_lock();
-		pico_stack_tick();
+		pico_stack_tick(stack);
 		error = pico_stack_unlock();
     }
 

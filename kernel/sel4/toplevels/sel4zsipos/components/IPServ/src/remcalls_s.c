@@ -114,7 +114,7 @@ static void handle_rem_get_devices(rem_arg_t *arg)
 	do_pico_stack_lock();
 
 	r->devices.count = 0;
-	pico_tree_foreach(n, &Device_tree)
+	pico_tree_foreach(n, &stack->Device_tree)
 	{
 		struct pico_device *dev = n->keyValue;
 
@@ -145,7 +145,7 @@ static void handle_rem_get_device_config(rem_arg_t *arg)
 	do_pico_stack_lock();
 
 	name = strcmp(a->name, "lo") == 0 ? "loop" : a->name;
-	dev = pico_get_device(name);
+	dev = pico_get_device(stack, name);
 	if (!dev) {
 		r->retval = -1;
 		goto quit;
@@ -158,7 +158,7 @@ static void handle_rem_get_device_config(rem_arg_t *arg)
 		r->config.mac = dev->eth->mac;
 	}
 	r->config.mtu = dev->mtu;
-	ip4l = pico_ipv4_link_by_dev(dev);
+	ip4l = pico_ipv4_link_by_dev(stack, dev);
 	if (ip4l) {
 		r->config.hasipv4link = 1;
 		r->config.address.ip4 = ip4l->address;
@@ -186,17 +186,17 @@ static void handle_rem_set_device_address(rem_arg_t *arg)
 		goto quit;
 	}
 
-	dev = pico_get_device(a->name);
+	dev = pico_get_device(stack, a->name);
 	if (!dev) {
 		r->retval = -1;
 		goto quit;
 	}
 
-	ip4l = pico_ipv4_link_by_dev(dev);
+	ip4l = pico_ipv4_link_by_dev(stack, dev);
 	if (ip4l)
-		pico_ipv4_link_del(dev, ip4l->address);
+		pico_ipv4_link_del(stack, dev, ip4l->address);
 
-	r->retval = pico_ipv4_link_add(dev, a->address.ip4, a->netmask.ip4);
+	r->retval = pico_ipv4_link_add(stack, dev, a->address.ip4, a->netmask.ip4);
 
 quit:
 
@@ -217,14 +217,14 @@ static void handle_rem_device_down(rem_arg_t *arg)
 		r->retval = -1;
 		goto quit;
 	}
-	dev = pico_get_device(a->name);
+	dev = pico_get_device(stack, a->name);
 	if (!dev) {
 		r->retval = -1;
 		goto quit;
 	}
-	ip4l = pico_ipv4_link_by_dev(dev);
+	ip4l = pico_ipv4_link_by_dev(stack, dev);
 	if (ip4l)
-		pico_ipv4_link_del(dev, ip4l->address);
+		pico_ipv4_link_del(stack, dev, ip4l->address);
 	r->retval = 0;
 
 quit:
@@ -249,19 +249,19 @@ static void handle_rem_device_addroute(rem_arg_t *arg)
 	}
 	if (!devname[0])
 		devname = "eth0";
-	dev = pico_get_device(devname);
+	dev = pico_get_device(stack, devname);
 	if (!dev) {
 		printf("device %s not found\n", a->name);
 		r->retval = -1;
 		goto quit;
 	}
-	ip4l = pico_ipv4_link_by_dev(dev);
+	ip4l = pico_ipv4_link_by_dev(stack, dev);
 	if (!ip4l) {
 		printf("device %s has no link!\n", a->name);
 		r->retval = -1;
 		goto quit;
 	}
-	if (pico_ipv4_route_add(a->address.ip4, a->genmask.ip4, a->gateway.ip4, a->metric, ip4l) < 0)
+	if (pico_ipv4_route_add(stack, a->address.ip4, a->genmask.ip4, a->gateway.ip4, a->metric, ip4l) < 0)
 		r->retval = 0 - pico_err;
 	else
 		r->retval = 0;
@@ -270,8 +270,6 @@ quit:
 
 	do_pico_stack_unlock();
 }
-
-extern struct pico_tree Routes;
 
 static void handle_rem_get_routes(rem_arg_t *arg)
 {
@@ -283,7 +281,7 @@ static void handle_rem_get_routes(rem_arg_t *arg)
 	do_pico_stack_lock();
 
 	r->routes.count = 0;
-	pico_tree_foreach(index, &Routes)
+	pico_tree_foreach(index, &stack->Routes)
 	{
 		struct pico_ipv4_route *r4 = index->keyValue;
 		int                     flags = 1;
@@ -340,13 +338,13 @@ static void handle_rem_dhcp(rem_arg_t *arg)
 	do_pico_stack_lock();
 
 	if (dhcp_xid != -1) {
-		pico_dhcp_client_abort(dhcp_xid);
+		pico_dhcp_client_abort(stack, dhcp_xid);
 		dhcp_xid = -1;
 	}
 
 	dhcp_finished = 0;
 
-	dev = pico_get_device(a->name);
+	dev = pico_get_device(stack, a->name);
 	if (!dev) {
 		printf("dhcp: device %s not found\n", a->name);
 		r->retval = -1;
@@ -381,7 +379,7 @@ static void handle_rem_dhcp(rem_arg_t *arg)
 	r->nameserver_count = 0;
 
 	if (dhcp_code == PICO_DHCP_SUCCESS) {
-		void *cli = pico_dhcp_get_identifier(dhcp_xid);
+		void *cli = pico_dhcp_get_identifier(stack, dhcp_xid);
 		int   count = 0;
 
 		for(;count < SEL4IP_MAX_NAMESERVERS;) {
@@ -439,7 +437,7 @@ static void handle_rem_ping(rem_arg_t *arg)
 	{	char host[16];
 
 		pico_ipv4_to_string(host, a->addr.ip4.addr);
-		ret = pico_icmp4_ping(host, count, 1000, 10000, 64, ping4_callback);
+		ret = pico_icmp4_ping(stack, host, count, 1000, 10000, 64, ping4_callback);
 
 		r->retval = 0;
 		res->hdr.pico_err = pico_err;
@@ -666,7 +664,7 @@ static void handle_rem_pico_socket_open(rem_arg_t *arg)
 	rem_pico_socket_open_arg_t *a = &arg->u.rem_pico_socket_open_arg;
 	rem_pico_socket_open_res_t *r = &res->u.rem_pico_socket_open_res;
 
-	r->retval = (rem_pico_socket_t*)pico_socket_open(a->net, a->proto, handle_socket_event);
+	r->retval = (rem_pico_socket_t*)pico_socket_open(stack, a->net, a->proto, handle_socket_event);
 	res->hdr.pico_err = pico_err;
 }
 

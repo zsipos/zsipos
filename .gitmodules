@@ -107,3 +107,6 @@
 [submodule "kernel/u-boot"]
 	path = kernel/u-boot
 	url = https://github.com/zsipos/u-boot
+[submodule "kernel/sel4/projects/libpicotcpng/picotcp"]
+	path = kernel/sel4/projects/libpicotcpng/picotcp
+	url = https://github.com/zsipos/picotcp-ng

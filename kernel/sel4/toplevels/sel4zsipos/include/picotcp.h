@@ -19,3 +19,5 @@
 #include "pico_stack.h"
 #include "pico_tree.h"
 #include "pico_socket.h"
+
+extern struct pico_stack *stack;

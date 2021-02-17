@@ -12,6 +12,7 @@ list(
         ${project_dir}/tools/seL4/elfloader-tool/
 	${project_dir}/tools/camkes-tool/
 	${project_dir}/tools/capdl/
+	${project_dir}/libpicotcpng/
         ${project_modules}
 )
 
