@@ -29,6 +29,8 @@ DEF DTMF_START        = 10
 DEF DTMF_START_CHAR   = '*' 
 DEF DTMF_CONFIRM      = 11
 DEF DTMF_CONFIRM_CHAR = '#'
+DEF DTMF_A            = 12
+DEF DTMF_A_CHAR       = 'A'
 
 cdef class DTMFExchange:
 
@@ -218,9 +220,9 @@ cdef class DTMFExchange:
     
     def dtmfLocalidOut(self, id):
         if self.remoteid:
-            id = DTMF_CONFIRM_CHAR + id + self.crc(id)
+            id = DTMF_CONFIRM_CHAR + DTMF_A_CHAR + id + self.crc(id)
         else:
-            id = DTMF_START_CHAR + id + self.crc(id)
+            id = DTMF_START_CHAR + DTMF_A_CHAR + id + self.crc(id)
         self.dtmfStringOut(id)
         
     def dtmfStringOut(self, chars):
