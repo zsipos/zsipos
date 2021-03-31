@@ -414,6 +414,7 @@ cdef extern from "../fltk.cpp":
     cdef float        get_value(Fl_Progress* widget) nogil
     cdef char         get_value(Fl_Button* widget) nogil
     cdef const char*  get_value(Fl_Input_* input_) nogil
+    cdef const char*  get_value(Fl_Output* output) nogil
     cdef int          get_value(Fl_Choice* widget) nogil
     cdef double       get_value(Fl_Valuator* valuator) nogil
     cdef float        get_maximum(Fl_Progress* widget) nogil

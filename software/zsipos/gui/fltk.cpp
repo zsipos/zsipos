@@ -62,6 +62,11 @@ const char * get_value(Fl_Input_* w)
 	return w->value();
 }
 
+const char * get_value(Fl_Output* w)
+{
+	return w->value();
+}
+
 char get_value(Fl_Button* w)
 {
 	return w->value();

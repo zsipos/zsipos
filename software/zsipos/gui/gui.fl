@@ -152,15 +152,15 @@ class CONFIGUI {open
           Fl_Group group_static_ip {
             xywh {10 109 465 159} labelsize 18 align 129
           } {
-            Fl_Output btn_ext_phone {
+            Fl_Output btn_extphoneaddr {
               label {My IP Address}
               xywh {10 125 150 35} box UP_BOX color 29 labelsize 18 align 8 textsize 18
             }
-            Fl_Output btn_subnet_mask {
+            Fl_Output btn_extnetmask {
               label {Subnet Mask}
               xywh {10 175 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
             }
-            Fl_Output btn_gateway {
+            Fl_Output btn_extgateway {
               label Gateway
               xywh {10 225 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
             }
@@ -173,7 +173,7 @@ class CONFIGUI {open
             Fl_Box framep3 {
               xywh {165 225 255 30} box DOWN_FRAME
             }
-            Fl_Button btn_ping_gateway {
+            Fl_Button btn_ping_extgateway {
               label ping
               xywh {425 225 50 30}
             }
@@ -181,14 +181,14 @@ class CONFIGUI {open
           Fl_Group group_dns {
             xywh {10 265 480 50} labelsize 18 align 129
           } {
-            Fl_Output btn_dns_server {
+            Fl_Output btn_dnsserver {
               label {DNS Server}
               xywh {10 275 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
             }
             Fl_Box framed1 {
               xywh {165 275 255 30} box DOWN_FRAME
             }
-            Fl_Button btn_ping_dns {
+            Fl_Button btn_ping_dnsserver {
               label ping
               xywh {425 275 50 30}
             }
@@ -198,23 +198,23 @@ class CONFIGUI {open
           label Server open
           xywh {0 75 480 245} hide
         } {
-          Fl_Output btn_sip_proxy {
+          Fl_Output btn_sipproxy {
             label {SIP Proxy  }
             xywh {10 95 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
           }
-          Fl_Output btn_ice_storage {
+          Fl_Output btn_icestorageurl {
             label {ICE Storage  }
             xywh {10 140 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
           }
-          Fl_Output btn_stun_server {
+          Fl_Output btn_stunserver {
             label {STUN Server  }
             xywh {10 185 150 30} box UP_BOX color 29 selection_color 4 labelsize 18 align 8 textsize 18
           }
-          Fl_Output btn_turn_server {
+          Fl_Output btn_turnserver {
             label {TURN Server  }
             xywh {10 230 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
           }
-          Fl_Output btn_ntp_server {
+          Fl_Output btn_ntpserver {
             label {NTP Server  }
             xywh {10 275 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
           }
@@ -233,28 +233,28 @@ class CONFIGUI {open
           Fl_Box frames5 {
             xywh {165 275 255 30} box DOWN_FRAME
           }
-          Fl_Button btn_ping_sip {
+          Fl_Button btn_ping_sipproxy {
             label ping
             xywh {425 95 50 30}
           }
-          Fl_Button btn_ping_ice {
+          Fl_Button btn_ping_icestorageurl {
             label ping
             xywh {425 140 50 30}
           }
-          Fl_Button btn_ping_stun {
+          Fl_Button btn_ping_stunserver {
             label ping
             xywh {425 185 50 30}
           }
-          Fl_Button btn_ping_turn {
+          Fl_Button btn_ping_turnserver {
             label ping
             xywh {425 230 50 30}
           }
-          Fl_Button btn_ping_ntp {
+          Fl_Button btn_ping_ntpserver {
             label ping
             xywh {425 275 50 30}
           }
         }
-        Fl_Group group_log {
+        Fl_Group group_logs {
           label Logs open
           xywh {0 75 480 250} hide
         } {
@@ -262,14 +262,14 @@ class CONFIGUI {open
             label {Log Settings}
             xywh {15 86 150 30} labelsize 18
           }
-          Fl_Output btn_upload_server {
+          Fl_Output btn_uploaduri {
             label {Upload Server}
             xywh {15 125 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
           }
           Fl_Box framee2 {
             xywh {170 125 255 30} box DOWN_FRAME
           }
-          Fl_Button btn_ping_upload_server {
+          Fl_Button btn_ping_uploaduri {
             label ping
             xywh {430 125 50 30}
           }
@@ -302,14 +302,14 @@ class CONFIGUI {open
           label Experts open
           xywh {0 75 480 245} hide
         } {
-          Fl_Output btn_local_proxy {
+          Fl_Output btn_localproxyaddr {
             label {Local Proxy  }
             xywh {10 90 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
           }
           Fl_Box framee1 {
             xywh {165 90 255 30} box DOWN_FRAME
           }
-          Fl_Button btn_ping_local_proxy {
+          Fl_Button btn_ping_localproxyaddr {
             label ping
             xywh {425 90 50 30}
           }
@@ -331,11 +331,11 @@ class CONFIGUI {open
             }
           }
         }
-        Fl_Group group_passwd {
+        Fl_Group group_rootpw {
           label Passwd open
           xywh {0 75 480 245} hide
         } {
-          Fl_Button btn_root_pw {
+          Fl_Button btn_rootpw {
             label {Change root password}
             xywh {35 125 203 29}
           }
@@ -443,11 +443,11 @@ class CONFIGUI {open
               xywh {370 155 87 30} type Radio down_box ROUND_DOWN_BOX
             }
           }
-          Fl_Output out_update_server {
+          Fl_Output btn_updateuri {
             label {Update URL}
             xywh {0 195 150 30} box UP_BOX color 29 labelsize 18 align 8 textsize 18
           }
-          Fl_Button btn_ping_update_url {
+          Fl_Button btn_ping_updateuri {
             label ping
             xywh {425 195 50 30}
           }
@@ -469,15 +469,15 @@ class CONFIGUI {open
       } {
         Fl_Button btn_save_ok {
           label Save
-          xywh {224 147 75 50} labelsize 18
+          xywh {257 147 75 50} labelsize 18
         }
         Fl_Button btn_save_cancel {
           label Cancel
           xywh {353 147 75 50} labelsize 18
         }
         Fl_Button btn_save_and_restart {
-          label {Save+Restart}
-          xywh {28 147 152 50} labelsize 18
+          label {Save and Restart}
+          xywh {28 147 205 50} labelsize 18
         }
         Fl_Box box_restart {
           label {Changes require a restart.}
