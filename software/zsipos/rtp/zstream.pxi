@@ -19,6 +19,15 @@ Copyright (C) 2017 Stefan Adams
    Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301  
 """
 
+
+cdef bool globalMute = False
+
+def setGlobalMute(on):
+    global globalMute
+    globalMute = on
+
+def getGlobalMute():
+    return globalMute
     
 cdef extern from "../alawulaw.tables":
     cdef pj_uint8_t zsipos_a2u[]
@@ -472,6 +481,8 @@ cdef class CyRTPStream:
         self.locSSRC = pj_ntohl((<uint32_t*>&databuf[8])[0])
         pj_gettimeofday(&self.loctime)                    
         if self.handshake:
+            return
+        if globalMute:
             return
         # fix in offset
         (<uint16_t*>databuf)[1] = pj_htons(self.locseq + self.locoffset)

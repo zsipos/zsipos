@@ -35,38 +35,57 @@ from GMITM import GMITMEventListener
 from utils import PYCALL
 from SipProtocol import parseAddress
 from console import console
+from rtp import getGlobalMute, setGlobalMute
 
+cdef extern from *:
+    cdef void exit(int code) nogil
+    
 log = logging.getLogger("gui")
 
 cdef bool dolog = True
+cdef int nrcalls = 0
 
 ##########
 # MAINUI #
 ##########
 
 cdef MAINUI* mainui
-cdef extern from *:
-
-    cdef void exit(int code) nogil
     
     
 cdef void on_close(Fl_Widget *widget, void *data) with gil:
     mainui.window.hide()
     exit(0)
 
-
 cdef void on_btn_config(Fl_Widget *widget, void *data) with gil:
-    on_config_enter(widget, data) 
+    show_config() 
 
+cdef void on_btn_mute(Fl_Widget *widget, void *data) with gil:
+    setGlobalMute(not getGlobalMute())
+    drawMuteButton()
+    mainui.window.redraw()
+    
+cdef void on_btn_info(Fl_Widget *widget, void *data) with gil:
+    show_config(True)
+
+cdef void drawMuteButton() with gil:
+    if getGlobalMute():
+        mainui.btn_mute.image(icon_rtp_mute)
+    else:
+        mainui.btn_mute.image(icon_rtp_on)
 
 cdef void app_main() nogil:
     global mainui
     mainui = new MAINUI()
     mainui.window.callback(on_close, NULL)
     mainui.btn_config.callback(on_btn_config, NULL)
-    mainui.btn_mute.image(icon_rtp_on)
+    mainui.btn_mute.callback(on_btn_mute, NULL)
+    mainui.btn_info.callback(on_btn_info, NULL)
+    mainui.btn_info.activate()
+    with gil:
+        drawMuteButton()
     mainui.btn_info.image(icon_info)
     mainui.btn_config.image(icon_gear)
+    mainui.btn_config.take_focus()
     with gil:
         configui_init("")
     mainui.window.show()
@@ -82,7 +101,7 @@ cdef void app_main() nogil:
 def cfg_main(infstr):
     configui_init(infstr)
     loadfonts()
-    on_config_enter(NULL, NULL)
+    show_config()
     Fl.lock()
     Fl.run()
 
@@ -247,14 +266,24 @@ class GUI_GMITMEventListener(GMITMEventListener):
     
     def onCallCreated(self, cc, msg):
         def ___():
+            global nrcalls
             if dolog: log.info("onCallCreated")
+            nrcalls += 1
+            if nrcalls == 1:
+                mainui.btn_mute.activate()
             call = Call(cc, msg)
             setattr(cc, "ui", call)
         callGUI(___)
 
     def onCallTerminated(self, cc, msg, code):       
         def ___():
+            global nrcalls
             if dolog: log.info("onCallTerminated")
+            nrcalls -= 1
+            if nrcalls == 0:
+                setGlobalMute(False)
+                mainui.btn_mute.deactivate()
+                drawMuteButton()
             delattr(cc, "ui")
         callGUI(___)
         
