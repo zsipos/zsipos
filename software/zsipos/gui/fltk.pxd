@@ -173,7 +173,7 @@ cdef extern from "FL/Fl_Widget.H":
         void redraw_label() nogil
         void resize(int x, int y, int w, int h) nogil
         void show() nogil
-        int  take_focus()
+        int  take_focus() nogil
         #void visible_focus(int v)
 
 cdef extern from "FL/Fl_Box.H":
