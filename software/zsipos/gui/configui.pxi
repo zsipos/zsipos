@@ -53,8 +53,9 @@ include 'configutils.pxi'       # configedit depends on it
 include 'configedit.pxi'
 include 'confighelp.pxi'
 include 'configkeyboard.pxi'
-include 'configmount.pxi'       #logs, update
+include 'configmount.pxi'       # logs, update
 include 'configsave.pxi'
+include 'configsure.pxi'        # update, reset
 include 'configtext.pxi'
 include 'configuifltk.pxi'
 # config groups
@@ -72,24 +73,18 @@ include 'config_update.pxi'
 # globals
 cdef CONFIGUI* configui
 
-stable = False            # configui not initialized yet
-root_pw_is_set = False    # force pw_reset
+stable = False          # configui not initialized yet
+root_pw_is_set = True   # force pw_reset
 
 """ Callbacks """
 # application MAINUI
-cdef void on_config_enter(Fl_Widget* widget, void *data) with gil:
-    #debug("on config enter")
-    configui.window.activate()
-    configui.tab_config.value(configui.group_ip)
-    configui.btn_back.show()
-    configui.btn_back.take_focus()
-    configui.window.show()
-
 cdef void on_config_close(Fl_Widget* widget, void *data) with gil:
     configui.window.hide()
 
 # main window
 cdef void on_btn_back(Fl_Widget* widget, void *data) with gil:
+    configui.btn_warn.hide()
+    configui.tab_config.show()
     do_back()
 
 cdef void on_btn_warn(Fl_Widget* widget, void *data) with gil:
@@ -136,6 +131,7 @@ def check_mandatory_dnsserver():
 def check_mandatory_servers():
     ret = check_mandatory_value(consts.SIPPROXY)
     ret += check_mandatory_value(consts.ICESTORAGEURL)
+    ret += check_mandatory_value(consts.LOCPROXYADDR)
     return ret
 
 def check_mandatory_static_ip():
@@ -178,7 +174,7 @@ def cfg_hide_externalPhoneAddress():
 
 def cfg_restore_externalPhoneAddress():
     """ restore extPhoneAddress after cfg is written """
-    if cfdict[consts.EXTUSEDHCP]:
+    if cfdict[consts.EXTUSEDHCP] and consts.EXTPHONEADDR in cfdict:
         config.set(consts.SECTION, consts.EXTPHONEADDR, cfdict[consts.EXTPHONEADDR])
 
 def config_has_changed():
@@ -302,8 +298,8 @@ def do_restart(restart_type):
         elif restart_type == 'reconfig':
             console.info("reconfigure...")
             log.info("reconfig system")
-            #os.system('/etc/init.d/rcK && /etc/init.d/rcS')
-            os.system('reboot')
+            os.system('/etc/init.d/rcK && /etc/init.d/rcS')
+            #os.system('reboot') # fuer picotcp
         elif restart_type == 'shutdown':
             console.info("shutdown...")
             log.info("shutdown system")
@@ -313,9 +309,14 @@ def do_restart(restart_type):
             log.info("restart zsipos")
             os._exit(0)
     else:
-        what = f'{restart_type} requested'
-        info(f"TestModus {what}")
-        log.info(what)
+        if restart_type == 'restart' or restart_type == 'reboot':
+            console.info("restart...")
+            log.info("restart zsipos")
+            os._exit(0)
+        else:
+            what = f'{restart_type} requested'
+            info(f"TestModus {what}")
+            log.info(what)
 
 def do_save_cfg():
     dict_to_config()
@@ -367,6 +368,7 @@ def group_init(label):
     func()
 
 def info(infomessage):
+    debug(f'info {infomessage}')
     configui.btn_warn.copy_label(infomessage)
     configui.btn_warn.labelcolor(39)
     configui.tab_config.hide()
@@ -458,7 +460,21 @@ def ping_url_path(var):
         if len(host):
             do_ping(host, ifnr=0)# not LOCPROXYADDR
 
+def show_config(bStartUpdate=False):
+    #debug("show_config")
+    configui.window.activate()
+    if bStartUpdate:
+        group_update_init()
+        configui.tab_config.value(configui.group_update)
+    else:
+        group_ip_init()
+        configui.tab_config.value(configui.group_ip)
+    configui.btn_back.show()
+    configui.btn_back.take_focus()
+    configui.window.show()
+
 def warn(warnmessage):
+    debug(f'warn {warnmessage}')
     configui.btn_warn.copy_label(warnmessage)
     configui.btn_warn.labelcolor(88)
     configui.tab_config.hide()
@@ -514,7 +530,6 @@ def configui_init(infstr):
     ui = configui = new CONFIGUI()
     ui.window.position(0,60)
     ui.window.labeltype(FL_NORMAL_LABEL)
-    ui.window.callback(on_config_enter, <void*>configui)
     ui.window.callback(on_config_close, NULL)
     # back button
     ui.btn_back.callback(on_btn_back, NULL)
@@ -532,6 +547,7 @@ def configui_init(infstr):
     ui.btn_help.callback(on_btn_help, NULL)
     # this tab is shown first
     group_init(str_ip_config)
+    ui.tab_config.value(ui.group_ip)
     # startup warning from gui.pyx
     if infstr:
         warn(infstr)
@@ -542,6 +558,7 @@ def configui_init(infstr):
 
 #enforce root password change on first startup
 if os.path.exists(pw_reset):
+    root_pw_is_set = False
     configui_init("")
     configui.btn_address_cancel.hide()
     configui.btn_address_back.hide()
@@ -549,6 +566,6 @@ if os.path.exists(pw_reset):
     while True:
         Fl.check()
         if root_pw_is_set:
-           log.info("new password set")
-           os.remove(pw_reset)
-           break
+            log.info("new password set")
+            os.remove(pw_reset)
+            break

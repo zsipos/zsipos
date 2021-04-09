@@ -360,7 +360,7 @@ class CONFIGUI {open
             label {Device Shutdown}
             xywh {30 250 200 35}
           }
-          Fl_Button btn_nxcal {
+          Fl_Button btn_calibrate {
             label {Calibrate Display}
             xywh {260 110 200 35}
           }
@@ -458,6 +458,26 @@ class CONFIGUI {open
             label {Look for Updates}
             xywh {155 260 204 30} labelsize 18
           }
+        }
+      }
+    }
+    Fl_Window winSure {
+      xywh {1252 153 480 320} type Double visible
+    } {
+      Fl_Group group_sure {
+        xywh {0 0 480 320}
+      } {
+        Fl_Box box_sure {
+          label {Are you sure?}
+          xywh {78 38 334 92} labelsize 18 labelcolor 88 align 128
+        }
+        Fl_Button btn_sure_cancel {
+          label Cancel
+          xywh {300 155 75 50} labelsize 18
+        }
+        Fl_Button btn_sure_ok {
+          label Ok
+          xywh {105 155 120 50} labelsize 18
         }
       }
     }
@@ -991,26 +1011,6 @@ class CONFIGUI {open
       Fl_Button btn_updateinfo_ok {
         label {Update Now}
         xywh {165 285 160 30} labelsize 18
-      }
-    }
-    Fl_Window winUpdateSure {
-      xywh {1252 153 480 320} type Double visible
-    } {
-      Fl_Group group_updatesure {
-        xywh {0 0 480 320}
-      } {
-        Fl_Box box_updatesure {
-          label {Are you sure to update now?}
-          xywh {78 64 334 25} labelsize 22 labelcolor 88
-        }
-        Fl_Button btn_updatesure_cancel {
-          label Cancel
-          xywh {300 155 75 50} labelsize 18
-        }
-        Fl_Button btn_updatesure_ok {
-          label Update
-          xywh {105 155 120 50} labelsize 18
-        }
       }
     }
     Fl_Window winUpdateProgress {

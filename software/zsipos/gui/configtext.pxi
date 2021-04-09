@@ -67,8 +67,7 @@ cdef str str_sshd_first_start ='This is the first start of sshd. It will take ar
 cdef str str_update_reboot_information = '\nNOTE: If reboot should fail, press display until it turns black. Device returns to current version.'
 
 cdef str str_ip_config = 'Ip Config'
-cdef str help_ip_config = """
-Setup your network configuration.
+cdef str help_ip_config = """Setup your network configuration.
 
 You can obtain your IP Address including the DNS setting automatically from a DHCP server or specify it manually.
 In this case you can use either IPv4 or IPv6 address.
@@ -85,8 +84,7 @@ mask: 64
 """
 
 cdef str str_server = 'Server'
-cdef str help_server = """
-SIP Proxy:
+cdef str help_server = """SIP Proxy:
 
 The name / Address and port of your SIP proxy
 
@@ -113,8 +111,7 @@ cdef str str_logs = 'Logs'
 # no log help
 
 cdef str str_experts = 'Experts'
-cdef str help_experts = """
-These settings should only be changed if you are aware of what you are doing! For normal operation please use the defaults.
+cdef str help_experts = """These settings should only be changed if you are aware of what you are doing! For normal operation please use the defaults.
 
 Local Proxy:
 
@@ -122,23 +119,22 @@ This is the IP address of the zsipos box shown to the local IP phone. There is n
 
 skip zrtp1:
 
-If the external Phone Address is behind NAT, select 'skip zrtp1' in order to save time. Do NOT select this option, if your IP-Address is routable. Default is off.
-
-gitversions:
-
-Shows the short git commit hashes of the components, that is the software version.
+If your provider or your VOIP environment does not support ZRPT1 protocol, select 'skip zrtp1' in order to save time. Default is off. Generally, ZRTP1 is faster if supported.
 """
 
 cdef str str_rootpw = 'Passwd'
 # no help
 
 cdef str str_reset = 'Reset'
-cdef str help_reset ="""
-Power off/on always reboots.
+cdef str help_reset ="""Power off/on always reboots.
 
 Restart:
 
 Restart the program.
+
+Reconfigure Net:
+
+Restart all services, thus refresh dhcp.
 
 Reboot:
 
@@ -147,6 +143,10 @@ Reboot the machine.
 Device Shutdown:
 
 If you want to remove the SSD card, first shut down the unit, then unplug the power cord. Now you can safely remove the card.
+
+Calibrate Display:
+
+If the display seems out of position, you can calibrate it here.
 
 Delete Trust Information:
 
@@ -158,7 +158,12 @@ Delete trust information, reset zsipos.cfg, reset network configuration, reset r
 """
 
 cdef str str_sysinfo = 'SysInfo'
-# no help
+cdef str help_sysinfo ="""Click the buttons to show the content of the corresponding file or command.
+
+Git Versions:
+
+Shows the short git commit hashes of the components, that is the software version.
+"""
 
 cdef str str_update = 'Update'
 # no help

@@ -54,6 +54,8 @@ cdef void on_btn_help(Fl_Widget* widget, void *data) with gil:
         show_help('Help', help_experts)
     elif str(label) == str_reset:
         show_help('Help', help_reset)
+    elif str(label) == str_sysinfo:
+        show_help('Help', help_sysinfo)
 
 # WinHelp
 cdef void on_btn_help_back(Fl_Widget* widget, void *data) with gil:
@@ -77,6 +79,16 @@ def replace_help(mypos, lastpos, what):
     helpTextBuffer.replace(mypos, lastpos, what)
 
 def show_help(label, out):
+    """ show help window with label and display out """
+    if not help_initialized:
+        help_init()
+    configui.txt_helpDisplay.copy_label(label)
+    helpTextBuffer.text(out)
+    configui.winHelp.wait_for_expose()
+    configui.winHelp.flush()
+    configui.winHelp.show()
+
+def show_help_last(label, out):
     """ show help window with label and display out """
     if not help_initialized:
         help_init()

@@ -42,23 +42,53 @@ def group_rootpw_init():
     rootpw_initialized = True
 
 class EditAddress_rootpw(EditAddress):
+    """ special handling root_pw """
+
+    def back_pressed(self):
+        debug("EditAddress_rootpw::back_pressed")
+        if root_pw_is_set: # normal mode
+            if self.estep > 0:
+                self.estep -= 1
+                self.show()
+            else:
+                self.cancel_pressed()
+        else:
+            if self.estep == 1:
+                configui.btn_address_back.hide()
+                self.estep = 0
+                self.show()
+            else:
+                configui.btn_address_warn.copy_label("Cannot go back")
+                configui.btn_address_warn.show()
+                configui.input_text.take_focus()
+
+    def cancel_pressed(self):
+        if not root_pw_is_set:
+            configui.btn_address_warn.copy_label("You must set a root password")
+            configui.btn_address_warn.show()
+            configui.input_text.take_focus()
+        else:
+            self.close()
+            self.Cancel()
+
     def init(self):
         """ init from type """
 
         type = self.type
-        self.title = "Change root password"
         self.estep = 0 # first step
 
         if type == 'rootpw':
             self.steps = 3
-            self.heads = ["old password", "new_password", "repeat new password"]
+            self.title = "Change root password"
+            self.heads = ["old password", "new password", "repeat new password"]
             self.editvals = ['', '', '']
             self.keyboard = ['abc', 'abc', 'abc']
             self.testfunctions = [self.oldpwtest, storenewpw, comparepw]
             self.warnings = ['Password is wrong.', 'Minimum password length is 6', 'Passwords do not match.']
         elif type == 'initrootpw':
             self.steps = 2
-            self.heads = ["new_password", "repeat new password"]
+            self.title = "Set root password"
+            self.heads = ["password", "repeat password"]
             self.editvals = ['', '']
             self.keyboard = ['abc', 'abc']
             self.testfunctions = [storenewpw, comparepw]

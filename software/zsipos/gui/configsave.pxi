@@ -45,7 +45,7 @@ cdef void on_btn_save_and_restart(Fl_Widget* widget, void *data) with gil:
     # label e.g. 'Save and Restart'
     lbl = get_label(configui.btn_save_and_restart).split(' ')[-1].lower()
     if lbl == 'update':
-        show_sure()
+        show_sure('Are you sure to update now?', 'Update')
     else:
         do_restart(lbl)
 

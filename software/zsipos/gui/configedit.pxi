@@ -66,8 +66,10 @@ class EditWindow(object):
 
     def save(self):
         self.value = get_value(configui.input_text)
-        if len(self.value) and self.testfunction is not None:
-            if not self.testfunction(self.value):
+        if self.testfunction is not None:
+            if len(self.value) and self.testfunction(self.value):
+                pass
+            else:
                 configui.btn_address_warn.copy_label(self.warning)
                 configui.btn_address_warn.show()
                 configui.input_text.take_focus()
@@ -428,13 +430,13 @@ class EditAddress_split(EditAddress):
 
 ################################################
 # WinEditAddress
-cdef extern from *:
-    cdef int Py_REFCNT(void*) nogil
+#cdef extern from *:
+#    cdef int Py_REFCNT(void*) nogil
 
 cdef void on_btn_address_back(Fl_Widget* widget, void *cfdata) with gil:
     """show previous window"""
     debug('on_btn_address_back')
-    print(Py_REFCNT(cfdata))
+    #print(Py_REFCNT(cfdata))
     edit = <object>cfdata
     edit.parent.back_pressed()
 # on_btn_address_back
@@ -444,7 +446,7 @@ cdef void on_btn_address_ok(Fl_Widget* widget, void *cfdata) with gil:
     debug('on_btn_address_ok')
     # restore btn_address_cancel
     configui.btn_address_cancel.show()
-    print(Py_REFCNT(cfdata))
+    #print(Py_REFCNT(cfdata))
     edit = <object>cfdata
     if edit.save():
         edit.parent.cache(edit)
@@ -456,7 +458,7 @@ cdef void on_btn_address_next(Fl_Widget* widget, void *cfdata) with gil:
     debug('on_btn_address_next')
     # restore btn_address_back
     configui.btn_address_back.show()
-    print(Py_REFCNT(cfdata))
+    #print(Py_REFCNT(cfdata))
     edit = <object>cfdata
     if edit.save():
         edit.parent.cache(edit)
@@ -465,7 +467,7 @@ cdef void on_btn_address_next(Fl_Widget* widget, void *cfdata) with gil:
 
 cdef void on_btn_address_cancel(Fl_Widget* widget, void *cfdata) with gil:
     debug('on_btn_address_cancel')
-    print(Py_REFCNT(cfdata))
+    #print(Py_REFCNT(cfdata))
     edit = <object>cfdata
     edit.parent.cancel_pressed()
 

@@ -51,9 +51,6 @@ def subwindows_init():
     ui.txt_updateinfo.scrollbar_width(20)
     ui.btn_updateinfo_back.callback(on_btn_updateinfo_back, NULL)
     ui.btn_updateinfo_ok.callback(on_btn_updateinfo_ok, NULL)
-    # WinUpdateSure
-    ui.btn_updatesure_ok.callback(on_btn_updatesure_ok, NULL)
-    ui.btn_updatesure_cancel.callback(on_btn_updatesure_cancel, NULL)
     # WinUpdateProgress
     updateProgressBuffer = new Fl_Text_Buffer()
     updateProgressBuffer.text("")
@@ -74,32 +71,14 @@ cdef void on_btn_updateinfo_back(Fl_Widget* widget, void *data) with gil:
     configui.winUpdateInfo.hide()
 
 cdef void on_btn_updateinfo_ok(Fl_Widget* widget, void *data) with gil:
+    configui.winUpdateInfo.hide()
     if config_has_changed():
         restart_type = 'update'
         cfg_cleanup()
         info = "config has changed, %s requested" % (restart_type,)
         show_save(info, restart_type)
     else:
-        show_sure()
-
-# winUpdateSure
-cdef void on_btn_updatesure_cancel(Fl_Widget* widget, void *data) with gil:
-    configui.winUpdateSure.hide()
-
-cdef void on_btn_updatesure_ok(Fl_Widget* widget, void *data) with gil:
-    global user_hit_cancel_button
-    global UpdateHalted
-    global UpdateFailed
-
-    user_hit_cancel_button = False
-    UpdateHalted = False
-    UpdateFailed = False
-    configui.winUpdateSure.hide()
-    configui.btn_updateprogress_reboot.deactivate()
-    configui.btn_updateprogress_cancel.activate()
-    configui.winUpdateProgress.show()
-    configui.winUpdateProgress.wait_for_expose()
-    do_update1()
+        show_sure('Are you sure to update now?', 'Update')
 
 # winUpdateProgress
 cdef void on_btn_updateprogress_cancel(Fl_Widget* widget, void *data) with gil:
@@ -253,7 +232,18 @@ def copy_file(source):
                 raise
 
 def do_update1():
-    """ download tar, calc checksum """
+    """ download tar, calc checksum with UpdateProgress Win """
+    global user_hit_cancel_button
+    global UpdateHalted
+    global UpdateFailed
+
+    user_hit_cancel_button = False
+    UpdateHalted = False
+    UpdateFailed = False
+    configui.btn_updateprogress_reboot.deactivate()
+    configui.btn_updateprogress_cancel.activate()
+    configui.winUpdateProgress.show()
+    configui.winUpdateProgress.wait_for_expose()
     updateProgressBuffer.text(str_update_started)
     configui.winUpdateProgress.flush()
     try:
@@ -392,10 +382,6 @@ def show_updateinfo(out):
     configui.winUpdateInfo.wait_for_expose()
     configui.winUpdateInfo.flush()
     configui.winUpdateInfo.show()
-
-def show_sure():
-    configui.winUpdateInfo.hide()
-    configui.winUpdateSure.show()
 
 def to_updateprogress(mytext):
     """ append to progress buffer and to log.info """

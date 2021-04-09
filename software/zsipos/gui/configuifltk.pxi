@@ -110,7 +110,7 @@ cdef extern from "gui.cxx":
         Fl_Button*          btn_reconfig
         Fl_Button*          btn_reboot
         Fl_Button*          btn_shutdown
-        Fl_Button*          btn_nxcal
+        Fl_Button*          btn_calibrate
         Fl_Button*          btn_zid_reset
         Fl_Button*          btn_fac_reset
         # Sys Info
@@ -132,6 +132,12 @@ cdef extern from "gui.cxx":
         Fl_Round_Button*    btn_boot_current
         Fl_Round_Button*    btn_boot_alternate
         Fl_Button*          btn_update_info
+
+        # Are you sure?
+        Fl_Double_Window*   winSure
+        Fl_Box*             box_sure
+        Fl_Button*          btn_sure_cancel
+        Fl_Button*          btn_sure_ok
 
         # Save
         Fl_Double_Window*   winSave
@@ -268,12 +274,6 @@ cdef extern from "gui.cxx":
         Fl_Button*          btn_ping_updateuri
         Fl_Text_Display*    txt_updateinfo
         Fl_Button*          btn_updateinfo_ok
-
-        # Update
-        Fl_Double_Window*   winUpdateSure
-        Fl_Box*             box_updatesure
-        Fl_Button*          btn_updatesure_cancel
-        Fl_Button*          btn_updatesure_ok
 
         # Update Progress
         Fl_Double_Window*   winUpdateProgress

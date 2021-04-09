@@ -99,14 +99,14 @@ def disp_turn(var1, var2, var3):
     else:
         h = ''
     if var2 in cfdict:
-        u = f'{cfdict[var2]}'
+        u = f'{h};u={cfdict[var2]}'
     else:
-        u = ''
+        u = f'{h}'
     if var3 in cfdict:
-        p = f'{cfdict[var3]}'
+        p = f'{u};p={cfdict[var3]}'
     else:
-        p = ''
-    return filled(f'{h};u={u};p={p}')
+        p = f'{u}'
+    return filled(p)
 
 def filled(string):
     """ insert starting blank, fill up with white to 80 chars """

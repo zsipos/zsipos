@@ -38,11 +38,11 @@ def group_reset_init():
     if reset_initialized:
         return
 
-    ui.btn_restart.callback(on_btn_restart, <void*>'restart')
-    ui.btn_reconfig.callback(on_btn_restart, <void*>'reconfig')
-    ui.btn_reboot.callback(on_btn_restart, <void*>'reboot')
-    ui.btn_shutdown.callback(on_btn_restart, <void*>'shutdown')
-    ui.btn_nxcal.callback(on_btn_nxcal, NULL)
+    ui.btn_restart.callback(on_btn_restart, <void*>'Restart')
+    ui.btn_reconfig.callback(on_btn_restart, <void*>'Reconfig')
+    ui.btn_reboot.callback(on_btn_restart, <void*>'Reboot')
+    ui.btn_shutdown.callback(on_btn_restart, <void*>'Shutdown')
+    ui.btn_calibrate.callback(on_btn_calibrate, NULL)
     ui.btn_zid_reset.callback(on_btn_zid_reset, NULL)
     ui.btn_fac_reset.callback(on_btn_fac_reset, NULL)
     reset_initialized = True
@@ -56,24 +56,31 @@ cdef void on_btn_restart(Fl_Widget* widget, void *data) with gil:
         info = "config has changed, %s requested" % (restart_type,)
         show_save(info, restart_type)
     else:
-        do_restart(restart_type)
+        show_sure('Are you sure to {} now?'.format(restart_type.lower()), restart_type)
 
 cdef void on_btn_fac_reset(Fl_Widget* widget, void *data) with gil:
     #debug("btn_fac_reset")
-    if issel4():
-        #debug('factory reset')
-        for file in (consts.CFGFILE, consts.ZIDFILE, consts.NDBFILE):
-            if os.path.isfile(file):
-                log.info("remove "+file)
-                os.remove(file)
-        log.info("factory reset, reboot system")
-        os.system('reboot')
-    else:
-        what = 'factory reset requested'
-        info(f"TestModus {what}")
-        log.info(what)
+    show_sure('Are you sure to make a factory reset now?', 'Factory Reset')
 
-cdef void on_btn_nxcal(Fl_Widget* widget, void *data) with gil:
+cdef void on_btn_calibrate(Fl_Widget* widget, void *data) with gil:
+    show_sure('Do you want to re-calibrate the display?', 'Calibrate')
+
+cdef void on_btn_zid_reset(Fl_Widget* widget, void *data) with gil:
+    all = ''
+    for file in (consts.ZIDFILE, consts.NDBFILE):
+        if os.path.isfile(file):
+            if len(all):
+                all += f', {file}'
+            else:
+                all = file
+    if len(all):
+        show_sure(f'Are you sure to remove {all}?', 'Zid Reset')
+    else:
+        info('nothing to remove')
+
+# python
+def do_calibrate():
+    """ Calibrate Display """
     if issel4():
         configui.window.hide()
         os.unlink('/etc/pointercal')
@@ -84,7 +91,24 @@ cdef void on_btn_nxcal(Fl_Widget* widget, void *data) with gil:
         info(f"TestModus {what}")
         log.info(what)
 
-cdef void on_btn_zid_reset(Fl_Widget* widget, void *data) with gil:
+def do_factory_reset():
+    """ delete config, request new root password """
+    #debug('factory reset')
+    log.info("factory reset")
+    for file in (consts.CFGFILE, consts.ZIDFILE, consts.NDBFILE):
+        if os.path.isfile(file):
+            log.info("remove "+file)
+            os.remove(file)
+    os.mknod(pw_reset)
+    if issel4():
+        log.info("reboot system")
+        os.system('reboot')
+    else:
+        what = 'factory reset, reboot requested'
+        info(f"TestModus {what}")
+        log.info(what)
+
+def do_zid_reset():
     all = ''
     for file in (consts.ZIDFILE, consts.NDBFILE):
         if os.path.isfile(file):
@@ -99,4 +123,3 @@ cdef void on_btn_zid_reset(Fl_Widget* widget, void *data) with gil:
         info(f'{all} removed')
     else:
         info('nothing to remove')
-

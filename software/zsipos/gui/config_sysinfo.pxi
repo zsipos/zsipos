@@ -39,17 +39,17 @@ def group_sysinfo_init():
     global sysinfo_initialized
 
     ui = configui
-    ui.btn_help.hide()
+    ui.btn_help.show()
 
     if sysinfo_initialized:
         return
 
     ui.btn_zsipos_cfg.callback(on_btn_sysinfo, <void*>"zsipos.cfg")
-    ui.btn_zsipos_log.callback(on_btn_sysinfo, <void*>"zsipos.log")
-    ui.btn_nohup_out.callback(on_btn_sysinfo, <void*>"nohup.out")
+    ui.btn_zsipos_log.callback(on_btn_loginfo, <void*>"zsipos.log")
+    ui.btn_nohup_out.callback(on_btn_loginfo, <void*>"nohup.out")
     ui.btn_ifconfig.callback(on_btn_ifconfig, NULL)
     ui.btn_resolv_conf.callback(on_btn_sysinfo, <void*>"/etc/resolv.conf")
-    ui.btn_messages.callback(on_btn_sysinfo, <void*>"/var/log/messages")
+    ui.btn_messages.callback(on_btn_loginfo, <void*>"/var/log/messages")
     gitout_init()
     gitversions_init()
     bootversion_init()
@@ -57,6 +57,9 @@ def group_sysinfo_init():
     sysinfo_initialized = True
 
 # callbacks
+cdef void on_btn_loginfo(Fl_Widget *widget, void *data) with gil:
+    show_loginfo(<str>data)
+
 cdef void on_btn_sysinfo(Fl_Widget *widget, void *data) with gil:
     show_sysinfo(<str>data)
 
@@ -64,7 +67,7 @@ cdef void on_btn_ifconfig(Fl_Widget *widget, void *data) with gil:
     show_ifconfig()
 
 cdef void on_btn_show_git(Fl_Widget* widget, void *data) with gil:
-    show_help("gitversion", str_gitversions)
+    show_help("Git Versions", str_gitversions)
 
 # python
 def bootversion_init():
@@ -98,9 +101,22 @@ def show_ifconfig():
         pass
     show_help("ifconfig", out)
 
-def show_sysinfo(filename):
+def show_loginfo(filename):
+    """ show last 200 lines of logfile, position at the end """
     try:
         out = subprocess.check_output(["tail", "-200", filename], stderr=subprocess.STDOUT, encoding="utf8")
+    except CalledProcessError as e:
+        if len(e.output):
+            warn(e.output)
+        else:
+            warn(str(sys.exc_info()[1]))
+        return
+    show_help_last(filename, out)
+
+def show_sysinfo(filename):
+    """ show file from beginning (for small files) """
+    try:
+        out = subprocess.check_output(["cat", filename], stderr=subprocess.STDOUT, encoding="utf8")
     except CalledProcessError as e:
         if len(e.output):
             warn(e.output)
