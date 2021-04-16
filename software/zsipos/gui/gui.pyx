@@ -57,7 +57,7 @@ cdef void on_close(Fl_Widget *widget, void *data) with gil:
     exit(0)
 
 cdef void on_btn_config(Fl_Widget *widget, void *data) with gil:
-    show_config() 
+    show_config(configui.group_ip) 
 
 cdef void on_btn_mute(Fl_Widget *widget, void *data) with gil:
     setGlobalMute(not getGlobalMute())
@@ -65,7 +65,7 @@ cdef void on_btn_mute(Fl_Widget *widget, void *data) with gil:
     mainui.window.redraw()
     
 cdef void on_btn_info(Fl_Widget *widget, void *data) with gil:
-    show_config(True)
+    show_config(configui.group_update)
 
 cdef void drawMuteButton() with gil:
     if getGlobalMute():
@@ -98,10 +98,16 @@ cdef void app_main() nogil:
         log.info("gui is ready")
     Fl.run()
     
-def cfg_main(infstr):
+def cfg_main(infstr, config_tab):
     configui_init(infstr)
     loadfonts()
-    show_config()
+    if config_tab == 1:
+        show_config(configui.group_ip)
+    elif config_tab == 2:
+        show_config(configui.group_server)
+    else:
+        log.warning("bad value for config_tab: %d", config_tab)
+        show_config(configui.group_ip)
     Fl.lock()
     Fl.run()
 

@@ -27,4 +27,11 @@ class ZsiposException(Exception):
         self.caused_by = exc_info()
 
 class ZsiposCfgException(ZsiposException):
-    pass
+    def __init__(self, *args, **kwargs):
+        tab = kwargs.get('config_tab')
+        if tab:
+            self.config_tab = tab;
+            del kwargs['config_tab']
+        else:
+            self.config_tab = 1;
+        super(ZsiposCfgException, self).__init__(*args, **kwargs)

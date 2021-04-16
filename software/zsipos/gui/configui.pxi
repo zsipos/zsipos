@@ -94,14 +94,41 @@ cdef void on_btn_warn(Fl_Widget* widget, void *data) with gil:
 
 # Config TabGroup
 cdef void on_tab_group(Fl_Widget *widget, void *data) with gil:
-    label = get_label(get_value(configui.tab_config))
-    #debug("on_tab_group %s" %(label, ))
-    group_init(label)
+    group_init(get_value(configui.tab_config))
 
+cdef void group_init(Fl_Widget *widget):
+    """ call group init """
+    mytab = <Fl_Tabs*>widget
 
-#########################################
-# Windows
-#########################################
+    ui = configui
+    if mytab == ui.group_ip:
+        group_ip_init()
+    elif mytab == ui.group_server:
+        group_server_init()
+    elif mytab == ui.group_logs:
+        group_logs_init()
+    elif mytab == ui.group_experts:
+        group_experts_init()
+    elif mytab == ui.group_rootpw:
+        group_rootpw_init()
+    elif mytab == ui.group_reset:
+        group_reset_init()
+    elif mytab == ui.group_sysinfo:
+        group_sysinfo_init()
+    elif mytab == ui.group_update:
+        group_update_init()
+    else:
+        raise Exception("group_init: unknown group")
+
+cdef void show_config(Fl_Widget *widget):
+    #debug("show_config")
+    group_init(widget)
+    configui.tab_config.value(widget)
+    configui.window.activate()
+    configui.btn_back.show()
+    configui.btn_back.take_focus()
+    configui.window.show()
+
 ###########################################################################
 # Python
 ###########################################################################
@@ -351,22 +378,6 @@ def err_to_win(mytext, mywin):
             log.error("err_to_win: unknown window %s" % (mywin, ))
             return
 
-def group_init(label):
-    """ call group init """
-    debug(f'group_init {label}')
-    mapping = {
-        str_ip_config: group_ip_init,
-        str_server: group_server_init,
-        str_logs: group_logs_init,
-        str_experts: group_experts_init,
-        str_rootpw: group_rootpw_init,
-        str_reset: group_reset_init,
-        str_sysinfo: group_sysinfo_init,
-        str_update: group_update_init
-    }
-    func = mapping[label]
-    func()
-
 def info(infomessage):
     debug(f'info {infomessage}')
     configui.btn_warn.copy_label(infomessage)
@@ -460,19 +471,6 @@ def ping_url_path(var):
         if len(host):
             do_ping(host, ifnr=0)# not LOCPROXYADDR
 
-def show_config(bStartUpdate=False):
-    #debug("show_config")
-    configui.window.activate()
-    if bStartUpdate:
-        group_update_init()
-        configui.tab_config.value(configui.group_update)
-    else:
-        group_ip_init()
-        configui.tab_config.value(configui.group_ip)
-    configui.btn_back.show()
-    configui.btn_back.take_focus()
-    configui.window.show()
-
 def warn(warnmessage):
     debug(f'warn {warnmessage}')
     configui.btn_warn.copy_label(warnmessage)
@@ -546,7 +544,7 @@ def configui_init(infstr):
     ui.tab_config.callback(on_tab_group, NULL)
     ui.btn_help.callback(on_btn_help, NULL)
     # this tab is shown first
-    group_init(str_ip_config)
+    group_init(ui.group_ip)
     ui.tab_config.value(ui.group_ip)
     # startup warning from gui.pyx
     if infstr:

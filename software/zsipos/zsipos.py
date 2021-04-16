@@ -74,13 +74,13 @@ def setExternalProxyAddress():
     try:
         sipproxy = config.get(consts.SECTION, consts.SIPPROXY).strip()
     except:
-        raise ZsiposCfgException("sipproxy not found")
+        raise ZsiposCfgException("sipproxy not found", config_tab=2)
     if len(sipproxy):
         sipparams = split_host_port(sipproxy)
         try:
             extproxyadr = socket.gethostbyname(sipparams[0])
         except:
-            raise ZsiposCfgException("sipproxy invalid hostname")
+            raise ZsiposCfgException("sipproxy invalid hostname", config_tab=2)
         config.set(consts.SECTION, consts.EXTPROXYADDR, extproxyadr)
         if len(sipparams) == 2 and len(sipparams[1]):
             config.set(consts.SECTION, consts.EXTPROXYPORT, sipparams[1])
@@ -88,7 +88,7 @@ def setExternalProxyAddress():
             extproxyport = config.get(consts.SECTION, consts.EXTPROXYPORT).strip()
             config.set(consts.SECTION, consts.SIPPROXY, "%s:%s" %(sipproxy, extproxyport))
     else:
-        raise ZsiposCfgException("sipproxy not found")
+        raise ZsiposCfgException("sipproxy not found", config_tab=2)
 
 def setExternalGateway():
     if config.has_option(consts.SECTION, consts.EXTGATEWAY):
@@ -160,9 +160,9 @@ def app_main(withgui):
         except:
             pass
 
-def cfg_main(infstr):
+def cfg_main(infstr, config_tab):
     import gui
-    gui.cfg_main(infstr) # @UndefinedVariable
+    gui.cfg_main(infstr, config_tab) # @UndefinedVariable
 
 def main_func():
     global cfggui
@@ -245,13 +245,17 @@ def main_func():
         loadmodule("gui")
 
     if cfggui:
-        cfg_main(infstr)
+        cfg_main(infstr, 1)
     else:
         try:
             app_main(withgui)
         except ZsiposException as e:
             if withgui:
-                cfg_main(str(exc_info()[1]))
+                if hasattr(e, "config_tab"):
+                    config_tab = e.config_tab
+                else:
+                    config_tab = 1
+                cfg_main(str(exc_info()[1]), config_tab)
             else:
                 raise e
 

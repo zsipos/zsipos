@@ -44,18 +44,28 @@ def help_init():
     help_initialized = True
 
 cdef void on_btn_help(Fl_Widget* widget, void *data) with gil:
-    label = get_label(get_value(configui.tab_config))
-    #debug(label)
-    if str(label) == str_ip_config:
+    """ displays the appropriate help text """
+    mytab = get_value(configui.tab_config)
+    ui = configui
+
+    if mytab == ui.group_ip:
         show_help('Help', help_ip_config)
-    elif str(label) == str_server:
+    elif mytab == ui.group_server:
         show_help('Help', help_server)
-    elif str(label) == str_experts:
+    elif mytab == ui.group_logs:
+        pass
+    elif mytab == ui.group_experts:
         show_help('Help', help_experts)
-    elif str(label) == str_reset:
+    elif mytab == ui.group_rootpw:
+        pass
+    elif mytab == ui.group_reset:
         show_help('Help', help_reset)
-    elif str(label) == str_sysinfo:
+    elif mytab == ui.group_sysinfo:
         show_help('Help', help_sysinfo)
+    elif mytab == ui.group_update:
+        pass
+    else:
+        raise Exception("on_btn_help: unknown group")
 
 # WinHelp
 cdef void on_btn_help_back(Fl_Widget* widget, void *data) with gil:

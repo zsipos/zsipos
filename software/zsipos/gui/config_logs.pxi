@@ -99,17 +99,6 @@ def group_logs_init():
 
 
 #callbacks
-cdef void on_btn_addfile(Fl_Widget* widget, void *cfdata) with gil:
-    """ add/remove nohup.out, zsipos.log """
-    myitem = <Fl_Button*>cfdata
-    myfile = get_label(myitem)
-    if get_value(myitem):
-        log.info("on_btn_addfile: add %s" %(myfile,))
-        add_file(myfile)
-    else:
-        log.info("on_btn_addfile: remove %s" %(myfile,))
-        remove_file(myfile)
-
 cdef void on_btn_alternate_archive(Fl_Widget* widget, void *data) with gil:
     """ switch between local and alternate archive """
     global current_archive
