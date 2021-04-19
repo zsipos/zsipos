@@ -67,7 +67,10 @@ class EditWindow(object):
     def save(self):
         self.value = get_value(configui.input_text)
         if self.testfunction is not None:
-            if len(self.value) and self.testfunction(self.value):
+            if (self.testfunction == is_valid_or_empty_port 
+                and self.testfunction(self.value)):
+                pass
+            elif len(self.value) and self.testfunction(self.value):
                 pass
             else:
                 configui.btn_address_warn.copy_label(self.warning)

@@ -197,6 +197,7 @@ def is_valid_ipv6_mask(netmask):
         return False
 
 def is_valid_or_empty_port(testport):
+    debug(f'is_valid_or_empty_port >{testport}<')
     if testport is "":
         return True
     else:

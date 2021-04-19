@@ -518,40 +518,38 @@ def configui_init(infstr):
     global log
     global stable
 
-    if stable:
-        return
-
-    log = logging.getLogger("zsipos.config")
-    log.info ("configui_init...")
-    log.info("gitdate: %x" %(gitdates["zsipos"], ))
-    config_to_dict()
-    ui = configui = new CONFIGUI()
-    ui.window.position(0,60)
-    ui.window.labeltype(FL_NORMAL_LABEL)
-    ui.window.callback(on_config_close, NULL)
-    # back button
-    ui.btn_back.callback(on_btn_back, NULL)
-    ui.btn_warn.callback(on_btn_warn, NULL)
-    # tab_config - braucht genormte label
-    ui.group_ip.label(str_ip_config)
-    ui.group_server.label(str_server)
-    ui.group_logs.label(str_logs)
-    ui.group_experts.label(str_experts)
-    ui.group_rootpw.label(str_rootpw)
-    ui.group_reset.label(str_reset)
-    ui.group_sysinfo.label(str_sysinfo)
-    ui.group_update.label(str_update)
-    ui.tab_config.callback(on_tab_group, NULL)
-    ui.btn_help.callback(on_btn_help, NULL)
-    # this tab is shown first
-    group_init(ui.group_ip)
-    ui.tab_config.value(ui.group_ip)
+    if not stable:
+        log = logging.getLogger("zsipos.config")
+        log.info ("configui_init...")
+        log.info("gitdate: %x" %(gitdates["zsipos"], ))
+        config_to_dict()
+        ui = configui = new CONFIGUI()
+        ui.window.position(0,60)
+        ui.window.labeltype(FL_NORMAL_LABEL)
+        ui.window.callback(on_config_close, NULL)
+        # back button
+        ui.btn_back.callback(on_btn_back, NULL)
+        ui.btn_warn.callback(on_btn_warn, NULL)
+        # tab_config - braucht genormte label
+        ui.group_ip.label(str_ip_config)
+        ui.group_server.label(str_server)
+        ui.group_logs.label(str_logs)
+        ui.group_experts.label(str_experts)
+        ui.group_rootpw.label(str_rootpw)
+        ui.group_reset.label(str_reset)
+        ui.group_sysinfo.label(str_sysinfo)
+        ui.group_update.label(str_update)
+        ui.tab_config.callback(on_tab_group, NULL)
+        ui.btn_help.callback(on_btn_help, NULL)
+        # this tab is shown first
+        group_init(ui.group_ip)
+        ui.tab_config.value(ui.group_ip)
+        stable = True
+        log.info("... finished")
     # startup warning from gui.pyx
     if infstr:
         warn(infstr)
 
-    stable = True
-    log.info("... finished")
 # configui_init
 
 #enforce root password change on first startup
