@@ -28,9 +28,9 @@ CC_ZSIPOS        = $(ZTC_CXX)
 CFLAGS_ZSIPOS    += \
 	$(CFLAGS_HARDENING_ZSIPOS) \
 	-I$(ZTC_SYSROOT)/usr/include \
-	-I$(ZTC_SYSROOT)/usr/include/python3.8
+	-I$(ZTC_SYSROOT)/usr/include/python3.9
 LDFLAGS_ZSIPOS   += $(LDFLAGS_HARDENING_ZSIPOS)
-LIBS_ZSIPOS      += -lpython3.8
+LIBS_ZSIPOS      += -lpython3.9
 
 all:: $(MODULE_ZSIPOS)
 

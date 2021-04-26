@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
-VERSION=1
+VERSION=2
 VDIR="$ZTOP/.venv-zsipos"
 
 if [ -f "$VDIR/version" ]
@@ -27,7 +27,7 @@ else
 	pip install --upgrade pip
 	#zsipos
 	pip install twisted==19.7
-	pip install cython==0.29.14
+	pip install cython==0.29.23
 	#litex
 	pushd "$ZTOP/gateware"
 	for i in migen litex litedram liteeth liteiclink
