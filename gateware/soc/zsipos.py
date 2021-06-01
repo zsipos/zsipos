@@ -32,7 +32,7 @@ from tools.dts import *
 from cores.aes.aes_mod import AES
 from cores.sha1.sha1_mod import SHA1
 from cores.sdcard.sdcard_mod import SDCard
-from cores.spi.spi_mod import SPIMaster
+from cores.spi.spi_mod import SPIMaster, SPIPads
 from cores.interrupt.interrupt_mod import Interrupt
 from cores.memirq.memirq_mod import MemIrq
 from cores.utils.wishbone import DMATest
@@ -91,6 +91,7 @@ class MySoC(SoCCore):
         "sdmmc"    : 0x40000000,
         "spi0"     : 0x41000000,
         "spi1"     : 0x42000000,
+        "spi2"     : 0x43000000,
         "aes"      : 0x4e000000,
         "sha1"     : 0x4f000000,
         "spiflash" : 0x50000000,
@@ -190,7 +191,7 @@ class MySoC(SoCCore):
             self.platform.request("spiflash"),
             dummy=8, # see datasheet for dummy cycles
             div=2,   # multiple of 2
-            with_bitbang=True,
+            with_bypass=True,
             endianness=self.cpu.endianness,
             addr32bit=True)
         self.spiflash.add_clk_primitive(self.platform.device)
@@ -233,6 +234,19 @@ class MySoC(SoCCore):
             ws35a_pendown = self.platform.request("ws35a_int")
             self.submodules.ws35a = TouchscreenInterrupt(ws35a_pendown)
             self.add_interrupt("ws35a")
+            # SPI2: spi bus to flashrom
+            flash_spi_pads = SPIPads(self.spiflash.bypass_sclk,
+                                     self.spiflash.bypass_mosi,
+                                     self.spiflash.bypass_miso,
+                                     self.spiflash.bypass_cs_n,
+                                     self.spiflash.bypass_en)
+            self.submodules.spi2 = SPIMaster(self.platform, pads=flash_spi_pads, name="flashspi", busmaster=False)
+            if hasattr(self.spi2, "master_bus"):
+                self.add_wb_master((self.spi2.master_bus))
+            self.add_memory_region("spi2", self.mem_map["spi2"], self.spi2.get_size(), type="io")
+            self.add_wb_slave(self.mem_map["spi2"], self.spi2.slave_bus, size=self.spi2.get_size())
+            self.add_csr("spi2")
+            self.add_interrupt("spi2")
             # gpio0: leds, ws35a controls
             board_led = Signal()
             self.comb += self.platform.request("board_led").eq(~board_led)

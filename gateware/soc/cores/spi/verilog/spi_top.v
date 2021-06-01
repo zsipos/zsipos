@@ -60,7 +60,8 @@ module zsipos_spi #(
   output reg            sck_o,     // serial clock output
   output [SS_WIDTH-1:0] ss_o,      // slave select (active low)
   output wire           mosi_o,    // MasterOut SlaveIN
-  input  wire           miso_i     // MasterIn SlaveOut
+  input  wire           miso_i,    // MasterIn SlaveOut
+  output wire           en_o       // Enabled flag
 );
 
     reg  [7:0]          spcr;       // Serial Peripheral Control   Register ('HC11 naming)
@@ -148,6 +149,9 @@ module zsipos_spi #(
     wire       cpol = spcr[3];   // Clock Polarity Bit
     wire       cpha = spcr[2];   // Clock Phase Bit
     wire [1:0] spr  = spcr[1:0]; // Clock Rate Select Bits
+
+// generate enable flag
+    assign en_o = spe;
 
 // decode Serial Peripheral Extension Register
     wire [1:0] spre = sper[1:0]; // extended clock rate select
