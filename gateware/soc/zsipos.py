@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# SPDX-FileCopyrightText: 2019 Stefan Adams <stefan.adams@vipcomag.de>
+# SPDX-FileCopyrightText: 2019-2021 Stefan Adams <stefan.adams@vipcomag.de>
 # SPDX-License-Identifier: GPL-3.0-or-later
 
 import argparse
@@ -13,7 +13,7 @@ from litex.soc.cores.gpio import GPIOIn, GPIOOut
 from litex.soc.cores.spi_flash import SpiFlash
 from litex.soc.cores.timer import Timer
 
-from litex.soc.integration.soc_sdram import *
+from litex.soc.integration.soc_core import *
 from litex.soc.integration.builder import *
 
 from litedram.modules import IM4G08D3FABG125
@@ -37,10 +37,24 @@ from cores.interrupt.interrupt_mod import Interrupt
 from cores.memirq.memirq_mod import MemIrq
 from cores.utils.wishbone import DMATest
 
+
+class TouchscreenInterrupt(Interrupt):
+    def __init__(self, pin):
+        Interrupt.__init__(self)
+        pin_last = Signal(reset=1)
+        self.sync += [
+            self.ev.irq.eq(0),
+            If(pin != pin_last,
+                pin_last.eq(pin),
+                If(~pin, self.ev.irq.eq(1))
+            )
+        ]
+
+
 # CRG ----------------------------------------------------------------------------------------------
 
-class _CRG(Module):
-    def __init__(self, platform, sys_clk_freq, clock_reset):
+class CRG(Module):
+    def __init__(self, platform, sys_clk_freq, full_board):
         self.clock_domains.cd_sys = ClockDomain()
         self.clock_domains.cd_sys4x = ClockDomain(reset_less=True)
         self.clock_domains.cd_sys4x_dqs = ClockDomain(reset_less=True)
@@ -48,14 +62,13 @@ class _CRG(Module):
 
         # # #
 
-        #self.cd_sys.clk.attr.add("keep")
-        #self.cd_sys4x.clk.attr.add("keep")
-        #self.cd_sys4x_dqs.clk.attr.add("keep")
-
         self.submodules.pll = pll = S7MMCM(speedgrade=-2)
 
         self.rst = Signal()
-        self.comb += pll.reset.eq(clock_reset | self.rst)
+        if full_board:
+            self.comb += pll.reset.eq((self.rst & pll.locked) | ~platform.request("cpu_reset"))
+        else:
+            self.comb += pll.reset.eq((self.rst & pll.locked) | platform.request("reset_trenz"))
 
         pll.register_clkin(platform.request("clk100"), 100e6)
         pll.create_clkout(self.cd_sys, sys_clk_freq)
@@ -63,50 +76,62 @@ class _CRG(Module):
         pll.create_clkout(self.cd_sys4x_dqs, 4*sys_clk_freq, phase=90)
         pll.create_clkout(self.cd_idelay, 200e6)
 
+        platform.add_false_path_constraints(self.cd_sys.clk, pll.clkin) # Ignore sys_clk to pll.clkin path created by SoC's rst.
+
+        #platform.add_false_path_constraints(pll.clkin, self.rst) # Ignore sys_clk to pll.clkin path created by SoC's rst.
+
         self.submodules.idelayctrl = S7IDELAYCTRL(self.cd_idelay)
 
-# BaseSoC ------------------------------------------------------------------------------------------
+# MySoC --------------------------------------------------------------------------------------------
 
-class BaseSoC(SoCSDRAM):
+class MySoC(SoCCore):
+    mem_map = {
+        "ethmac"   : 0x30000000,
+        "ethmac1"  : 0x31000000,
+        "sdmmc"    : 0x40000000,
+        "spi0"     : 0x41000000,
+        "spi1"     : 0x42000000,
+        "aes"      : 0x4e000000,
+        "sha1"     : 0x4f000000,
+        "spiflash" : 0x50000000,
+    }
+    mem_map.update(SoCCore.mem_map)
+
+    flash_size = 0x2000000
+    with_busmasters = False
+    full_board = True
+    fast_sd = with_busmasters and False
+
     def __init__(self, sys_clk_freq=int(75e6), **kwargs):
         platform = zsipos.Platform()
-        SoCSDRAM.__init__(self, platform, clk_freq=sys_clk_freq, csr_alignment=64, **kwargs)
 
-        # clock_reset is top level reset
-        clock_reset = Signal()
-        self.submodules.crg = _CRG(platform, sys_clk_freq, clock_reset)
+        # SoCCore ----------------------------------------------------------------------------------
+        SoCCore.__init__(self, platform, sys_clk_freq,
+            ident         = "ZSIPOS SoC (based on LiteX)",
+            ident_version = True,
+            **kwargs)
 
-        # reset logic for logic triggered reset
-        # soc.reset can be used e.g. for gpio reset
-        self.reset = Signal()
-        if self.full_board:
-            self.comb += clock_reset.eq((self.reset & self.crg.pll.locked) | ~platform.request("cpu_reset"))
-        else:
-            self.comb += clock_reset.eq((self.reset & self.crg.pll.locked) | platform.request("reset_trenz"))
-            print("using settings for te0710 only")
 
-        # sdram
-        self.submodules.ddrphy = s7ddrphy.A7DDRPHY(platform.request("ddram"),
-                                                   memtype="DDR3",
-                                                   nphases=4,
-                                                   sys_clk_freq=sys_clk_freq)
-        self.add_csr("ddrphy")
-        sdram_module = IM4G08D3FABG125(sys_clk_freq, "1:4")
-        self.register_sdram(self.ddrphy,
-                            sdram_module.geom_settings,
-                            sdram_module.timing_settings)
+        # CRG --------------------------------------------------------------------------------------
 
-# EthernetSoC --------------------------------------------------------------------------------------
+        self.submodules.crg = CRG(platform, sys_clk_freq, self.full_board)
 
-class EthernetSoC(BaseSoC):
-    mem_map = {
-        "ethmac"  : 0x30000000,
-        "ethmac1" : 0x31000000,
-    }
-    mem_map.update(BaseSoC.mem_map)
+        # DDR3 SDRAM -------------------------------------------------------------------------------
 
-    def __init__(self, **kwargs):
-        BaseSoC.__init__(self, **kwargs)
+        self.add_constant("SDRAM_2020_08")
+        if not self.integrated_main_ram_size:
+            self.submodules.ddrphy = s7ddrphy.A7DDRPHY(platform.request("ddram"),
+                memtype          = "DDR3",
+                nphases          = 4,
+                sys_clk_freq     = sys_clk_freq,
+                iodelay_clk_freq = 200e6)
+            self.add_sdram("sdram",
+                phy           = self.ddrphy,
+                module        = IM4G08D3FABG125(sys_clk_freq, "1:4"),
+                l2_cache_size = kwargs.get("l2_size", 8192)
+            )
+
+        # Ethernet ---------------------------------------------------------------------------------
 
         self.submodules.ethphy = LiteEthPHYMII(self.platform.request("eth_clocks"),
                                                self.platform.request("eth"))
@@ -153,43 +178,17 @@ class EthernetSoC(BaseSoC):
         pwdn1 = self.platform.request("eth_pwdn", 1)
         self.comb += pwdn1.eq(1)
 
+        # zsipos peripherals -----------------------------------------------------------------------
 
-class TouchscreenInterrupt(Interrupt):
-    def __init__(self, pin):
-        Interrupt.__init__(self)
-        pin_last = Signal(reset=1)
-        self.sync += [
-            self.ev.irq.eq(0),
-            If(pin != pin_last,
-                pin_last.eq(pin),
-                If(~pin, self.ev.irq.eq(1))
-            )
-        ]
-
-
-class MySoC(EthernetSoC):
-    mem_map = {
-        "sdmmc"    : 0x40000000,
-        "spi0"     : 0x41000000,
-        "spi1"     : 0x42000000,
-        "aes"      : 0x4e000000,
-        "sha1"     : 0x4f000000,
-        "spiflash" : 0x50000000,
-    }
-    mem_map.update(EthernetSoC.mem_map)
-    flash_size = 0x2000000
-    with_busmasters = False
-    full_board = True
-    fast_sd = with_busmasters and False
-
-    def __init__(self, **kwargs):
-        EthernetSoC.__init__(self, **kwargs)
+        self.add_config("ZSIPOS_BOOT")
         self.set_bios_ip("192.168.0.55", "192.168.0.45")
         # flash-rom
+        # S25FL256SAGBHI20
         self.add_constant("FLASH_BOOT_ADDRESS", self.mem_map["spiflash"] + FLASH_BOOTROM_OFFSET)
         self.submodules.spiflash = SpiFlash(
-            self.platform.request("spiflash4x"),
-            dummy=6, # see datasheet for dummy cycles
+            #spiflash: dummy=8, spiflash4x: dummy=6
+            self.platform.request("spiflash"),
+            dummy=8, # see datasheet for dummy cycles
             div=2,   # multiple of 2
             with_bitbang=True,
             endianness=self.cpu.endianness,
@@ -243,7 +242,7 @@ class MySoC(EthernetSoC):
                 self.platform.request("user_led", 2),
                 self.platform.request("user_led", 3),
                 board_led,
-                self.reset,
+                self.crg.rst,
                 ws35a_rs,
                 ws35a_reset,
             )
@@ -381,11 +380,11 @@ class MySoC(EthernetSoC):
 def main():
     parser = argparse.ArgumentParser(description="LiteX SoC on ZSIPOS")
     builder_args(parser)
-    soc_sdram_args(parser)
+    soc_core_args(parser)
     dtshelper_args(parser)
     flashhelper_args(parser)
     args = parser.parse_args()
-    soc = MySoC(sys_clk_freq=int(75e6), **soc_sdram_argdict(args))
+    soc = MySoC(sys_clk_freq=int(75e6), **soc_core_argdict(args))
     builder = Builder(soc, **builder_argdict(args))
     builder.build()
     if args.dts_file:
