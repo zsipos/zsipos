@@ -18,6 +18,7 @@ python3 $BOARD.py \
 	--csr-data-width=8 \
 	--csr-address-width=16 \
 	--csr-paging=4096 \
+	--no-ctrl \
 	--output-dir $outdir \
 	--dts-file $outdir/software/include/generated/devicetree.dts \
 	--csr-offset-file $outdir/software/include/generated/csroffsets.h \
