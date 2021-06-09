@@ -90,8 +90,10 @@ def getGitMagic():
                 gitversions['FPGA-GIT'] = 0
             else:
                 gitversions['FPGA-GIT'] = int(v)
-        with open('/proc/version', 'r') as f:
-            gitversions['KERNEL-GIT'] = int(f.read().split(' ')[2].split('-')[2][1:], 16)
+        try:
+            gitversions['KERNEL-GIT'] = int(uname()[2].split('-')[1][1:], 16)
+        except:
+            gitversions['KERNEL-GIT'] = 0
     else:
         try: 
             with open('/sys/devices/platform/ff000000.zsiposver/zsiposver', 'r') as f:
