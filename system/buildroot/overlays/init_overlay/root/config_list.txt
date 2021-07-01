@@ -8,4 +8,4 @@
 /etc/pointercal
 /etc/shadow
 /etc/ssh/*
-
+/rotate
