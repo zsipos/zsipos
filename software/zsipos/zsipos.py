@@ -57,6 +57,18 @@ def infomsg(msg):
 def usage():
     print("usage:", argv[0], "[-h|--help] [-v} [--config configfile] [--logile logfile] [--logext] [--logloc] [--no-gui]")
 
+def checkTurnserver():
+    if config.has_option(consts.SECTION, consts.TURNSERVER):
+        try:
+            u = config.get(consts.SECTION, consts.TURNUSER)
+            p = config.get(consts.SECTION, consts.TURNPASSWORD)
+        except:
+            raise ZsiposCfgException("Turn User or Password missing", config_tab=2)
+        if len(u.strip()) > 0 and len(p.strip()) > 0:
+            return
+        else:
+            raise ZsiposCfgException("Turn User or Password missing", config_tab=2)
+
 def setExternalPhoneAddress():
     if config.has_option(consts.SECTION, consts.EXTPHONEADDR):
         extphoneadr = config.get(consts.SECTION, consts.EXTPHONEADDR)
@@ -121,6 +133,7 @@ def app_main(withgui):
         setExternalPhoneAddress()
         setExternalGateway()
         setExternalProxyAddress()
+        checkTurnserver()
 
         try:
             #force exception if not found

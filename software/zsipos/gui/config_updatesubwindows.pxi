@@ -138,6 +138,8 @@ cdef void on_btn_hex_warn(Fl_Widget* widget, void *data) with gil:
 # python
 def append_progress(out):
     """ append text and show """
+    if not subwindows_initialized:
+        subwindows_init()
     updateProgressBuffer.append(out)
     lines = configui.txt_updateprogress.count_lines(0, updateProgressBuffer.length(), False)
     configui.txt_updateprogress.scroll(lines, 0)
@@ -146,6 +148,8 @@ def append_progress(out):
 
 def append_updateinfo(out):
     """ append text and show """
+    if not subwindows_initialized:
+        subwindows_init()
     updateInfoBuffer.append(out)
     lines = configui.txt_updateinfo.count_lines(0, updateInfoBuffer.length(), False)
     configui.txt_updateinfo.scroll(lines, 0)

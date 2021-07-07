@@ -75,6 +75,8 @@ cdef void on_btn_help_back(Fl_Widget* widget, void *data) with gil:
 
 def append_help(out):
     """ append text and show """
+    if not help_initialized:
+        help_init()
     helpTextBuffer.append(out)
     lines = configui.txt_helpDisplay.count_lines(0, helpTextBuffer.length(), False)
     #debug("disp.count_lines %d" % (lines, ))
